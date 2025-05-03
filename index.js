@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron');
+const path = require('node:path');
 
 function createWindow () {
   let win = new BrowserWindow({
@@ -6,11 +7,14 @@ function createWindow () {
     height: 480,
     useContentSize: true,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      preload: path.join(__dirname, 'out/main.js')
     }
   });
 
   win.loadFile('index.html');
 }
 
-app.on('ready', createWindow);
+app.whenReady().then(() => {
+  createWindow();
+});

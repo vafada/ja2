@@ -2,12 +2,12 @@
   "name": "ja2",
   "version": "0.1.0",
   "description": "Jagged Alliance 2",
-  "main": "out/main.js",
+  "main": "index.js",
   "private": true,
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^12.7.12",
-    "electron": "^7.1.4",
+    "electron": "36.1.0",
     "typescript": "^3.7.2"
   },
   "repository": {
@@ -17,6 +17,10 @@
   "author": {
     "name": "Alexander Batalov",
     "email": "alex.batalov@gmail.com"
+  },
+  "scripts": {
+    "start": "ELECTRON_ENABLE_LOGGING=true JA2_DATA_DIR=~/ja2/Data electron .",
+    "build": "tsc"
   },
   "license": "SEE LICENSE IN SFI-SCLA",
   "bugs": {
