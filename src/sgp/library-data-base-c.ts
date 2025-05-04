@@ -125,7 +125,7 @@ function CheckForLibraryExistence(pLibraryName: string /* STR */): boolean {
   let hFile: HANDLE;
 
   // try to opent the file, if we canm the library exists
-  hFile = CreateFile(pLibraryName, GENERIC_READ, 0, null, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, null);
+  hFile = CreateFile(pLibraryName, GENERIC_READ, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS);
 
   // if the file was not opened
   if (hFile == INVALID_HANDLE_VALUE) {
@@ -147,12 +147,11 @@ function InitializeLibrary(pLibraryName: string /* STR */, pLibHeader: LibraryHe
   let DirEntry: DIRENTRY = createDirEntry();
   let LibFileHeader: LIBHEADER = createLibHeader();
   let uiCount: UINT32 = 0;
-  let zTempPath: string /* CHAR8[SGPFILENAME_LEN] */;
 
   let buffer: Buffer;
 
   // open the library for reading ( if it exists )
-  hFile = CreateFile(pLibraryName, GENERIC_READ, 0, null, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, null);
+  hFile = CreateFile(pLibraryName, GENERIC_READ, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS);
   if (hFile == INVALID_HANDLE_VALUE) {
     // error opening the library
     return false;

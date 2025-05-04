@@ -266,7 +266,7 @@ export function FileOpen(strFilename: string /* STR */, uiOptions: UINT32, fDele
 
   // if the file is on the disk
   if (fExists) {
-    hRealFile = CreateFile(strFilename, dwAccess, 0, null, OPEN_ALWAYS, dwFlagsAndAttributes, null);
+    hRealFile = CreateFile(strFilename, dwAccess, OPEN_ALWAYS, dwFlagsAndAttributes);
 
     if (hRealFile == INVALID_HANDLE_VALUE) {
       return 0;
@@ -323,7 +323,7 @@ export function FileOpen(strFilename: string /* STR */, uiOptions: UINT32, fDele
       dwCreationFlags = OPEN_ALWAYS;
     }
 
-    hRealFile = CreateFile(strFilename, dwAccess, 0, null, dwCreationFlags, dwFlagsAndAttributes, null);
+    hRealFile = CreateFile(strFilename, dwAccess, dwCreationFlags, dwFlagsAndAttributes);
     if (hRealFile == INVALID_HANDLE_VALUE) {
       return 0;
     }

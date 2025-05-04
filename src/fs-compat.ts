@@ -43,9 +43,7 @@ export function createFileTime(): FILETIME {
   };
 }
 
-export const FILETIME_SIZE = 8;
-
-export function CreateFile(lpFileName: string, dwDesiredAccess: number, dwShareMode: number, lpSecurityAttributes: null, dwCreationDisposition: number, dwFlagsAndAttributes: number, hTemplateFile: null): HANDLE {
+export function CreateFile(lpFileName: string, dwDesiredAccess: number, dwCreationDisposition: number, dwFlagsAndAttributes: number): HANDLE {
   let flags = 0;
 
   switch (dwDesiredAccess >>> 0) {
