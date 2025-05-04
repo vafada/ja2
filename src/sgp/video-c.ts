@@ -175,12 +175,6 @@ export function InitializeVideoManager(hInstance: HTMLElement): boolean {
   let uiIndex: UINT32;
   let hWindow: HTMLCanvasElement;
 
-  //
-  // Register debug topics
-  //
-
-  RegisterDebugTopic(TOPIC_VIDEO, "Video");
-  DebugMsg(TOPIC_VIDEO, DBG_LEVEL_0, "Initializing the video manager");
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   //

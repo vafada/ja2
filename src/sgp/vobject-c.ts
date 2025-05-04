@@ -59,8 +59,6 @@ function createVObjectNode(): VOBJECT_NODE {
 let gpVObjectHead: VOBJECT_NODE | null /* Pointer<VOBJECT_NODE> */ = null;
 let gpVObjectTail: VOBJECT_NODE | null /* Pointer<VOBJECT_NODE> */ = null;
 let guiVObjectIndex: UINT32 = 1;
-let guiVObjectSize: UINT32 = 0;
-let guiVObjectTotalAdded: UINT32 = 0;
 
 // **************************************************************
 //
@@ -68,15 +66,13 @@ let guiVObjectTotalAdded: UINT32 = 0;
 //
 // **************************************************************
 
-export function InitializeVideoObjectManager(): boolean {
+export function InitializeVideoObjectManager() {
   // Shouldn't be calling this if the video object manager already exists.
   // Call shutdown first...
   Assert(!gpVObjectHead);
   Assert(!gpVObjectTail);
-  RegisterDebugTopic(TOPIC_VIDEOOBJECT, "Video Object Manager");
   gpVObjectHead = gpVObjectTail = null;
   gfVideoObjectsInit = true;
-  return true;
 }
 
 export function ShutdownVideoObjectManager(): boolean {
@@ -89,9 +85,6 @@ export function ShutdownVideoObjectManager(): boolean {
   gpVObjectHead = null;
   gpVObjectTail = null;
   guiVObjectIndex = 1;
-  guiVObjectSize = 0;
-  guiVObjectTotalAdded = 0;
-  UnRegisterDebugTopic(TOPIC_VIDEOOBJECT, "Video Objects");
   gfVideoObjectsInit = false;
   return true;
 }
@@ -133,9 +126,6 @@ export function AddStandardVideoObject(pVObjectDesc: VOBJECT_DESC): UINT32 {
   gpVObjectTail.uiIndex = guiVObjectIndex += 2;
   puiIndex = gpVObjectTail.uiIndex;
   Assert(guiVObjectIndex < 0xfffffff0); // unlikely that we will ever use 2 billion vobjects!
-  // We would have to create about 70 vobjects per second for 1 year straight to achieve this...
-  guiVObjectSize++;
-  guiVObjectTotalAdded++;
 
   return puiIndex;
 }
@@ -212,7 +202,6 @@ export function DeleteVideoObjectFromIndex(uiVObject: UINT32): boolean {
       }
 // The node is now detached.  Now deallocate it.
       curr = null;
-      guiVObjectSize--;
       return true;
     }
     curr = curr.next;

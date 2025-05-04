@@ -24,54 +24,21 @@ export let gbPixelDepth: UINT8 = PIXEL_DEPTH;
 function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
   let pFontTable: FontTranslationTable;
 
-  // Initialize the Debug Manager - success doesn't matter
-  InitializeDebugManager();
-
-  // Now start up everything else.
-  RegisterDebugTopic(TOPIC_SGP, "Standard Gaming Platform");
-
-  // this one needs to go ahead of all others (except Debug), for MemDebugCounter to work right...
-  FastDebugMsg("Initializing Memory Manager");
   // Initialize the Memory Manager
-  if (InitializeMemoryManager() == false) {
-    // We were unable to initialize the memory manager
-    FastDebugMsg("FAILED : Initializing Memory Manager");
-    return false;
-  }
+  InitializeMemoryManager();
 
-  FastDebugMsg("Initializing File Manager");
-  // Initialize the File Manager
-  if (InitializeFileManager('') == false) {
-    // We were unable to initialize the file manager
-    FastDebugMsg("FAILED : Initializing File Manager");
-    return false;
-  }
 
-  FastDebugMsg("Initializing Input Manager");
   // Initialize the Input Manager
-  if (InitializeInputManager() == false) {
-    // We were unable to initialize the input manager
-    FastDebugMsg("FAILED : Initializing Input Manager");
-    return false;
-  }
+  InitializeInputManager();
 
-  FastDebugMsg("Initializing Video Manager");
-  // Initialize DirectDraw (DirectX 2)
   if (InitializeVideoManager(hInstance) == false) {
-    // We were unable to initialize the video manager
-    FastDebugMsg("FAILED : Initializing Video Manager");
     return false;
   }
 
   // Initialize Video Object Manager
-  FastDebugMsg("Initializing Video Object Manager");
-  if (!InitializeVideoObjectManager()) {
-    FastDebugMsg("FAILED : Initializing Video Object Manager");
-    return false;
-  }
+  InitializeVideoObjectManager();
 
   // Initialize Video Surface Manager
-  FastDebugMsg("Initializing Video Surface Manager");
   if (!InitializeVideoSurfaceManager()) {
     FastDebugMsg("FAILED : Initializing Video Surface Manager");
     return false;
@@ -87,30 +54,21 @@ function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
   pFontTable = CreateEnglishTransTable();
 
   // Initialize Font Manager
-  FastDebugMsg("Initializing the Font Manager");
   // Init the manager and copy the TransTable stuff into it.
   if (!InitializeFontManager(8, pFontTable)) {
-    FastDebugMsg("FAILED : Initializing Font Manager");
     return false;
   }
 
-  FastDebugMsg("Initializing Sound Manager");
   // Initialize the Sound Manager (DirectSound)
   if (InitializeSoundManager() == false) {
-    // We were unable to initialize the sound manager
-    FastDebugMsg("FAILED : Initializing Sound Manager");
     return false;
   }
 
-  FastDebugMsg("Initializing Random");
   // Initialize random number generator
   InitializeRandom(); // no Shutdown
 
-  FastDebugMsg("Initializing Game Manager");
   // Initialize the Game
   if (InitializeGame() == false) {
-    // We were unable to initialize the game
-    FastDebugMsg("FAILED : Initializing Game Manager");
     return false;
   }
 

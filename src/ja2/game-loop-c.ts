@@ -15,9 +15,6 @@ let gubCheckForFreeSpaceOnHardDriveCount: UINT8 = DONT_CHECK_FOR_FREE_SPACE;
 export function InitializeGame(): boolean {
   let uiIndex: UINT32;
 
-  ClearAllDebugTopics();
-  RegisterJA2DebugTopic(TOPIC_JA2OPPLIST, "Reg");
-  // RegisterJA2DebugTopic( TOPIC_MEMORY_MANAGER, "Reg" );
 
   // Initlaize mouse subsystems
   MSYS_Init();
@@ -26,8 +23,6 @@ export function InitializeGame(): boolean {
 
   // Init Fonts
   if (!InitializeFonts()) {
-    // Send debug message and quit
-    DebugMsg(TOPIC_JA2, DBG_LEVEL_3, "COULD NOT INUT FONT SYSTEM...");
     return false;
   }
 

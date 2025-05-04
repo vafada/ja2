@@ -164,9 +164,7 @@ function MouseHandler(Code: number, wParam: number, lParam: number): boolean {
   return true;
 }
 
-export function InitializeInputManager(): boolean {
-  // Link to debugger
-  RegisterDebugTopic(TOPIC_INPUT, "Input Manager");
+export function InitializeInputManager() {
   // Initialize the gfKeyState table to FALSE everywhere
   gfKeyState.fill(false);
   // Initialize the Event Queue
@@ -222,8 +220,6 @@ export function InitializeInputManager(): boolean {
     const offsetY = Math.max(Math.min(ev.offsetY, SCREEN_HEIGHT), 0);
     MouseHandler(0, ev.button === 0 ? WM_LBUTTONUP : WM_RBUTTONUP, (offsetY << 16) | offsetX);
   });
-
-  return true;
 }
 
 export function ShutdownInputManager(): void {

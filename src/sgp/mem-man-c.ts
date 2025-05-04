@@ -88,16 +88,12 @@ let fMemManagerInit: boolean = false;
 //
 //**************************************************************************
 
-export function InitializeMemoryManager(): boolean {
-  // Register the memory manager with the debugger
-  RegisterDebugTopic(TOPIC_MEMORY_MANAGER, "Memory Manager");
+export function InitializeMemoryManager() {
   MemDebugCounter = 0;
   guiMemTotal = 0;
   guiMemAlloced = 0;
   guiMemFreed = 0;
   fMemManagerInit = true;
-
-  return true;
 }
 
 //**************************************************************************

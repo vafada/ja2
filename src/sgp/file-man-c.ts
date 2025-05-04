@@ -63,24 +63,6 @@ export let gFileDataBase: DatabaseManagerHeaderStruct = createDatabaseManagerHea
 //
 //**************************************************************************
 
-//**************************************************************************
-//
-// FileSystemInit
-//
-//		Starts up the file system.
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//
-//**************************************************************************
-
-export function InitializeFileManager(strIndexFilename: string /* STR */): boolean {
-  RegisterDebugTopic(TOPIC_FILE_MANAGER, "File Manager");
-  return true;
-}
 
 //**************************************************************************
 //

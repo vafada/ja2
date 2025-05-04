@@ -122,14 +122,16 @@ export function SoundEnableSound(fEnable: boolean): void {
 export function InitializeSoundManager(): boolean {
   let uiCount: UINT32;
 
-  if (fSoundSystemInit)
+  if (fSoundSystemInit) {
     ShutdownSoundManager();
+  }
 
   for (uiCount = 0; uiCount < SOUND_MAX_CHANNELS; uiCount++)
   pSoundList.forEach(resetSoundTag);
 
-  if (gfEnableStartup && SoundInitHardware())
+  if (gfEnableStartup && SoundInitHardware()) {
     fSoundSystemInit = true;
+  }
 
   SoundInitCache();
 

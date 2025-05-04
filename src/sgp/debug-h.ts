@@ -27,9 +27,6 @@ export function AssertMsg(condition: any, msg: string): asserts condition {
 }
 
 //*******************************************************************************************
-
-// Moved these out of the defines - debug mgr always initialized
-export const InitializeDebugManager = () => {};
 export const ShutdownDebugManager = () => {};
 
 //*******************************************************************************************

@@ -82,7 +82,6 @@ export function InitializeVideoSurfaceManager(): boolean {
 
   // Create primary and backbuffer from globals
   if (!SetPrimaryVideoSurfaces()) {
-    DbgMessage(TOPIC_VIDEOSURFACE, DBG_LEVEL_1, FormatString("Could not create primary surfaces"));
     return false;
   }
 

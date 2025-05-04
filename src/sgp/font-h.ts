@@ -42,9 +42,6 @@ export function createFontTranslationTable(): FontTranslationTable {
 
 // functions
 
-// Function for displaying coded test. Since it's slower to do this, it's separate from  the normal fuctions
-const FONT_CODE_BEGINCOLOR = 180;
-const FONT_CODE_RESETCOLOR = 181;
 
 // extern FontBase *LoadFontFile(UINT8 *pFileName);
 // extern UINT8    *GetFontPalette(UINT8 *pFileName);
