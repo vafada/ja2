@@ -683,11 +683,6 @@ export function SoundStopAllRandom(): boolean {
 //*******************************************************************************
 export function SoundServiceStreams(): boolean {
   let uiCount: UINT32;
-  let uiSpeed: UINT32;
-  let uiBuffLen: UINT32;
-  let uiBytesPerSample: UINT32;
-  let pBuffer: Pointer<UINT8>;
-  let pData: Pointer<void>;
 
   if (fSoundSystemInit) {
     for (uiCount = 0; uiCount < SOUND_MAX_CHANNELS; uiCount++) {

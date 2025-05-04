@@ -3,104 +3,9 @@ namespace ja2 {
 const fs: typeof import('fs') = require('fs');
 const path: typeof import('path') = require('path');
 
-//**************************************************************************
-//
-// Filename :	FileMan.c
-//
-//	Purpose :	function definitions for the memory manager
-//
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//    08Apr97:ARM   -> Assign return value from Push() calls back to HStack
-//                     handle, because it may possibly do a MemRealloc()
-//		29Dec97:Kris Morness
-//									-> Added functionality for setting file attributes which
-//									   allows for read-only attribute overriding
-//									-> Also added a simple function that clears all file attributes
-//										 to normal.
-//
-//		5 Feb 98:Dave French -> extensive modification to support libraries
-//
-//**************************************************************************
-
-//**************************************************************************
-//
-//				Defines
-//
-//**************************************************************************
-
-const FILENAME_LENGTH = 600;
-
-const PRINT_DEBUG_INFO = () => FileDebugPrint();
-
-//**************************************************************************
-//
-//				Typedefs
-//
-//**************************************************************************
-
-//**************************************************************************
-//
-//				Variables
-//
-//**************************************************************************
-
 // The FileDatabaseHeader
 export let gFileDataBase: DatabaseManagerHeaderStruct = createDatabaseManagerHeaderStruct();
 
-// FileSystem gfs;
-
-//**************************************************************************
-//
-//				Function Prototypes
-//
-//**************************************************************************
-
-//**************************************************************************
-//
-//				Functions
-//
-//**************************************************************************
-
-
-//**************************************************************************
-//
-// FileSystemShutdown
-//
-//		Shuts down the file system.
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//
-//		9 Feb 98	DEF - modified to work with the library system
-//
-//**************************************************************************
-
-export function ShutdownFileManager(): void {
-  UnRegisterDebugTopic(TOPIC_FILE_MANAGER, "File Manager");
-}
-
-//**************************************************************************
-//
-// FileDebug
-//
-//		To set whether or not we should print debug info.
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//
-//**************************************************************************
-
-function FileDebug(f: boolean): void {
-  //	gfs.fDebug = f;
-}
 
 //**************************************************************************
 //
@@ -527,7 +432,6 @@ export function FileWrite(hFile: HWFILE, pDest: Buffer, uiBytesToWrite: UINT32):
 
 export function FileSeek(hFile: HWFILE, uiDistance: UINT32, uiHow: UINT8): boolean {
   let hRealFile: HANDLE;
-  let lDistanceToMove: number;
   let dwMoveMethod: number;
   let iDistance: INT32 = 0;
 
@@ -552,8 +456,6 @@ export function FileSeek(hFile: HWFILE, uiDistance: UINT32, uiHow: UINT8): boole
         iDistance = -(iDistance);
     } else
       dwMoveMethod = FILE_CURRENT;
-
-    lDistanceToMove = uiDistance;
 
     if (SetFilePointer(hRealFile, iDistance, null, dwMoveMethod) == 0xFFFFFFFF)
       return false;
@@ -672,209 +574,6 @@ export function FileGetSize(hFile: HWFILE): UINT32 {
     return 0;
   else
     return uiFileSize;
-}
-
-//**************************************************************************
-//
-// FileDebugPrint
-//
-//		To print the state of memory to output.
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//
-//**************************************************************************
-
-function FileDebugPrint(): void {
-}
-
-//**************************************************************************
-//
-// CreateFileHandle
-//
-//
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//
-//**************************************************************************
-/*
-
-        not needed anymore
-
-HWFILE CreateFileHandle( HANDLE hRealFile, BOOLEAN fDatabaseFile )
-{
-        UINT32		i, uiOldNumHandles;
-        FMFileInfo		*pNewFileInfo;
-
-        Assert( !fDatabaseFile || (fDatabaseFile && gfs.fDBInitialized) );
-
-        // don't use 1st position - it'll confuse the users
-        for ( i=1 ; i<gfs.uiNumHandles ; i++ )
-        {
-                if ( gfs.pFileInfo[i].hFileHandle == 0 && gfs.pFileInfo[i].hDBFile == 0 )
-                {
-                        if ( fDatabaseFile )
-                                gfs.pFileInfo[i].hDBFile = (HDBFILE)hRealFile;
-                        else
-                                gfs.pFileInfo[i].hFileHandle = hRealFile;
-                        return( i );
-                }
-        }
-
-        uiOldNumHandles = gfs.uiNumHandles;
-
-        pNewFileInfo = (FMFileInfo *)MemRealloc( gfs.pFileInfo, gfs.uiNumHandles + NUM_FILES_TO_ADD_AT_A_TIME );
-        if ( !pNewFileInfo )
-        {
-                // TBD: error error error
-                return(0);
-        }
-        gfs.pFileInfo = (FMFileInfo *)pNewFileInfo;
-        gfs.uiNumHandles = gfs.uiNumHandles + NUM_FILES_TO_ADD_AT_A_TIME;
-
-        for ( i=uiOldNumHandles ; i<gfs.uiNumHandles ; i++ )
-        {
-                gfs.pFileInfo[i].hFileHandle = 0;
-                gfs.pFileInfo[i].hDBFile = 0;
-        }
-
-        if ( fDatabaseFile )
-                gfs.pFileInfo[uiOldNumHandles].hDBFile = (HDBFILE)hRealFile;
-        else
-                gfs.pFileInfo[uiOldNumHandles].hFileHandle = hRealFile;
-
-        return(uiOldNumHandles);
-}
-*/
-
-//**************************************************************************
-//
-// DestroyFileHandle
-//
-//
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		24sep96:HJH		-> creation
-//
-//**************************************************************************
-/*
-void DestroyFileHandle( HWFILE hFile )
-{
-        if ( hFile < gfs.uiNumHandles && hFile )
-        {
-                gfs.pFileInfo[hFile].hFileHandle = 0;
-                gfs.pFileInfo[hFile].hDBFile = 0;
-        }
-}
-*/
-
-//**************************************************************************
-//
-// BuildFileDirectory
-//
-//
-//
-// Parameter List :
-// Return Value :
-// Modification history :
-//
-//		??nov96:HJH		-> creation
-//
-//**************************************************************************
-
-function BuildFileDirectory(): void {
-  return; // temporary until container stuff is fixed
-  /*
-          INT32					i, iNumFiles = 0;
-          HANDLE				hFile, hFileIn;
-          WIN32_FIND_DATA	find, inFind;
-          BOOLEAN				fMore = TRUE;
-          CHAR					cName[FILENAME_LENGTH], cDir[FILENAME_LENGTH], cSubDir[FILENAME_LENGTH];
-          HCONTAINER			hStack;
-
-
-
-          //
-          //	First, push all the file names in the directory (and subdirectories)
-          //	onto the stack.
-          //
-
-          GetProfileChar( "Startup", "InstPath", "", cDir );
-
-          if ( strlen( cDir ) == 0 )
-                  return;
-
-          hStack = CreateStack( 100, FILENAME_LENGTH );
-          if (hStack == NULL)
-          {
-                  FastDebugMsg(String("BuildFileDirectory: CreateStack Failed for the filename stack"));
-                  return;
-          }
-
-          find.dwFileAttributes = FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_DIRECTORY;
-
-          strcpy( &(cDir[strlen(cDir)]), "\\*.*\0" );
-          hFile = FindFirstFile( cDir, &find );
-          while ( fMore )
-          {
-                  if ( find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-                  {
-                          if ( strcmp( find.cFileName, "." ) != 0 && strcmp( find.cFileName, ".." ) != 0 )
-                          {
-                                  // a valid directory
-                                  inFind.dwFileAttributes = FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_DIRECTORY;
-                                  strcpy( cSubDir, cDir );
-                                  strcpy( &(cSubDir[strlen(cDir)-3]), find.cFileName );
-                                  strcpy( &(cSubDir[strlen(cSubDir)]), "\\*.*\0" );
-                                  hFileIn = FindFirstFile( cSubDir, &inFind );
-                                  iNumFiles += GetFilesInDirectory( hStack, cSubDir, hFileIn, &inFind );
-                                  FindClose( hFileIn );
-                          }
-                  }
-                  else
-                  {
-                          iNumFiles++;
-                          strcpy( cName, cDir );
-                          strcpy( &(cName[strlen(cName)-3]), find.cFileName );
-                          CharLower( cName );
-                          hStack = Push( hStack, cName );
-                  }
-                  find.dwFileAttributes = FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_DIRECTORY;
-                  fMore = FindNextFile( hFile, &find );
-          }
-          FindClose( hFile );
-
-          //
-          //	Okay, we have all the files in the stack, now put them in place.
-          //
-          gfs.uiNumFilesInDirectory = iNumFiles;
-
-          gfs.pcFileNames = (CHAR *)MemAlloc( iNumFiles * FILENAME_LENGTH );
-
-          if ( gfs.pcFileNames )
-          {
-                  for ( i=0 ; i<iNumFiles ; i++ )
-                  {
-                          Pop( hStack, (void *)(&gfs.pcFileNames[i*FILENAME_LENGTH]) );
-                  }
-          }
-
-          //
-          //	Clean up.
-          //
-
-          DeleteStack( hStack );
-  */
 }
 
 export function SetFileManCurrentDirectory(pcDirectory: string /* STR */): boolean {
@@ -1045,11 +744,7 @@ export function GetFileManFileTime(hFile: HWFILE, pCreationTime: SGP_FILETIME, p
   let hRealFile: HANDLE;
   let sLibraryID: INT16;
   let uiFileNum: UINT32;
-
-  let sCreationUtcFileTime: FILETIME;
-  let sLastAccessedUtcFileTime: FILETIME;
-  let sLastWriteUtcFileTime: FILETIME;
-
+  
   // Initialize the passed in variables
   pCreationTime.dwLowDateTime = 0;
   pCreationTime.dwHighDateTime = 0;

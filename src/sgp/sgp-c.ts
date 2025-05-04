@@ -6,19 +6,12 @@ export let ghInstance: HTMLElement;
 
 // Global Variable Declarations
 
-let gfApplicationActive: boolean;
 export let gfProgramIsRunning: boolean;
-let gfGameInitialized: boolean = false;
 export let gfDontUseDDBlits: boolean = false;
 
-// There were TWO of them??!?! -- DB
-// CHAR8		gzCommandLine[ 100 ];
 export let gzCommandLine: string /* CHAR8[100] */; // Command line given
 
-let gzErrorMsg: string /* CHAR8[2048] */ = "";
-let gfIgnoreMessages: boolean = false;
-
-// GLOBAL VARIBLE, SET TO DEFAULT BUT CAN BE CHANGED BY THE GAME IF INIT FILE READ
+// GLOBAL VARIABLE, SET TO DEFAULT BUT CAN BE CHANGED BY THE GAME IF INIT FILE READ
 export let gbPixelDepth: UINT8 = PIXEL_DEPTH;
 
 function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
@@ -72,48 +65,7 @@ function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
     return false;
   }
 
-  gfGameInitialized = true;
-
   return true;
-}
-
-function ShutdownStandardGamingPlatform(): void {
-  //
-  // Shut down the different components of the SGP
-  //
-
-  // TEST
-  SoundServiceStreams();
-
-  if (gfGameInitialized) {
-    ShutdownGame();
-  }
-
-  ShutdownButtonSystem();
-  MSYS_Shutdown();
-
-  ShutdownSoundManager();
-
-  DestroyEnglishTransTable(); // has to go before ShutdownFontManager()
-  ShutdownFontManager();
-
-  ShutdownClockManager(); // must shutdown before VideoManager, 'cause it uses ghWindow
-
-  ShutdownVideoSurfaceManager();
-  ShutdownVideoObjectManager();
-  ShutdownVideoManager();
-
-  ShutdownInputManager();
-  ShutdownFileManager();
-
-  ShutdownMemoryManager(); // must go last (except for Debug), for MemDebugCounter to work right...
-
-  //
-  // Make sure we unregister the last remaining debug topic before shutting
-  // down the debugging layer
-  UnRegisterDebugTopic(TOPIC_SGP, "Standard Gaming Platform");
-
-  ShutdownDebugManager();
 }
 
 export function WinMain(hInstance: HTMLElement): number {
@@ -127,12 +79,9 @@ export function WinMain(hInstance: HTMLElement): number {
     return 0;
   }
 
-// FIXME: Language-specific code
-// #ifdef ENGLISH
   SetIntroType(Enum21.INTRO_SPLASH);
-// #endif
 
-  gfApplicationActive = true;
+
   gfProgramIsRunning = true;
 
   FastDebugMsg("Running Game");
