@@ -1,68 +1,56 @@
 namespace ja2 {
+  const MAP_BORDER_X = 261;
+  const MAP_BORDER_Y = 0;
 
-const MAP_BORDER_X = 261;
-const MAP_BORDER_Y = 0;
+  const MAP_BORDER_CORNER_X = 584;
+  const MAP_BORDER_CORNER_Y = 279;
 
-const MAP_BORDER_CORNER_X = 584;
-const MAP_BORDER_CORNER_Y = 279;
+  // mouse levels
+  let LevelMouseRegions: MOUSE_REGION[] /* [4] */ = createArrayFrom(
+    4,
+    createMouseRegion,
+  );
 
-// mouse levels
-let LevelMouseRegions: MOUSE_REGION[] /* [4] */ = createArrayFrom(4, createMouseRegion);
+  // graphics
+  let guiMapBorder: UINT32;
+  // UINT32 guiMapBorderCorner;
 
-// graphics
-let guiMapBorder: UINT32;
-// UINT32 guiMapBorderCorner;
+  // scroll direction
+  let giScrollButtonState: INT32 = -1;
 
-// scroll direction
-let giScrollButtonState: INT32 = -1;
+  // flags
+  export let fShowTownFlag: boolean = false;
+  export let fShowMineFlag: boolean = false;
+  export let fShowTeamFlag: boolean = false;
+  export let fShowMilitia: boolean = false;
+  export let fShowAircraftFlag: boolean = false;
+  export let fShowItemsFlag: boolean = false;
 
-// flags
-export let fShowTownFlag: boolean = false;
-export let fShowMineFlag: boolean = false;
-export let fShowTeamFlag: boolean = false;
-export let fShowMilitia: boolean = false;
-export let fShowAircraftFlag: boolean = false;
-export let fShowItemsFlag: boolean = false;
+  export let fZoomFlag: boolean = false;
+  // BOOLEAN fShowVehicleFlag = FALSE;
 
-export let fZoomFlag: boolean = false;
-// BOOLEAN fShowVehicleFlag = FALSE;
+  // BOOLEAN fMapScrollDueToPanelButton = FALSE;
+  // BOOLEAN fCursorIsOnMapScrollButtons = FALSE;
+  // BOOLEAN fDisabledMapBorder = FALSE;
 
-// BOOLEAN fMapScrollDueToPanelButton = FALSE;
-// BOOLEAN fCursorIsOnMapScrollButtons = FALSE;
-// BOOLEAN fDisabledMapBorder = FALSE;
+  // buttons & button images
+  export let giMapBorderButtons: INT32[] /* [6] */ = [-1, -1, -1, -1, -1, -1];
+  let giMapBorderButtonsImage: INT32[] /* [6] */ = [-1, -1, -1, -1, -1, -1];
 
-// buttons & button images
-export let giMapBorderButtons: INT32[] /* [6] */ = [
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-];
-let giMapBorderButtonsImage: INT32[] /* [6] */ = [
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-  -1,
-];
+  // UINT32 guiMapBorderScrollButtons[ 4 ] = { -1, -1, -1, -1 };
+  // UINT32 guiMapBorderScrollButtonsImage[ 4 ];
 
-// UINT32 guiMapBorderScrollButtons[ 4 ] = { -1, -1, -1, -1 };
-// UINT32 guiMapBorderScrollButtonsImage[ 4 ];
+  // raise/lower land buttons
+  // UINT32 guiMapBorderLandRaiseButtons[ 2 ] = { -1, -1 };
+  // UINT32 guiMapBorderLandRaiseButtonsImage[ 2 ];
 
-// raise/lower land buttons
-// UINT32 guiMapBorderLandRaiseButtons[ 2 ] = { -1, -1 };
-// UINT32 guiMapBorderLandRaiseButtonsImage[ 2 ];
+  // void MapScrollButtonMvtCheck( void );
+  // BOOLEAN ScrollButtonsDisplayingHelpMessage( void );
+  // void UpdateScrollButtonStatesWhileScrolling( void );
 
-// void MapScrollButtonMvtCheck( void );
-// BOOLEAN ScrollButtonsDisplayingHelpMessage( void );
-// void UpdateScrollButtonStatesWhileScrolling( void );
+  // void BtnZoomCallback(GUI_BUTTON *btn,INT32 reason);
 
-// void BtnZoomCallback(GUI_BUTTON *btn,INT32 reason);
-
-/*
+  /*
 void BtnScrollNorthMapScreenCallback( GUI_BUTTON *btn,INT32 reason );
 void BtnScrollSouthMapScreenCallback( GUI_BUTTON *btn,INT32 reason );
 void BtnScrollWestMapScreenCallback( GUI_BUTTON *btn,INT32 reason );
@@ -71,18 +59,18 @@ void BtnLowerLevelBtnCallback(GUI_BUTTON *btn,INT32 reason);
 void BtnRaiseLevelBtnCallback(GUI_BUTTON *btn,INT32 reason);
 */
 
-export function LoadMapBorderGraphics(): boolean {
-  // this procedure will load the graphics needed for the map border
-  let VObjectDesc: VOBJECT_DESC = createVObjectDesc();
+  export function LoadMapBorderGraphics(): boolean {
+    // this procedure will load the graphics needed for the map border
+    let VObjectDesc: VOBJECT_DESC = createVObjectDesc();
 
-  // will load map border
-  VObjectDesc.fCreateFlags = VOBJECT_CREATE_FROMFILE;
-  VObjectDesc.ImageFile = FilenameForBPP("INTERFACE\\MBS.sti");
-  if (!(guiMapBorder = AddVideoObject(VObjectDesc))) {
-    return false;
-  }
+    // will load map border
+    VObjectDesc.fCreateFlags = VOBJECT_CREATE_FROMFILE;
+    VObjectDesc.ImageFile = FilenameForBPP("INTERFACE\\MBS.sti");
+    if (!(guiMapBorder = AddVideoObject(VObjectDesc))) {
+      return false;
+    }
 
-  /* corner was removed along with the Zoom feature
+    /* corner was removed along with the Zoom feature
           // will load map border corner
           VObjectDesc.fCreateFlags=VOBJECT_CREATE_FROMFILE;
           FilenameForBPP( "INTERFACE\\map_screen_cutout.sti", VObjectDesc.ImageFile );
@@ -91,46 +79,54 @@ export function LoadMapBorderGraphics(): boolean {
           fCursorIsOnMapScrollButtons = FALSE;
   */
 
-  return true;
-}
+    return true;
+  }
 
-export function DeleteMapBorderGraphics(): void {
-  // procedure will delete graphics loaded for map border
+  export function DeleteMapBorderGraphics(): void {
+    // procedure will delete graphics loaded for map border
 
-  DeleteVideoObjectFromIndex(guiMapBorder);
-  //	DeleteVideoObjectFromIndex( guiMapBorderCorner );
+    DeleteVideoObjectFromIndex(guiMapBorder);
+    //	DeleteVideoObjectFromIndex( guiMapBorderCorner );
 
-  return;
-}
+    return;
+  }
 
-export function RenderMapBorder(): void {
-  // renders the actual border to the guiSAVEBUFFER
-  let hHandle: SGPVObject;
+  export function RenderMapBorder(): void {
+    // renders the actual border to the guiSAVEBUFFER
+    let hHandle: SGPVObject;
 
-  /*
+    /*
           if( fDisabledMapBorder )
           {
                   return;
           }
   */
 
-  if (fShowMapInventoryPool) {
-    // render background, then leave
-    BlitInventoryPoolGraphic();
+    if (fShowMapInventoryPool) {
+      // render background, then leave
+      BlitInventoryPoolGraphic();
+      return;
+    }
+
+    // get and blt border
+    hHandle = GetVideoObject(guiMapBorder);
+    BltVideoObject(
+      guiSAVEBUFFER,
+      hHandle,
+      0,
+      MAP_BORDER_X,
+      MAP_BORDER_Y,
+      VO_BLT_SRCTRANSPARENCY,
+      null,
+    );
+
+    // show the level marker
+    DisplayCurrentLevelMarker();
+
     return;
   }
 
-  // get and blt border
-  hHandle = GetVideoObject(guiMapBorder);
-  BltVideoObject(guiSAVEBUFFER, hHandle, 0, MAP_BORDER_X, MAP_BORDER_Y, VO_BLT_SRCTRANSPARENCY, null);
-
-  // show the level marker
-  DisplayCurrentLevelMarker();
-
-  return;
-}
-
-/*
+  /*
 void RenderMapBorderCorner( void )
 {
         // renders map border corner to the FRAME_BUFFER
@@ -157,39 +153,47 @@ void RenderMapBorderCorner( void )
 }
 */
 
-export function RenderMapBorderEtaPopUp(): void {
-  // renders map border corner to the FRAME_BUFFER
-  let hHandle: SGPVObject;
+  export function RenderMapBorderEtaPopUp(): void {
+    // renders map border corner to the FRAME_BUFFER
+    let hHandle: SGPVObject;
 
-  /*
+    /*
           if( fDisabledMapBorder )
           {
                   return;
           }
   */
 
-  if (fShowMapInventoryPool) {
+    if (fShowMapInventoryPool) {
+      return;
+    }
+
+    if (fPlotForHelicopter == true) {
+      DisplayDistancesForHelicopter();
+      return;
+    }
+
+    // get and blt ETA box
+    hHandle = GetVideoObject(guiMapBorderEtaPopUp);
+    BltVideoObject(
+      FRAME_BUFFER,
+      hHandle,
+      0,
+      MAP_BORDER_X + 215,
+      291,
+      VO_BLT_SRCTRANSPARENCY,
+      null,
+    );
+
+    InvalidateRegion(MAP_BORDER_X + 215, 291, MAP_BORDER_X + 215 + 100, 310);
+
     return;
   }
 
-  if (fPlotForHelicopter == true) {
-    DisplayDistancesForHelicopter();
-    return;
-  }
+  export function CreateButtonsForMapBorder(): boolean {
+    // will create the buttons needed for the map screen border region
 
-  // get and blt ETA box
-  hHandle = GetVideoObject(guiMapBorderEtaPopUp);
-  BltVideoObject(FRAME_BUFFER, hHandle, 0, MAP_BORDER_X + 215, 291, VO_BLT_SRCTRANSPARENCY, null);
-
-  InvalidateRegion(MAP_BORDER_X + 215, 291, MAP_BORDER_X + 215 + 100, 310);
-
-  return;
-}
-
-export function CreateButtonsForMapBorder(): boolean {
-  // will create the buttons needed for the map screen border region
-
-  /*
+    /*
           // up button
           guiMapBorderScrollButtonsImage[ ZOOM_MAP_SCROLL_UP ] = LoadButtonImage( "INTERFACE\\map_screen_bottom_arrows.sti" ,11,4,-1,6,-1 );
     guiMapBorderScrollButtons[ ZOOM_MAP_SCROLL_UP ] = QuickCreateButton( guiMapBorderScrollButtonsImage[ ZOOM_MAP_SCROLL_UP ], 602, 303,
@@ -221,34 +225,124 @@ export function CreateButtonsForMapBorder(): boolean {
           SetButtonFastHelpText( guiMapBorderScrollButtons[ 3 ], pMapScreenBorderButtonHelpText[ 9 ] );
   */
 
-  // towns
-  giMapBorderButtonsImage[Enum141.MAP_BORDER_TOWN_BTN] = LoadButtonImage("INTERFACE\\map_border_buttons.sti", -1, 5, -1, 14, -1);
-  giMapBorderButtons[Enum141.MAP_BORDER_TOWN_BTN] = QuickCreateButton(giMapBorderButtonsImage[Enum141.MAP_BORDER_TOWN_BTN], 299, 323, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGH, MSYS_NO_CALLBACK, BtnTownCallback);
+    // towns
+    giMapBorderButtonsImage[Enum141.MAP_BORDER_TOWN_BTN] = LoadButtonImage(
+      "INTERFACE\\map_border_buttons.sti",
+      -1,
+      5,
+      -1,
+      14,
+      -1,
+    );
+    giMapBorderButtons[Enum141.MAP_BORDER_TOWN_BTN] = QuickCreateButton(
+      giMapBorderButtonsImage[Enum141.MAP_BORDER_TOWN_BTN],
+      299,
+      323,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGH,
+      MSYS_NO_CALLBACK,
+      BtnTownCallback,
+    );
 
-  // mines
-  giMapBorderButtonsImage[Enum141.MAP_BORDER_MINE_BTN] = LoadButtonImage("INTERFACE\\map_border_buttons.sti", -1, 4, -1, 13, -1);
-  giMapBorderButtons[Enum141.MAP_BORDER_MINE_BTN] = QuickCreateButton(giMapBorderButtonsImage[Enum141.MAP_BORDER_MINE_BTN], 342, 323, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGH, MSYS_NO_CALLBACK, BtnMineCallback);
+    // mines
+    giMapBorderButtonsImage[Enum141.MAP_BORDER_MINE_BTN] = LoadButtonImage(
+      "INTERFACE\\map_border_buttons.sti",
+      -1,
+      4,
+      -1,
+      13,
+      -1,
+    );
+    giMapBorderButtons[Enum141.MAP_BORDER_MINE_BTN] = QuickCreateButton(
+      giMapBorderButtonsImage[Enum141.MAP_BORDER_MINE_BTN],
+      342,
+      323,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGH,
+      MSYS_NO_CALLBACK,
+      BtnMineCallback,
+    );
 
-  // people
-  giMapBorderButtonsImage[Enum141.MAP_BORDER_TEAMS_BTN] = LoadButtonImage("INTERFACE\\map_border_buttons.sti", -1, 3, -1, 12, -1);
-  giMapBorderButtons[Enum141.MAP_BORDER_TEAMS_BTN] = QuickCreateButton(giMapBorderButtonsImage[Enum141.MAP_BORDER_TEAMS_BTN], 385, 323, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGH, MSYS_NO_CALLBACK, BtnTeamCallback);
+    // people
+    giMapBorderButtonsImage[Enum141.MAP_BORDER_TEAMS_BTN] = LoadButtonImage(
+      "INTERFACE\\map_border_buttons.sti",
+      -1,
+      3,
+      -1,
+      12,
+      -1,
+    );
+    giMapBorderButtons[Enum141.MAP_BORDER_TEAMS_BTN] = QuickCreateButton(
+      giMapBorderButtonsImage[Enum141.MAP_BORDER_TEAMS_BTN],
+      385,
+      323,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGH,
+      MSYS_NO_CALLBACK,
+      BtnTeamCallback,
+    );
 
-  // militia
-  giMapBorderButtonsImage[Enum141.MAP_BORDER_MILITIA_BTN] = LoadButtonImage("INTERFACE\\map_border_buttons.sti", -1, 8, -1, 17, -1);
-  giMapBorderButtons[Enum141.MAP_BORDER_MILITIA_BTN] = QuickCreateButton(giMapBorderButtonsImage[Enum141.MAP_BORDER_MILITIA_BTN], 428, 323, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGH, MSYS_NO_CALLBACK, BtnMilitiaCallback);
+    // militia
+    giMapBorderButtonsImage[Enum141.MAP_BORDER_MILITIA_BTN] = LoadButtonImage(
+      "INTERFACE\\map_border_buttons.sti",
+      -1,
+      8,
+      -1,
+      17,
+      -1,
+    );
+    giMapBorderButtons[Enum141.MAP_BORDER_MILITIA_BTN] = QuickCreateButton(
+      giMapBorderButtonsImage[Enum141.MAP_BORDER_MILITIA_BTN],
+      428,
+      323,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGH,
+      MSYS_NO_CALLBACK,
+      BtnMilitiaCallback,
+    );
 
-  // airspace
-  giMapBorderButtonsImage[Enum141.MAP_BORDER_AIRSPACE_BTN] = LoadButtonImage("INTERFACE\\map_border_buttons.sti", -1, 2, -1, 11, -1);
-  giMapBorderButtons[Enum141.MAP_BORDER_AIRSPACE_BTN] = QuickCreateButton(giMapBorderButtonsImage[Enum141.MAP_BORDER_AIRSPACE_BTN], 471, 323, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGH, MSYS_NO_CALLBACK, BtnAircraftCallback);
+    // airspace
+    giMapBorderButtonsImage[Enum141.MAP_BORDER_AIRSPACE_BTN] = LoadButtonImage(
+      "INTERFACE\\map_border_buttons.sti",
+      -1,
+      2,
+      -1,
+      11,
+      -1,
+    );
+    giMapBorderButtons[Enum141.MAP_BORDER_AIRSPACE_BTN] = QuickCreateButton(
+      giMapBorderButtonsImage[Enum141.MAP_BORDER_AIRSPACE_BTN],
+      471,
+      323,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGH,
+      MSYS_NO_CALLBACK,
+      BtnAircraftCallback,
+    );
 
-  // items
-  giMapBorderButtonsImage[Enum141.MAP_BORDER_ITEM_BTN] = LoadButtonImage("INTERFACE\\map_border_buttons.sti", -1, 1, -1, 10, -1);
-  giMapBorderButtons[Enum141.MAP_BORDER_ITEM_BTN] = QuickCreateButton(giMapBorderButtonsImage[Enum141.MAP_BORDER_ITEM_BTN], 514, 323, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGH, MSYS_NO_CALLBACK, BtnItemCallback);
+    // items
+    giMapBorderButtonsImage[Enum141.MAP_BORDER_ITEM_BTN] = LoadButtonImage(
+      "INTERFACE\\map_border_buttons.sti",
+      -1,
+      1,
+      -1,
+      10,
+      -1,
+    );
+    giMapBorderButtons[Enum141.MAP_BORDER_ITEM_BTN] = QuickCreateButton(
+      giMapBorderButtonsImage[Enum141.MAP_BORDER_ITEM_BTN],
+      514,
+      323,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGH,
+      MSYS_NO_CALLBACK,
+      BtnItemCallback,
+    );
 
-  // raise and lower view level
+    // raise and lower view level
 
-  // raise
-  /*
+    // raise
+    /*
   guiMapBorderLandRaiseButtonsImage[ MAP_BORDER_RAISE_LEVEL ] = LoadButtonImage( "INTERFACE\\map_screen_bottom_arrows.sti" ,11,4,-1,6,-1 );
   guiMapBorderLandRaiseButtons[ MAP_BORDER_RAISE_LEVEL ] = QuickCreateButton( guiMapBorderLandRaiseButtonsImage[ MAP_BORDER_RAISE_LEVEL ], MAP_BORDER_X + 264, 322,
                                                                           BUTTON_TOGGLE, MSYS_PRIORITY_HIGH,
@@ -261,80 +355,98 @@ export function CreateButtonsForMapBorder(): boolean {
                                                                           (GUI_CALLBACK)MSYS_NO_CALLBACK, (GUI_CALLBACK)BtnLowerLevelBtnCallback);
 
 */
-  // set up fast help text
-  SetButtonFastHelpText(giMapBorderButtons[0], pMapScreenBorderButtonHelpText[0]);
-  SetButtonFastHelpText(giMapBorderButtons[1], pMapScreenBorderButtonHelpText[1]);
-  SetButtonFastHelpText(giMapBorderButtons[2], pMapScreenBorderButtonHelpText[2]);
-  SetButtonFastHelpText(giMapBorderButtons[3], pMapScreenBorderButtonHelpText[3]);
-  SetButtonFastHelpText(giMapBorderButtons[4], pMapScreenBorderButtonHelpText[4]);
-  SetButtonFastHelpText(giMapBorderButtons[5], pMapScreenBorderButtonHelpText[5]);
+    // set up fast help text
+    SetButtonFastHelpText(
+      giMapBorderButtons[0],
+      pMapScreenBorderButtonHelpText[0],
+    );
+    SetButtonFastHelpText(
+      giMapBorderButtons[1],
+      pMapScreenBorderButtonHelpText[1],
+    );
+    SetButtonFastHelpText(
+      giMapBorderButtons[2],
+      pMapScreenBorderButtonHelpText[2],
+    );
+    SetButtonFastHelpText(
+      giMapBorderButtons[3],
+      pMapScreenBorderButtonHelpText[3],
+    );
+    SetButtonFastHelpText(
+      giMapBorderButtons[4],
+      pMapScreenBorderButtonHelpText[4],
+    );
+    SetButtonFastHelpText(
+      giMapBorderButtons[5],
+      pMapScreenBorderButtonHelpText[5],
+    );
 
-  // SetButtonFastHelpText( guiMapBorderLandRaiseButtons[ 0 ], pMapScreenBorderButtonHelpText[ 10 ] );
-  // SetButtonFastHelpText( guiMapBorderLandRaiseButtons[ 1 ], pMapScreenBorderButtonHelpText[ 11 ] );
+    // SetButtonFastHelpText( guiMapBorderLandRaiseButtons[ 0 ], pMapScreenBorderButtonHelpText[ 10 ] );
+    // SetButtonFastHelpText( guiMapBorderLandRaiseButtons[ 1 ], pMapScreenBorderButtonHelpText[ 11 ] );
 
-  SetButtonCursor(giMapBorderButtons[0], MSYS_NO_CURSOR);
-  SetButtonCursor(giMapBorderButtons[1], MSYS_NO_CURSOR);
-  SetButtonCursor(giMapBorderButtons[2], MSYS_NO_CURSOR);
-  SetButtonCursor(giMapBorderButtons[3], MSYS_NO_CURSOR);
-  SetButtonCursor(giMapBorderButtons[4], MSYS_NO_CURSOR);
-  SetButtonCursor(giMapBorderButtons[5], MSYS_NO_CURSOR);
+    SetButtonCursor(giMapBorderButtons[0], MSYS_NO_CURSOR);
+    SetButtonCursor(giMapBorderButtons[1], MSYS_NO_CURSOR);
+    SetButtonCursor(giMapBorderButtons[2], MSYS_NO_CURSOR);
+    SetButtonCursor(giMapBorderButtons[3], MSYS_NO_CURSOR);
+    SetButtonCursor(giMapBorderButtons[4], MSYS_NO_CURSOR);
+    SetButtonCursor(giMapBorderButtons[5], MSYS_NO_CURSOR);
 
-  //	SetButtonCursor(guiMapBorderLandRaiseButtons[ 0 ], MSYS_NO_CURSOR );
-  //	SetButtonCursor(guiMapBorderLandRaiseButtons[ 1 ], MSYS_NO_CURSOR );
+    //	SetButtonCursor(guiMapBorderLandRaiseButtons[ 0 ], MSYS_NO_CURSOR );
+    //	SetButtonCursor(guiMapBorderLandRaiseButtons[ 1 ], MSYS_NO_CURSOR );
 
-  InitializeMapBorderButtonStates();
+    InitializeMapBorderButtonStates();
 
-  return true;
-}
+    return true;
+  }
 
-export function DeleteMapBorderButtons(): void {
-  let ubCnt: UINT8;
+  export function DeleteMapBorderButtons(): void {
+    let ubCnt: UINT8;
 
-  /*
+    /*
           RemoveButton( guiMapBorderScrollButtons[ 0 ]);
           RemoveButton( guiMapBorderScrollButtons[ 1 ]);
           RemoveButton( guiMapBorderScrollButtons[ 2 ]);
           RemoveButton( guiMapBorderScrollButtons[ 3 ]);
   */
 
-  RemoveButton(giMapBorderButtons[0]);
-  RemoveButton(giMapBorderButtons[1]);
-  RemoveButton(giMapBorderButtons[2]);
-  RemoveButton(giMapBorderButtons[3]);
-  RemoveButton(giMapBorderButtons[4]);
-  RemoveButton(giMapBorderButtons[5]);
+    RemoveButton(giMapBorderButtons[0]);
+    RemoveButton(giMapBorderButtons[1]);
+    RemoveButton(giMapBorderButtons[2]);
+    RemoveButton(giMapBorderButtons[3]);
+    RemoveButton(giMapBorderButtons[4]);
+    RemoveButton(giMapBorderButtons[5]);
 
-  // RemoveButton( guiMapBorderLandRaiseButtons[ 0 ]);
-  // RemoveButton( guiMapBorderLandRaiseButtons[ 1 ]);
+    // RemoveButton( guiMapBorderLandRaiseButtons[ 0 ]);
+    // RemoveButton( guiMapBorderLandRaiseButtons[ 1 ]);
 
-  // images
+    // images
 
-  /*
+    /*
           UnloadButtonImage( guiMapBorderScrollButtonsImage[ 0 ] );
           UnloadButtonImage( guiMapBorderScrollButtonsImage[ 1 ] );
           UnloadButtonImage( guiMapBorderScrollButtonsImage[ 2 ] );
           UnloadButtonImage( guiMapBorderScrollButtonsImage[ 3 ] );
   */
 
-  UnloadButtonImage(giMapBorderButtonsImage[0]);
-  UnloadButtonImage(giMapBorderButtonsImage[1]);
-  UnloadButtonImage(giMapBorderButtonsImage[2]);
-  UnloadButtonImage(giMapBorderButtonsImage[3]);
-  UnloadButtonImage(giMapBorderButtonsImage[4]);
-  UnloadButtonImage(giMapBorderButtonsImage[5]);
+    UnloadButtonImage(giMapBorderButtonsImage[0]);
+    UnloadButtonImage(giMapBorderButtonsImage[1]);
+    UnloadButtonImage(giMapBorderButtonsImage[2]);
+    UnloadButtonImage(giMapBorderButtonsImage[3]);
+    UnloadButtonImage(giMapBorderButtonsImage[4]);
+    UnloadButtonImage(giMapBorderButtonsImage[5]);
 
-  // UnloadButtonImage( guiMapBorderLandRaiseButtonsImage[ 0 ] );
-  // UnloadButtonImage( guiMapBorderLandRaiseButtonsImage[ 1 ] );
+    // UnloadButtonImage( guiMapBorderLandRaiseButtonsImage[ 0 ] );
+    // UnloadButtonImage( guiMapBorderLandRaiseButtonsImage[ 1 ] );
 
-  for (ubCnt = 0; ubCnt < 6; ubCnt++) {
-    giMapBorderButtons[ubCnt] = -1;
-    giMapBorderButtonsImage[ubCnt] = -1;
+    for (ubCnt = 0; ubCnt < 6; ubCnt++) {
+      giMapBorderButtons[ubCnt] = -1;
+      giMapBorderButtonsImage[ubCnt] = -1;
+    }
   }
-}
 
-// callbacks
+  // callbacks
 
-/*
+  /*
 void BtnLowerLevelBtnCallback(GUI_BUTTON *btn,INT32 reason)
 {
 
@@ -391,63 +503,63 @@ void BtnRaiseLevelBtnCallback(GUI_BUTTON *btn,INT32 reason)
 }
 */
 
-function BtnMilitiaCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
-    ToggleShowMilitiaMode();
-  } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+  function BtnMilitiaCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+      ToggleShowMilitiaMode();
+    } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+    }
   }
-}
 
-function BtnTeamCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
-    ToggleShowTeamsMode();
-  } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+  function BtnTeamCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+      ToggleShowTeamsMode();
+    } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+    }
   }
-}
 
-function BtnTownCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
-    ToggleShowTownsMode();
-  } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+  function BtnTownCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+      ToggleShowTownsMode();
+    } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+    }
   }
-}
 
-function BtnMineCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
-    ToggleShowMinesMode();
-  } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+  function BtnMineCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+      ToggleShowMinesMode();
+    } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+    }
   }
-}
 
-function BtnAircraftCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+  function BtnAircraftCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
 
-    ToggleAirspaceMode();
-  } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+      ToggleAirspaceMode();
+    } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+    }
   }
-}
 
-function BtnItemCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+  function BtnItemCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (reason & MSYS_CALLBACK_REASON_LBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
 
-    ToggleItemsFilter();
-  } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
-    CommonBtnCallbackBtnDownChecks();
+      ToggleItemsFilter();
+    } else if (reason & MSYS_CALLBACK_REASON_RBUTTON_DWN) {
+      CommonBtnCallbackBtnDownChecks();
+    }
   }
-}
 
-/*
+  /*
 void BtnZoomCallback(GUI_BUTTON *btn,INT32 reason)
 {
         UINT16 sTempXOff=0;
@@ -496,76 +608,76 @@ void BtnZoomCallback(GUI_BUTTON *btn,INT32 reason)
 }
 */
 
-export function ToggleShowTownsMode(): void {
-  if (fShowTownFlag == true) {
-    fShowTownFlag = false;
-    MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
-  } else {
-    fShowTownFlag = true;
-    MapBorderButtonOn(Enum141.MAP_BORDER_TOWN_BTN);
-
-    if (fShowMineFlag == true) {
-      fShowMineFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
-    }
-
-    if (fShowAircraftFlag == true) {
-      fShowAircraftFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
-    }
-
-    if (fShowItemsFlag == true) {
-      fShowItemsFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
-    }
-  }
-
-  fMapPanelDirty = true;
-}
-
-export function ToggleShowMinesMode(): void {
-  if (fShowMineFlag == true) {
-    fShowMineFlag = false;
-    MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
-  } else {
-    fShowMineFlag = true;
-    MapBorderButtonOn(Enum141.MAP_BORDER_MINE_BTN);
-
+  export function ToggleShowTownsMode(): void {
     if (fShowTownFlag == true) {
       fShowTownFlag = false;
       MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
+    } else {
+      fShowTownFlag = true;
+      MapBorderButtonOn(Enum141.MAP_BORDER_TOWN_BTN);
+
+      if (fShowMineFlag == true) {
+        fShowMineFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
+      }
+
+      if (fShowAircraftFlag == true) {
+        fShowAircraftFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
+      }
+
+      if (fShowItemsFlag == true) {
+        fShowItemsFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
+      }
     }
 
-    if (fShowAircraftFlag == true) {
-      fShowAircraftFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
-    }
-
-    if (fShowItemsFlag == true) {
-      fShowItemsFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
-    }
+    fMapPanelDirty = true;
   }
 
-  fMapPanelDirty = true;
-}
+  export function ToggleShowMinesMode(): void {
+    if (fShowMineFlag == true) {
+      fShowMineFlag = false;
+      MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
+    } else {
+      fShowMineFlag = true;
+      MapBorderButtonOn(Enum141.MAP_BORDER_MINE_BTN);
 
-export function ToggleShowMilitiaMode(): void {
-  if (fShowMilitia == true) {
-    fShowMilitia = false;
-    MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
-  } else {
-    // toggle militia ON
-    fShowMilitia = true;
-    MapBorderButtonOn(Enum141.MAP_BORDER_MILITIA_BTN);
+      if (fShowTownFlag == true) {
+        fShowTownFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
+      }
 
-    // if Team is ON, turn it OFF
-    if (fShowTeamFlag == true) {
-      fShowTeamFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
+      if (fShowAircraftFlag == true) {
+        fShowAircraftFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
+      }
+
+      if (fShowItemsFlag == true) {
+        fShowItemsFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
+      }
     }
 
-    /*
+    fMapPanelDirty = true;
+  }
+
+  export function ToggleShowMilitiaMode(): void {
+    if (fShowMilitia == true) {
+      fShowMilitia = false;
+      MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
+    } else {
+      // toggle militia ON
+      fShowMilitia = true;
+      MapBorderButtonOn(Enum141.MAP_BORDER_MILITIA_BTN);
+
+      // if Team is ON, turn it OFF
+      if (fShowTeamFlag == true) {
+        fShowTeamFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
+      }
+
+      /*
                     // if Airspace is ON, turn it OFF
                     if( fShowAircraftFlag == TRUE )
                     {
@@ -574,86 +686,90 @@ export function ToggleShowMilitiaMode(): void {
                     }
     */
 
-    if (fShowItemsFlag == true) {
-      fShowItemsFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
-    }
-
-    // check if player has any militia
-    if (DoesPlayerHaveAnyMilitia() == false) {
-      let pwString: string /* STR16 */;
-
-      // no - so put up a message explaining how it works
-
-      // if he's already training some
-      if (IsAnyOneOnPlayersTeamOnThisAssignment(Enum117.TRAIN_TOWN)) {
-        // say they'll show up when training is completed
-        pwString = pMapErrorString[28];
-      } else {
-        // say you need to train them first
-        pwString = zMarksMapScreenText[1];
+      if (fShowItemsFlag == true) {
+        fShowItemsFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
       }
 
-      MapScreenMessage(FONT_MCOLOR_LTYELLOW, MSG_MAP_UI_POSITION_MIDDLE, pwString);
+      // check if player has any militia
+      if (DoesPlayerHaveAnyMilitia() == false) {
+        let pwString: string /* STR16 */;
+
+        // no - so put up a message explaining how it works
+
+        // if he's already training some
+        if (IsAnyOneOnPlayersTeamOnThisAssignment(Enum117.TRAIN_TOWN)) {
+          // say they'll show up when training is completed
+          pwString = pMapErrorString[28];
+        } else {
+          // say you need to train them first
+          pwString = zMarksMapScreenText[1];
+        }
+
+        MapScreenMessage(
+          FONT_MCOLOR_LTYELLOW,
+          MSG_MAP_UI_POSITION_MIDDLE,
+          pwString,
+        );
+      }
+    }
+
+    fMapPanelDirty = true;
+  }
+
+  export function ToggleShowTeamsMode(): void {
+    if (fShowTeamFlag == true) {
+      // turn show teams OFF
+      fShowTeamFlag = false;
+      MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
+
+      // dirty regions
+      fMapPanelDirty = true;
+      fTeamPanelDirty = true;
+      fCharacterInfoPanelDirty = true;
+    } else {
+      // turn show teams ON
+      TurnOnShowTeamsMode();
     }
   }
 
-  fMapPanelDirty = true;
-}
+  export function ToggleAirspaceMode(): void {
+    if (fShowAircraftFlag == true) {
+      // turn airspace OFF
+      fShowAircraftFlag = false;
+      MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
 
-export function ToggleShowTeamsMode(): void {
-  if (fShowTeamFlag == true) {
-    // turn show teams OFF
-    fShowTeamFlag = false;
-    MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
+      if (fPlotForHelicopter == true) {
+        AbortMovementPlottingMode();
+      }
 
-    // dirty regions
-    fMapPanelDirty = true;
-    fTeamPanelDirty = true;
-    fCharacterInfoPanelDirty = true;
-  } else {
-    // turn show teams ON
-    TurnOnShowTeamsMode();
-  }
-}
-
-export function ToggleAirspaceMode(): void {
-  if (fShowAircraftFlag == true) {
-    // turn airspace OFF
-    fShowAircraftFlag = false;
-    MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
-
-    if (fPlotForHelicopter == true) {
-      AbortMovementPlottingMode();
+      // dirty regions
+      fMapPanelDirty = true;
+      fTeamPanelDirty = true;
+      fCharacterInfoPanelDirty = true;
+    } else {
+      // turn airspace ON
+      TurnOnAirSpaceMode();
     }
-
-    // dirty regions
-    fMapPanelDirty = true;
-    fTeamPanelDirty = true;
-    fCharacterInfoPanelDirty = true;
-  } else {
-    // turn airspace ON
-    TurnOnAirSpaceMode();
   }
-}
 
-export function ToggleItemsFilter(): void {
-  if (fShowItemsFlag == true) {
-    // turn items OFF
-    fShowItemsFlag = false;
-    MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
+  export function ToggleItemsFilter(): void {
+    if (fShowItemsFlag == true) {
+      // turn items OFF
+      fShowItemsFlag = false;
+      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
 
-    // dirty regions
-    fMapPanelDirty = true;
-    fTeamPanelDirty = true;
-    fCharacterInfoPanelDirty = true;
-  } else {
-    // turn items ON
-    TurnOnItemFilterMode();
+      // dirty regions
+      fMapPanelDirty = true;
+      fTeamPanelDirty = true;
+      fCharacterInfoPanelDirty = true;
+    } else {
+      // turn items ON
+      TurnOnItemFilterMode();
+    }
   }
-}
 
-/*
+  /*
 void ShowDestinationOfPlottedPath( STR16 pLoc )
 {
         INT16 sFontX, sFontY;
@@ -672,7 +788,7 @@ void ShowDestinationOfPlottedPath( STR16 pLoc )
 }
 */
 
-/*
+  /*
 void BtnScrollNorthMapScreenCallback( GUI_BUTTON *btn,INT32 reason )
 {
         if(reason & MSYS_CALLBACK_REASON_LBUTTON_DWN )
@@ -846,7 +962,7 @@ void MapScrollButtonMvtCheck( void  )
 }
 */
 
-/*
+  /*
 void HandleMapScrollButtonStates( void )
 {
         // will enable/disable map scroll buttons based on zoom mode
@@ -901,31 +1017,43 @@ void HandleMapScrollButtonStates( void )
 }
 */
 
-// generic button mvt callback for mapscreen map border
-function BtnGenericMouseMoveButtonCallbackForMapBorder(btn: GUI_BUTTON, reason: INT32): void {
-  // If the button isn't the anchored button, then we don't want to modify the button state.
+  // generic button mvt callback for mapscreen map border
+  function BtnGenericMouseMoveButtonCallbackForMapBorder(
+    btn: GUI_BUTTON,
+    reason: INT32,
+  ): void {
+    // If the button isn't the anchored button, then we don't want to modify the button state.
 
-  if (btn != gpAnchoredButton) {
-    if (reason & MSYS_CALLBACK_REASON_LOST_MOUSE) {
-      if (btn.Area.uiFlags & MSYS_FASTHELP) {
-        // redraw area
-        fMapPanelDirty = true;
+    if (btn != gpAnchoredButton) {
+      if (reason & MSYS_CALLBACK_REASON_LOST_MOUSE) {
+        if (btn.Area.uiFlags & MSYS_FASTHELP) {
+          // redraw area
+          fMapPanelDirty = true;
+        }
       }
+      return;
     }
-    return;
+
+    if (reason & MSYS_CALLBACK_REASON_LOST_MOUSE) {
+      if (!gfAnchoredState) btn.uiFlags &= ~BUTTON_CLICKED_ON;
+      InvalidateRegion(
+        btn.Area.RegionTopLeftX,
+        btn.Area.RegionTopLeftY,
+        btn.Area.RegionBottomRightX,
+        btn.Area.RegionBottomRightY,
+      );
+    } else if (reason & MSYS_CALLBACK_REASON_GAIN_MOUSE) {
+      btn.uiFlags |= BUTTON_CLICKED_ON;
+      InvalidateRegion(
+        btn.Area.RegionTopLeftX,
+        btn.Area.RegionTopLeftY,
+        btn.Area.RegionBottomRightX,
+        btn.Area.RegionBottomRightY,
+      );
+    }
   }
 
-  if (reason & MSYS_CALLBACK_REASON_LOST_MOUSE) {
-    if (!gfAnchoredState)
-      btn.uiFlags &= (~BUTTON_CLICKED_ON);
-    InvalidateRegion(btn.Area.RegionTopLeftX, btn.Area.RegionTopLeftY, btn.Area.RegionBottomRightX, btn.Area.RegionBottomRightY);
-  } else if (reason & MSYS_CALLBACK_REASON_GAIN_MOUSE) {
-    btn.uiFlags |= BUTTON_CLICKED_ON;
-    InvalidateRegion(btn.Area.RegionTopLeftX, btn.Area.RegionTopLeftY, btn.Area.RegionBottomRightX, btn.Area.RegionBottomRightY);
-  }
-}
-
-/*
+  /*
 BOOLEAN ScrollButtonsDisplayingHelpMessage( void )
 {
         // return if any help messages are being displayed for the scroll buttons
@@ -942,59 +1070,77 @@ BOOLEAN ScrollButtonsDisplayingHelpMessage( void )
 }
 */
 
-function DisplayCurrentLevelMarker(): void {
-  // display the current level marker on the map border
+  function DisplayCurrentLevelMarker(): void {
+    // display the current level marker on the map border
 
-  let hHandle: SGPVObject;
+    let hHandle: SGPVObject;
 
-  /*
+    /*
           if( fDisabledMapBorder )
           {
                   return;
           }
   */
 
-  // it's actually a white rectangle, not a green arrow!
-  hHandle = GetVideoObject(guiLEVELMARKER);
-  BltVideoObject(guiSAVEBUFFER, hHandle, 0, MAP_LEVEL_MARKER_X + 1, MAP_LEVEL_MARKER_Y + (MAP_LEVEL_MARKER_DELTA * iCurrentMapSectorZ), VO_BLT_SRCTRANSPARENCY, null);
+    // it's actually a white rectangle, not a green arrow!
+    hHandle = GetVideoObject(guiLEVELMARKER);
+    BltVideoObject(
+      guiSAVEBUFFER,
+      hHandle,
+      0,
+      MAP_LEVEL_MARKER_X + 1,
+      MAP_LEVEL_MARKER_Y + MAP_LEVEL_MARKER_DELTA * iCurrentMapSectorZ,
+      VO_BLT_SRCTRANSPARENCY,
+      null,
+    );
 
-  return;
-}
-
-export function CreateMouseRegionsForLevelMarkers(): void {
-  let sCounter: INT16 = 0;
-  let sString: string /* CHAR16[64] */;
-
-  for (sCounter = 0; sCounter < 4; sCounter++) {
-    MSYS_DefineRegion(LevelMouseRegions[sCounter], MAP_LEVEL_MARKER_X, (MAP_LEVEL_MARKER_Y + (MAP_LEVEL_MARKER_DELTA * sCounter)), MAP_LEVEL_MARKER_X + MAP_LEVEL_MARKER_WIDTH, (MAP_LEVEL_MARKER_Y + (MAP_LEVEL_MARKER_DELTA * (sCounter + 1))), MSYS_PRIORITY_HIGH, MSYS_NO_CURSOR, MSYS_NO_CALLBACK, LevelMarkerBtnCallback);
-
-    MSYS_SetRegionUserData(LevelMouseRegions[sCounter], 0, sCounter);
-
-    sString = swprintf("%s %d", zMarksMapScreenText[0], sCounter + 1);
-    SetRegionFastHelpText(LevelMouseRegions[sCounter], sString);
+    return;
   }
-}
 
-export function DeleteMouseRegionsForLevelMarkers(): void {
-  let sCounter: INT16 = 0;
+  export function CreateMouseRegionsForLevelMarkers(): void {
+    let sCounter: INT16 = 0;
+    let sString: string /* CHAR16[64] */;
 
-  for (sCounter = 0; sCounter < 4; sCounter++) {
-    MSYS_RemoveRegion(LevelMouseRegions[sCounter]);
+    for (sCounter = 0; sCounter < 4; sCounter++) {
+      MSYS_DefineRegion(
+        LevelMouseRegions[sCounter],
+        MAP_LEVEL_MARKER_X,
+        MAP_LEVEL_MARKER_Y + MAP_LEVEL_MARKER_DELTA * sCounter,
+        MAP_LEVEL_MARKER_X + MAP_LEVEL_MARKER_WIDTH,
+        MAP_LEVEL_MARKER_Y + MAP_LEVEL_MARKER_DELTA * (sCounter + 1),
+        MSYS_PRIORITY_HIGH,
+        MSYS_NO_CURSOR,
+        MSYS_NO_CALLBACK,
+        LevelMarkerBtnCallback,
+      );
+
+      MSYS_SetRegionUserData(LevelMouseRegions[sCounter], 0, sCounter);
+
+      sString = swprintf("%s %d", zMarksMapScreenText[0], sCounter + 1);
+      SetRegionFastHelpText(LevelMouseRegions[sCounter], sString);
+    }
   }
-}
 
-function LevelMarkerBtnCallback(pRegion: MOUSE_REGION, iReason: INT32): void {
-  // btn callback handler for assignment screen mask region
-  let iCounter: INT32 = 0;
+  export function DeleteMouseRegionsForLevelMarkers(): void {
+    let sCounter: INT16 = 0;
 
-  iCounter = MSYS_GetRegionUserData(pRegion, 0);
-
-  if ((iReason & MSYS_CALLBACK_REASON_LBUTTON_UP)) {
-    JumpToLevel(iCounter);
+    for (sCounter = 0; sCounter < 4; sCounter++) {
+      MSYS_RemoveRegion(LevelMouseRegions[sCounter]);
+    }
   }
-}
 
-/*
+  function LevelMarkerBtnCallback(pRegion: MOUSE_REGION, iReason: INT32): void {
+    // btn callback handler for assignment screen mask region
+    let iCounter: INT32 = 0;
+
+    iCounter = MSYS_GetRegionUserData(pRegion, 0);
+
+    if (iReason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
+      JumpToLevel(iCounter);
+    }
+  }
+
+  /*
 void DisableMapBorderRegion( void )
 {
         // will shutdown map border region
@@ -1030,19 +1176,19 @@ void EnableMapBorderRegion( void )
 }
 */
 
-export function TurnOnShowTeamsMode(): void {
-  // if mode already on, leave, else set and redraw
+  export function TurnOnShowTeamsMode(): void {
+    // if mode already on, leave, else set and redraw
 
-  if (fShowTeamFlag == false) {
-    fShowTeamFlag = true;
-    MapBorderButtonOn(Enum141.MAP_BORDER_TEAMS_BTN);
+    if (fShowTeamFlag == false) {
+      fShowTeamFlag = true;
+      MapBorderButtonOn(Enum141.MAP_BORDER_TEAMS_BTN);
 
-    if (fShowMilitia == true) {
-      fShowMilitia = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
-    }
+      if (fShowMilitia == true) {
+        fShowMilitia = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
+      }
 
-    /*
+      /*
                     if( fShowAircraftFlag == TRUE )
                     {
                             fShowAircraftFlag = FALSE;
@@ -1050,37 +1196,37 @@ export function TurnOnShowTeamsMode(): void {
                     }
     */
 
-    if (fShowItemsFlag == true) {
-      fShowItemsFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
-    }
+      if (fShowItemsFlag == true) {
+        fShowItemsFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
+      }
 
-    // dirty regions
-    fMapPanelDirty = true;
-    fTeamPanelDirty = true;
-    fCharacterInfoPanelDirty = true;
+      // dirty regions
+      fMapPanelDirty = true;
+      fTeamPanelDirty = true;
+      fCharacterInfoPanelDirty = true;
+    }
   }
-}
 
-export function TurnOnAirSpaceMode(): void {
-  // if mode already on, leave, else set and redraw
+  export function TurnOnAirSpaceMode(): void {
+    // if mode already on, leave, else set and redraw
 
-  if (fShowAircraftFlag == false) {
-    fShowAircraftFlag = true;
-    MapBorderButtonOn(Enum141.MAP_BORDER_AIRSPACE_BTN);
+    if (fShowAircraftFlag == false) {
+      fShowAircraftFlag = true;
+      MapBorderButtonOn(Enum141.MAP_BORDER_AIRSPACE_BTN);
 
-    // Turn off towns & mines (mostly because town/mine names overlap SAM site names)
-    if (fShowTownFlag == true) {
-      fShowTownFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
-    }
+      // Turn off towns & mines (mostly because town/mine names overlap SAM site names)
+      if (fShowTownFlag == true) {
+        fShowTownFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
+      }
 
-    if (fShowMineFlag == true) {
-      fShowMineFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
-    }
+      if (fShowMineFlag == true) {
+        fShowMineFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
+      }
 
-    /*
+      /*
                     // Turn off teams and militia
                     if( fShowTeamFlag == TRUE )
                     {
@@ -1095,74 +1241,74 @@ export function TurnOnAirSpaceMode(): void {
                     }
     */
 
-    // Turn off items
-    if (fShowItemsFlag == true) {
-      fShowItemsFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
-    }
+      // Turn off items
+      if (fShowItemsFlag == true) {
+        fShowItemsFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
+      }
 
-    if (bSelectedDestChar != -1) {
-      AbortMovementPlottingMode();
-    }
+      if (bSelectedDestChar != -1) {
+        AbortMovementPlottingMode();
+      }
 
-    // if showing underground
-    if (iCurrentMapSectorZ != 0) {
-      // switch to the surface
-      JumpToLevel(0);
-    }
+      // if showing underground
+      if (iCurrentMapSectorZ != 0) {
+        // switch to the surface
+        JumpToLevel(0);
+      }
 
-    // dirty regions
-    fMapPanelDirty = true;
-    fTeamPanelDirty = true;
-    fCharacterInfoPanelDirty = true;
+      // dirty regions
+      fMapPanelDirty = true;
+      fTeamPanelDirty = true;
+      fCharacterInfoPanelDirty = true;
+    }
   }
-}
 
-function TurnOnItemFilterMode(): void {
-  // if mode already on, leave, else set and redraw
+  function TurnOnItemFilterMode(): void {
+    // if mode already on, leave, else set and redraw
 
-  if (fShowItemsFlag == false) {
-    fShowItemsFlag = true;
-    MapBorderButtonOn(Enum141.MAP_BORDER_ITEM_BTN);
+    if (fShowItemsFlag == false) {
+      fShowItemsFlag = true;
+      MapBorderButtonOn(Enum141.MAP_BORDER_ITEM_BTN);
 
-    // Turn off towns, mines, teams, militia & airspace if any are on
-    if (fShowTownFlag == true) {
-      fShowTownFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
+      // Turn off towns, mines, teams, militia & airspace if any are on
+      if (fShowTownFlag == true) {
+        fShowTownFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
+      }
+
+      if (fShowMineFlag == true) {
+        fShowMineFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
+      }
+
+      if (fShowTeamFlag == true) {
+        fShowTeamFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
+      }
+
+      if (fShowMilitia == true) {
+        fShowMilitia = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
+      }
+
+      if (fShowAircraftFlag == true) {
+        fShowAircraftFlag = false;
+        MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
+      }
+
+      if (bSelectedDestChar != -1 || fPlotForHelicopter == true) {
+        AbortMovementPlottingMode();
+      }
+
+      // dirty regions
+      fMapPanelDirty = true;
+      fTeamPanelDirty = true;
+      fCharacterInfoPanelDirty = true;
     }
-
-    if (fShowMineFlag == true) {
-      fShowMineFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
-    }
-
-    if (fShowTeamFlag == true) {
-      fShowTeamFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
-    }
-
-    if (fShowMilitia == true) {
-      fShowMilitia = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
-    }
-
-    if (fShowAircraftFlag == true) {
-      fShowAircraftFlag = false;
-      MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
-    }
-
-    if ((bSelectedDestChar != -1) || (fPlotForHelicopter == true)) {
-      AbortMovementPlottingMode();
-    }
-
-    // dirty regions
-    fMapPanelDirty = true;
-    fTeamPanelDirty = true;
-    fCharacterInfoPanelDirty = true;
   }
-}
 
-/*
+  /*
 void UpdateLevelButtonStates( void )
 {
 
@@ -1188,7 +1334,7 @@ void UpdateLevelButtonStates( void )
 }
 */
 
-/*
+  /*
 void UpdateScrollButtonStatesWhileScrolling( void )
 {
         // too far west, disable
@@ -1218,117 +1364,129 @@ void UpdateScrollButtonStatesWhileScrolling( void )
 }
 */
 
-function InitializeMapBorderButtonStates(): void {
-  if (fShowItemsFlag) {
-    MapBorderButtonOn(Enum141.MAP_BORDER_ITEM_BTN);
-  } else {
-    MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
-  }
+  function InitializeMapBorderButtonStates(): void {
+    if (fShowItemsFlag) {
+      MapBorderButtonOn(Enum141.MAP_BORDER_ITEM_BTN);
+    } else {
+      MapBorderButtonOff(Enum141.MAP_BORDER_ITEM_BTN);
+    }
 
-  if (fShowTownFlag) {
-    MapBorderButtonOn(Enum141.MAP_BORDER_TOWN_BTN);
-  } else {
-    MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
-  }
+    if (fShowTownFlag) {
+      MapBorderButtonOn(Enum141.MAP_BORDER_TOWN_BTN);
+    } else {
+      MapBorderButtonOff(Enum141.MAP_BORDER_TOWN_BTN);
+    }
 
-  if (fShowMineFlag) {
-    MapBorderButtonOn(Enum141.MAP_BORDER_MINE_BTN);
-  } else {
-    MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
-  }
+    if (fShowMineFlag) {
+      MapBorderButtonOn(Enum141.MAP_BORDER_MINE_BTN);
+    } else {
+      MapBorderButtonOff(Enum141.MAP_BORDER_MINE_BTN);
+    }
 
-  if (fShowTeamFlag) {
-    MapBorderButtonOn(Enum141.MAP_BORDER_TEAMS_BTN);
-  } else {
-    MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
-  }
+    if (fShowTeamFlag) {
+      MapBorderButtonOn(Enum141.MAP_BORDER_TEAMS_BTN);
+    } else {
+      MapBorderButtonOff(Enum141.MAP_BORDER_TEAMS_BTN);
+    }
 
-  if (fShowAircraftFlag) {
-    MapBorderButtonOn(Enum141.MAP_BORDER_AIRSPACE_BTN);
-  } else {
-    MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
-  }
+    if (fShowAircraftFlag) {
+      MapBorderButtonOn(Enum141.MAP_BORDER_AIRSPACE_BTN);
+    } else {
+      MapBorderButtonOff(Enum141.MAP_BORDER_AIRSPACE_BTN);
+    }
 
-  if (fShowMilitia) {
-    MapBorderButtonOn(Enum141.MAP_BORDER_MILITIA_BTN);
-  } else {
-    MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
-  }
-}
-
-function DoesPlayerHaveAnyMilitia(): boolean {
-  let sX: INT16;
-  let sY: INT16;
-
-  // run through list of towns that might have militia..if any return TRUE..else return FALSE
-  for (sX = 1; sX < MAP_WORLD_X - 1; sX++) {
-    for (sY = 1; sY < MAP_WORLD_Y - 1; sY++) {
-      if ((SectorInfo[SECTOR(sX, sY)].ubNumberOfCivsAtLevel[Enum126.GREEN_MILITIA] + SectorInfo[SECTOR(sX, sY)].ubNumberOfCivsAtLevel[Enum126.REGULAR_MILITIA] + SectorInfo[SECTOR(sX, sY)].ubNumberOfCivsAtLevel[Enum126.ELITE_MILITIA]) > 0) {
-        // found at least one
-        return true;
-      }
+    if (fShowMilitia) {
+      MapBorderButtonOn(Enum141.MAP_BORDER_MILITIA_BTN);
+    } else {
+      MapBorderButtonOff(Enum141.MAP_BORDER_MILITIA_BTN);
     }
   }
 
-  // no one found
-  return false;
-}
+  function DoesPlayerHaveAnyMilitia(): boolean {
+    let sX: INT16;
+    let sY: INT16;
 
-function CommonBtnCallbackBtnDownChecks(): void {
-  if (IsMapScreenHelpTextUp()) {
-    // stop mapscreen text
-    StopMapScreenHelpText();
+    // run through list of towns that might have militia..if any return TRUE..else return FALSE
+    for (sX = 1; sX < MAP_WORLD_X - 1; sX++) {
+      for (sY = 1; sY < MAP_WORLD_Y - 1; sY++) {
+        if (
+          SectorInfo[SECTOR(sX, sY)].ubNumberOfCivsAtLevel[
+            Enum126.GREEN_MILITIA
+          ] +
+            SectorInfo[SECTOR(sX, sY)].ubNumberOfCivsAtLevel[
+              Enum126.REGULAR_MILITIA
+            ] +
+            SectorInfo[SECTOR(sX, sY)].ubNumberOfCivsAtLevel[
+              Enum126.ELITE_MILITIA
+            ] >
+          0
+        ) {
+          // found at least one
+          return true;
+        }
+      }
+    }
+
+    // no one found
+    return false;
   }
 
-  // any click cancels MAP UI messages, unless we're in confirm map move mode
-  if ((giUIMessageOverlay != -1) && !gfInConfirmMapMoveMode) {
-    CancelMapUIMessage();
-  }
-}
+  function CommonBtnCallbackBtnDownChecks(): void {
+    if (IsMapScreenHelpTextUp()) {
+      // stop mapscreen text
+      StopMapScreenHelpText();
+    }
 
-export function InitMapScreenFlags(): void {
-  fShowTownFlag = true;
-  fShowMineFlag = false;
-
-  fShowTeamFlag = true;
-  fShowMilitia = false;
-
-  fShowAircraftFlag = false;
-  fShowItemsFlag = false;
-}
-
-function MapBorderButtonOff(ubBorderButtonIndex: UINT8): void {
-  Assert(ubBorderButtonIndex < 6);
-
-  if (fShowMapInventoryPool) {
-    return;
+    // any click cancels MAP UI messages, unless we're in confirm map move mode
+    if (giUIMessageOverlay != -1 && !gfInConfirmMapMoveMode) {
+      CancelMapUIMessage();
+    }
   }
 
-  // if button doesn't exist, return
-  if (giMapBorderButtons[ubBorderButtonIndex] == -1) {
-    return;
+  export function InitMapScreenFlags(): void {
+    fShowTownFlag = true;
+    fShowMineFlag = false;
+
+    fShowTeamFlag = true;
+    fShowMilitia = false;
+
+    fShowAircraftFlag = false;
+    fShowItemsFlag = false;
   }
 
-  Assert(giMapBorderButtons[ubBorderButtonIndex] < MAX_BUTTONS);
+  function MapBorderButtonOff(ubBorderButtonIndex: UINT8): void {
+    Assert(ubBorderButtonIndex < 6);
 
-  ButtonList[giMapBorderButtons[ubBorderButtonIndex]].uiFlags &= ~(BUTTON_CLICKED_ON);
-}
+    if (fShowMapInventoryPool) {
+      return;
+    }
 
-function MapBorderButtonOn(ubBorderButtonIndex: UINT8): void {
-  Assert(ubBorderButtonIndex < 6);
+    // if button doesn't exist, return
+    if (giMapBorderButtons[ubBorderButtonIndex] == -1) {
+      return;
+    }
 
-  if (fShowMapInventoryPool) {
-    return;
+    Assert(giMapBorderButtons[ubBorderButtonIndex] < MAX_BUTTONS);
+
+    ButtonList[giMapBorderButtons[ubBorderButtonIndex]].uiFlags &=
+      ~BUTTON_CLICKED_ON;
   }
 
-  // if button doesn't exist, return
-  if (giMapBorderButtons[ubBorderButtonIndex] == -1) {
-    return;
+  function MapBorderButtonOn(ubBorderButtonIndex: UINT8): void {
+    Assert(ubBorderButtonIndex < 6);
+
+    if (fShowMapInventoryPool) {
+      return;
+    }
+
+    // if button doesn't exist, return
+    if (giMapBorderButtons[ubBorderButtonIndex] == -1) {
+      return;
+    }
+
+    Assert(giMapBorderButtons[ubBorderButtonIndex] < MAX_BUTTONS);
+
+    ButtonList[giMapBorderButtons[ubBorderButtonIndex]].uiFlags |=
+      BUTTON_CLICKED_ON;
   }
-
-  Assert(giMapBorderButtons[ubBorderButtonIndex] < MAX_BUTTONS);
-
-  ButtonList[giMapBorderButtons[ubBorderButtonIndex]].uiFlags |= BUTTON_CLICKED_ON;
-}
-
 }

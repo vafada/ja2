@@ -1,6 +1,4 @@
 namespace ja2 {
-
-// Undo command flags
-export const MAX_UNDO_COMMAND_LENGTH = 10;
-
+  // Undo command flags
+  export const MAX_UNDO_COMMAND_LENGTH = 10;
 }

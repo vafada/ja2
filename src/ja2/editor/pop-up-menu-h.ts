@@ -1,10 +1,9 @@
 namespace ja2 {
+  // popupmenu.h
+  // Author:  Kris Morness
+  // Created:  Sept 4, 1997
 
-// popupmenu.h
-// Author:  Kris Morness
-// Created:  Sept 4, 1997
-
-/*
+  /*
 POPUP MENU
 
 DESIGN CONSIDERATIONS
@@ -34,54 +33,53 @@ will choose a selection in one of three ways:
                  region doesn't kill the menu, but in MacOS, it does.
 */
 
-export const enum Enum53 {
-  CHANGETSET_POPUP,
-  CHANGECIVGROUP_POPUP,
-  SCHEDULEACTION_POPUP,
-  ACTIONITEM_POPUP,
-  OWNERSHIPGROUP_POPUP,
-}
+  export const enum Enum53 {
+    CHANGETSET_POPUP,
+    CHANGECIVGROUP_POPUP,
+    SCHEDULEACTION_POPUP,
+    ACTIONITEM_POPUP,
+    OWNERSHIPGROUP_POPUP,
+  }
 
-// The direction of the popup menu relative to the button
-// pressed to activate it or mouse position.  In editor mode,
-// this will attempt to go up and to the right of the button.
-const UPMASK = 0x00;
-const DNMASK = 0x10;
-const RTMASK = 0x00;
-const LTMASK = 0x01;
-export const DIR_UPRIGHT = (UPMASK + RTMASK);
-export const DIR_UPLEFT = (UPMASK + LTMASK);
-export const DIR_DOWNRIGHT = (DNMASK + RTMASK);
-export const DIR_DOWNLEFT = (DNMASK + LTMASK);
+  // The direction of the popup menu relative to the button
+  // pressed to activate it or mouse position.  In editor mode,
+  // this will attempt to go up and to the right of the button.
+  const UPMASK = 0x00;
+  const DNMASK = 0x10;
+  const RTMASK = 0x00;
+  const LTMASK = 0x01;
+  export const DIR_UPRIGHT = UPMASK + RTMASK;
+  export const DIR_UPLEFT = UPMASK + LTMASK;
+  export const DIR_DOWNRIGHT = DNMASK + RTMASK;
+  export const DIR_DOWNLEFT = DNMASK + LTMASK;
 
-export const POPUP_ACTIVETYPE_NOT_YET_DETERMINED = 0;
-export const POPUP_ACTIVETYPE_PERSISTANT = 1;
-export const POPUP_ACTIVETYPE_NONPERSISTANT = 2;
+  export const POPUP_ACTIVETYPE_NOT_YET_DETERMINED = 0;
+  export const POPUP_ACTIVETYPE_PERSISTANT = 1;
+  export const POPUP_ACTIVETYPE_NONPERSISTANT = 2;
 
-export const MAX_COLUMNS = 8;
+  export const MAX_COLUMNS = 8;
 
-// This structure contains all the required information for rendering
-// the popup menu while in
-export interface CurrentPopupMenuInformation {
-  ubPopupMenuID: UINT8;
-  ubSelectedIndex: UINT8; // current popup menu index hilited.
-  ubNumEntries: UINT8;
-  ubColumns: UINT8;
-  ubMaxEntriesPerColumn: UINT8;
-  ubColumnWidth: UINT8[] /* [MAX_COLUMNS] */;
-  ubActiveType: UINT8;
-  usFont: UINT16;
-  fActive: boolean;
-  fUseKeyboardInfoUntilMouseMoves: boolean;
+  // This structure contains all the required information for rendering
+  // the popup menu while in
+  export interface CurrentPopupMenuInformation {
+    ubPopupMenuID: UINT8;
+    ubSelectedIndex: UINT8; // current popup menu index hilited.
+    ubNumEntries: UINT8;
+    ubColumns: UINT8;
+    ubMaxEntriesPerColumn: UINT8;
+    ubColumnWidth: UINT8[] /* [MAX_COLUMNS] */;
+    ubActiveType: UINT8;
+    usFont: UINT16;
+    fActive: boolean;
+    fUseKeyboardInfoUntilMouseMoves: boolean;
 
-  // popup region coords.
-  usLeft: UINT16;
-  usTop: UINT16;
-  usRight: UINT16;
-  usBottom: UINT16;
+    // popup region coords.
+    usLeft: UINT16;
+    usTop: UINT16;
+    usRight: UINT16;
+    usBottom: UINT16;
 
-  usLastMouseX: UINT16;
-  usLastMouseY: UINT16;
-}
-
+    usLastMouseX: UINT16;
+    usLastMouseY: UINT16;
+  }
 }

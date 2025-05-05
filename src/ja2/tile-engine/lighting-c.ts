@@ -1,68 +1,103 @@
 namespace ja2 {
+  const fs: typeof import("fs") = require("fs");
 
-const fs: typeof import('fs') = require('fs');
+  /****************************************************************************************
+   * JA2 Lighting Module
+   *
+   *		Tile-based, ray-casted lighting system.
+   *
+   *		Lights are precalculated into linked lists containing offsets from 0,0, and a light
+   * level to add at that tile. Lists are constructed by casting a ray from the origin of
+   * the light, and each tile stopped at is stored as a node in the list. To draw the light
+   * during runtime, you traverse the list, checking at each tile that it isn't of the type
+   * that can obscure light. If it is, you keep traversing the list until you hit a node
+   * with a marker LIGHT_NEW_RAY, which means you're back at the origin, and have skipped
+   * the remainder of the last ray.
+   *
+   * Written by Derek Beland, April 14, 1997
+   *
+   ***************************************************************************************/
+  const LVL1_L1_PER = 50;
+  const LVL1_L2_PER = 50;
 
-/****************************************************************************************
- * JA2 Lighting Module
- *
- *		Tile-based, ray-casted lighting system.
- *
- *		Lights are precalculated into linked lists containing offsets from 0,0, and a light
- * level to add at that tile. Lists are constructed by casting a ray from the origin of
- * the light, and each tile stopped at is stored as a node in the list. To draw the light
- * during runtime, you traverse the list, checking at each tile that it isn't of the type
- * that can obscure light. If it is, you keep traversing the list until you hit a node
- * with a marker LIGHT_NEW_RAY, which means you're back at the origin, and have skipped
- * the remainder of the last ray.
- *
- * Written by Derek Beland, April 14, 1997
- *
- ***************************************************************************************/
-const LVL1_L1_PER = (50);
-const LVL1_L2_PER = (50);
+  const LVL2_L1_PER = 30;
+  const LVL2_L2_PER = 70;
 
-const LVL2_L1_PER = (30);
-const LVL2_L2_PER = (70);
+  const LIGHT_TREE_REVEAL = 5; // width of rect
 
-const LIGHT_TREE_REVEAL = 5; // width of rect
+  // Local-use only prototypes
 
-// Local-use only prototypes
+  // Top node of linked lists, NULL = FREE
+  let pLightList: LIGHT_NODE[][] /* Pointer<LIGHT_NODE>[MAX_LIGHT_TEMPLATES] */ =
+    createArray(MAX_LIGHT_TEMPLATES, <LIGHT_NODE[]>(<unknown>null));
+  let usTemplateSize: UINT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let pLightRayList: UINT16[][] /* Pointer<UINT16>[MAX_LIGHT_TEMPLATES] */ =
+    createArray(MAX_LIGHT_TEMPLATES, <UINT16[]>(<unknown>null));
+  let usRaySize: UINT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightHeight: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightWidth: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightXOffset: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightYOffset: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightMapLeft: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightMapTop: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightMapRight: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  let LightMapBottom: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    0,
+  );
+  export let pLightNames: string[] /* STR[MAX_LIGHT_TEMPLATES] */ = createArray(
+    MAX_LIGHT_TEMPLATES,
+    "",
+  );
 
-// Top node of linked lists, NULL = FREE
-let pLightList: LIGHT_NODE[][] /* Pointer<LIGHT_NODE>[MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, <LIGHT_NODE[]><unknown>null);
-let usTemplateSize: UINT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let pLightRayList: UINT16[][] /* Pointer<UINT16>[MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, <UINT16[]><unknown>null);
-let usRaySize: UINT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightHeight: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightWidth: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightXOffset: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightYOffset: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightMapLeft: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightMapTop: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightMapRight: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-let LightMapBottom: INT16[] /* [MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, 0);
-export let pLightNames: string[] /* STR[MAX_LIGHT_TEMPLATES] */ = createArray(MAX_LIGHT_TEMPLATES, '');
+  // Sprite data
+  export let LightSprites: LIGHT_SPRITE[] /* [MAX_LIGHT_SPRITES] */ =
+    createArrayFrom(MAX_LIGHT_SPRITES, createLightSprite);
 
-// Sprite data
-export let LightSprites: LIGHT_SPRITE[] /* [MAX_LIGHT_SPRITES] */ = createArrayFrom(MAX_LIGHT_SPRITES, createLightSprite);
+  // Lighting system general data
+  export let ubAmbientLightLevel: UINT8 = DEFAULT_SHADE_LEVEL;
+  let gubNumLightColors: UINT8 = 1;
 
-// Lighting system general data
-export let ubAmbientLightLevel: UINT8 = DEFAULT_SHADE_LEVEL;
-let gubNumLightColors: UINT8 = 1;
+  // Externed in Rotting Corpses.c
+  export let gpLightColors: SGPPaletteEntry[] /* [3] */ = [
+    createSGPPaletteEntryFrom(0, 0, 0, 0),
+    createSGPPaletteEntryFrom(0, 0, 255, 0),
+    createSGPPaletteEntryFrom(0, 0, 0, 0),
+  ];
 
-// Externed in Rotting Corpses.c
-export let gpLightColors: SGPPaletteEntry[] /* [3] */ = [
-  createSGPPaletteEntryFrom(0, 0, 0, 0),
-  createSGPPaletteEntryFrom(0, 0, 255, 0),
-  createSGPPaletteEntryFrom(0, 0, 0, 0),
-];
+  let gpOrigLights: SGPPaletteEntry[] /* [2] */ = [
+    createSGPPaletteEntryFrom(0, 0, 0, 0),
+    createSGPPaletteEntryFrom(0, 0, 255, 0),
+  ];
 
-let gpOrigLights: SGPPaletteEntry[] /* [2] */ = [
-  createSGPPaletteEntryFrom(0, 0, 0, 0),
-  createSGPPaletteEntryFrom(0, 0, 255, 0),
-];
-
-/*
+  /*
 UINT16 gusShadeLevels[16][3]={{500, 500, 500},				// green table
                                                                                                                         {450, 450, 450},		// bright
                                                                                                                         {350, 350, 350},
@@ -80,9 +115,9 @@ UINT16 gusShadeLevels[16][3]={{500, 500, 500},				// green table
                                                                                                                         {18, 18, 224},
                                                                                                                         {48, 222, 48}};
 */
-// Externed in Rotting Corpses.c
-// Kris' attempt at blue night lights
-/*
+  // Externed in Rotting Corpses.c
+  // Kris' attempt at blue night lights
+  /*
 UINT16 gusShadeLevels[16][3]={{500, 500, 500},				// green table
                                                                                                                         {450, 450, 450},		// bright
                                                                                                                         {350, 350, 350},
@@ -101,7 +136,7 @@ UINT16 gusShadeLevels[16][3]={{500, 500, 500},				// green table
                                                                                                                         {48, 222, 48}};
 */
 
-/*
+  /*
 //Linda's final version
 
 UINT16 gusShadeLevels[16][3] =
@@ -125,987 +160,1118 @@ UINT16 gusShadeLevels[16][3] =
 };
 */
 
-// JA2 Gold:
-export let gusShadeLevels: UINT16[][] /* [16][3] */ = [
-  [ 500, 500, 500 ],
-  [ 450, 450, 450 ], // bright
-  [ 350, 350, 350 ],
-  [ 300, 300, 300 ],
-  [ 255, 255, 255 ], // normal
-  [ 231, 199, 199 ],
-  [ 209, 185, 185 ],
-  [ 187, 171, 171 ],
-  [ 165, 157, 157 ], // darkening
-  [ 143, 143, 143 ],
-  [ 121, 121, 129 ],
-  [ 99, 99, 115 ],
-  [ 77, 77, 101 ], // night
-  [ 36, 36, 244 ],
-  [ 18, 18, 224 ],
-  [ 48, 222, 48 ],
-];
+  // JA2 Gold:
+  export let gusShadeLevels: UINT16[][] /* [16][3] */ = [
+    [500, 500, 500],
+    [450, 450, 450], // bright
+    [350, 350, 350],
+    [300, 300, 300],
+    [255, 255, 255], // normal
+    [231, 199, 199],
+    [209, 185, 185],
+    [187, 171, 171],
+    [165, 157, 157], // darkening
+    [143, 143, 143],
+    [121, 121, 129],
+    [99, 99, 115],
+    [77, 77, 101], // night
+    [36, 36, 244],
+    [18, 18, 224],
+    [48, 222, 48],
+  ];
 
-// Set this true if you want the shadetables to be loaded from the text file.
-export let gfLoadShadeTablesFromTextFile: boolean = false;
+  // Set this true if you want the shadetables to be loaded from the text file.
+  export let gfLoadShadeTablesFromTextFile: boolean = false;
 
-export function LoadShadeTablesFromTextFile(): void {
-  let fp: number;
-  let i: INT32;
-  let j: INT32;
-  let num: INT32;
-  let str: string /* UINT8[10] */;
-  let startPos: number;
-  let pos: number;
-  let ch: number;
-  if (gfLoadShadeTablesFromTextFile) {
-    fp = fs.openSync("ShadeTables.txt", "r");
-    Assert(fp);
-    if (fp) {
-      str = fs.readFileSync(fp, { encoding: 'ascii' });
-      pos = 0;
-      for (i = 0; i < 16; i++) {
-        for (j = 0; j < 3; j++) {
-          startPos = -1;
-          while (pos < str.length) {
-            ch = str.charCodeAt(pos);
-            if (ch === 0x09 || ch === 0x0A || ch === 0x0D || ch === 0x20) {
-              if (startPos !== -1) {
-                break;
+  export function LoadShadeTablesFromTextFile(): void {
+    let fp: number;
+    let i: INT32;
+    let j: INT32;
+    let num: INT32;
+    let str: string /* UINT8[10] */;
+    let startPos: number;
+    let pos: number;
+    let ch: number;
+    if (gfLoadShadeTablesFromTextFile) {
+      fp = fs.openSync("ShadeTables.txt", "r");
+      Assert(fp);
+      if (fp) {
+        str = fs.readFileSync(fp, { encoding: "ascii" });
+        pos = 0;
+        for (i = 0; i < 16; i++) {
+          for (j = 0; j < 3; j++) {
+            startPos = -1;
+            while (pos < str.length) {
+              ch = str.charCodeAt(pos);
+              if (ch === 0x09 || ch === 0x0a || ch === 0x0d || ch === 0x20) {
+                if (startPos !== -1) {
+                  break;
+                }
+              } else {
+                if (startPos === -1) {
+                  startPos = pos;
+                }
               }
-            } else {
-              if (startPos === -1) {
-                startPos = pos;
-              }
+              pos++;
             }
-            pos++;
+            gusShadeLevels[i][j] =
+              parseInt(str.substring(startPos, pos), 10) || 0;
           }
-          gusShadeLevels[i][j] = parseInt(str.substring(startPos, pos), 10) || 0;
         }
+        fs.closeSync(fp);
       }
-      fs.closeSync(fp);
     }
   }
-}
 
-// Debug variable
-let gNodesAdded: UINT32 = 0;
+  // Debug variable
+  let gNodesAdded: UINT32 = 0;
 
-/****************************************************************************************
+  /****************************************************************************************
  InitLightingSystem
 
         Initializes the lighting system.
 
 ***************************************************************************************/
-export function InitLightingSystem(): boolean {
-  let uiCount: UINT32;
+  export function InitLightingSystem(): boolean {
+    let uiCount: UINT32;
 
-  LoadShadeTablesFromTextFile();
+    LoadShadeTablesFromTextFile();
 
-  // init all light lists
-  for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++) {
-    pLightList[uiCount] = <LIGHT_NODE[]><unknown>null;
-    pLightNames[uiCount] = '';
-    pLightRayList[uiCount] = <UINT16[]><unknown>null;
-    usTemplateSize[uiCount] = 0;
-    usRaySize[uiCount] = 0;
+    // init all light lists
+    for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++) {
+      pLightList[uiCount] = <LIGHT_NODE[]>(<unknown>null);
+      pLightNames[uiCount] = "";
+      pLightRayList[uiCount] = <UINT16[]>(<unknown>null);
+      usTemplateSize[uiCount] = 0;
+      usRaySize[uiCount] = 0;
+    }
+
+    // init all light sprites
+    for (uiCount = 0; uiCount < MAX_LIGHT_SPRITES; uiCount++)
+      resetLightSprite(LightSprites[uiCount]);
+
+    if (LightLoad("TRANSLUC.LHT") != 0) {
+      DebugMsg(
+        TOPIC_GAME,
+        DBG_LEVEL_0,
+        FormatString("Failed to load translucency template"),
+      );
+      return false;
+    }
+
+    return true;
   }
 
-  // init all light sprites
-  for (uiCount = 0; uiCount < MAX_LIGHT_SPRITES; uiCount++)
-    resetLightSprite(LightSprites[uiCount]);
+  // THIS MUST BE CALLED ONCE ALL SURFACE VIDEO OBJECTS HAVE BEEN LOADED!
+  export function SetDefaultWorldLightingColors(): boolean {
+    let pPal: SGPPaletteEntry[] /* [2] */ = createArrayFrom(
+      2,
+      createSGPPaletteEntry,
+    );
 
-  if (LightLoad("TRANSLUC.LHT") != 0) {
-    DebugMsg(TOPIC_GAME, DBG_LEVEL_0, FormatString("Failed to load translucency template"));
-    return false;
+    pPal[0].peRed = 0;
+    pPal[0].peGreen = 0;
+    pPal[0].peBlue = 0;
+    pPal[1].peRed = 0;
+    pPal[1].peGreen = 0;
+    pPal[1].peBlue = 128;
+
+    LightSetColors(pPal, 1);
+
+    return true;
   }
 
-  return true;
-}
-
-// THIS MUST BE CALLED ONCE ALL SURFACE VIDEO OBJECTS HAVE BEEN LOADED!
-export function SetDefaultWorldLightingColors(): boolean {
-  let pPal: SGPPaletteEntry[] /* [2] */ = createArrayFrom(2, createSGPPaletteEntry);
-
-  pPal[0].peRed = 0;
-  pPal[0].peGreen = 0;
-  pPal[0].peBlue = 0;
-  pPal[1].peRed = 0;
-  pPal[1].peGreen = 0;
-  pPal[1].peBlue = 128;
-
-  LightSetColors(pPal, 1);
-
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
  ShutdownLightingSystem
 
         Closes down the lighting system. Any lights that were created are destroyed, and the
         memory attached to them freed up.
 
 ***************************************************************************************/
-export function ShutdownLightingSystem(): boolean {
-  let uiCount: UINT32;
+  export function ShutdownLightingSystem(): boolean {
+    let uiCount: UINT32;
 
-  // free up all allocated light nodes
-  for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++)
-    if (pLightList[uiCount] != null)
-      LightDelete(uiCount);
+    // free up all allocated light nodes
+    for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++)
+      if (pLightList[uiCount] != null) LightDelete(uiCount);
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
  LightReset
 
         Removes all currently active lights, without undrawing them.
 
 ***************************************************************************************/
-export function LightReset(): boolean {
-  let uiCount: UINT32;
+  export function LightReset(): boolean {
+    let uiCount: UINT32;
 
-  // reset all light lists
-  for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++)
-    if (pLightList[uiCount] != null)
-      LightDelete(uiCount);
+    // reset all light lists
+    for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++)
+      if (pLightList[uiCount] != null) LightDelete(uiCount);
 
-  // init all light sprites
-  for (uiCount = 0; uiCount < MAX_LIGHT_SPRITES; uiCount++)
-    resetLightSprite(LightSprites[uiCount]);
+    // init all light sprites
+    for (uiCount = 0; uiCount < MAX_LIGHT_SPRITES; uiCount++)
+      resetLightSprite(LightSprites[uiCount]);
 
-  if (LightLoad("TRANSLUC.LHT") != 0) {
-    DebugMsg(TOPIC_GAME, DBG_LEVEL_0, FormatString("Failed to load translucency template"));
-    return false;
+    if (LightLoad("TRANSLUC.LHT") != 0) {
+      DebugMsg(
+        TOPIC_GAME,
+        DBG_LEVEL_0,
+        FormatString("Failed to load translucency template"),
+      );
+      return false;
+    }
+
+    // Loop through mercs and reset light value
+    for (uiCount = 0; uiCount < MAX_NUM_SOLDIERS; uiCount++) {
+      MercPtrs[uiCount].iLight = -1;
+    }
+
+    return true;
   }
 
-  // Loop through mercs and reset light value
-  for (uiCount = 0; uiCount < MAX_NUM_SOLDIERS; uiCount++) {
-    MercPtrs[uiCount].iLight = -1;
-  }
-
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
  LightCreateTemplateNode
 
         Creates a new node, and appends it to the template list. The index into the list is
         returned.
 
 ***************************************************************************************/
-function LightCreateTemplateNode(iLight: INT32, iX: INT16, iY: INT16, ubLight: UINT8): UINT16 {
-  let usNumNodes: UINT16;
+  function LightCreateTemplateNode(
+    iLight: INT32,
+    iX: INT16,
+    iY: INT16,
+    ubLight: UINT8,
+  ): UINT16 {
+    let usNumNodes: UINT16;
 
-  // create a new list
-  if (pLightList[iLight] == null) {
-    pLightList[iLight] = [createLightNode()];
+    // create a new list
+    if (pLightList[iLight] == null) {
+      pLightList[iLight] = [createLightNode()];
 
-    pLightList[iLight][0].iDX = iX;
-    pLightList[iLight][0].iDY = iY;
-    pLightList[iLight][0].ubLight = ubLight;
-    pLightList[iLight][0].uiFlags = 0;
+      pLightList[iLight][0].iDX = iX;
+      pLightList[iLight][0].iDY = iY;
+      pLightList[iLight][0].ubLight = ubLight;
+      pLightList[iLight][0].uiFlags = 0;
 
-    usTemplateSize[iLight] = 1;
-    return 0;
-  } else {
-    usNumNodes = usTemplateSize[iLight];
-    pLightList[iLight].push(createLightNode());
-    pLightList[iLight][usNumNodes].iDX = iX;
-    pLightList[iLight][usNumNodes].iDY = iY;
-    pLightList[iLight][usNumNodes].ubLight = ubLight;
-    pLightList[iLight][usNumNodes].uiFlags = 0;
-    usTemplateSize[iLight] = usNumNodes + 1;
-    return usNumNodes;
+      usTemplateSize[iLight] = 1;
+      return 0;
+    } else {
+      usNumNodes = usTemplateSize[iLight];
+      pLightList[iLight].push(createLightNode());
+      pLightList[iLight][usNumNodes].iDX = iX;
+      pLightList[iLight][usNumNodes].iDY = iY;
+      pLightList[iLight][usNumNodes].ubLight = ubLight;
+      pLightList[iLight][usNumNodes].uiFlags = 0;
+      usTemplateSize[iLight] = usNumNodes + 1;
+      return usNumNodes;
+    }
   }
-}
 
-/****************************************************************************************
+  /****************************************************************************************
  LightAddTemplateNode
 
         Adds a node to the template list. If the node does not exist, it creates a new one.
         Returns the index into the list.
 
 ***************************************************************************************/
-function LightAddTemplateNode(iLight: INT32, iX: INT16, iY: INT16, ubLight: UINT8): UINT16 {
-  let usCount: UINT16;
+  function LightAddTemplateNode(
+    iLight: INT32,
+    iX: INT16,
+    iY: INT16,
+    ubLight: UINT8,
+  ): UINT16 {
+    let usCount: UINT16;
 
-  for (usCount = 0; usCount < usTemplateSize[iLight]; usCount++) {
-    if ((pLightList[iLight][usCount].iDX == iX) && (pLightList[iLight][usCount].iDY == iY)) {
-      return usCount;
+    for (usCount = 0; usCount < usTemplateSize[iLight]; usCount++) {
+      if (
+        pLightList[iLight][usCount].iDX == iX &&
+        pLightList[iLight][usCount].iDY == iY
+      ) {
+        return usCount;
+      }
     }
+
+    return LightCreateTemplateNode(iLight, iX, iY, ubLight);
   }
 
-  return LightCreateTemplateNode(iLight, iX, iY, ubLight);
-}
-
-/****************************************************************************************
+  /****************************************************************************************
  LightAddRayNode
 
         Adds a node to the ray casting list.
 
 ***************************************************************************************/
-function LightAddRayNode(iLight: INT32, iX: INT16, iY: INT16, ubLight: UINT8, usFlags: UINT16): UINT16 {
-  let usNumNodes: UINT16;
+  function LightAddRayNode(
+    iLight: INT32,
+    iX: INT16,
+    iY: INT16,
+    ubLight: UINT8,
+    usFlags: UINT16,
+  ): UINT16 {
+    let usNumNodes: UINT16;
 
-  // create a new list
-  if (pLightRayList[iLight] == null) {
-    pLightRayList[iLight] = [0];
+    // create a new list
+    if (pLightRayList[iLight] == null) {
+      pLightRayList[iLight] = [0];
 
-    pLightRayList[iLight][0] = (LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags);
+      pLightRayList[iLight][0] =
+        LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags;
 
-    usRaySize[iLight] = 1;
-    return 0;
-  } else {
-    usNumNodes = usRaySize[iLight];
-    pLightRayList[iLight].push(0);
-    pLightRayList[iLight][usNumNodes] = (LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags);
-    usRaySize[iLight] = usNumNodes + 1;
-    return usNumNodes;
+      usRaySize[iLight] = 1;
+      return 0;
+    } else {
+      usNumNodes = usRaySize[iLight];
+      pLightRayList[iLight].push(0);
+      pLightRayList[iLight][usNumNodes] =
+        LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags;
+      usRaySize[iLight] = usNumNodes + 1;
+      return usNumNodes;
+    }
   }
-}
 
-/****************************************************************************************
+  /****************************************************************************************
  LightAddRayNode
 
         Adds a node to the ray casting list.
 
 ***************************************************************************************/
-function LightInsertRayNode(iLight: INT32, usIndex: UINT16, iX: INT16, iY: INT16, ubLight: UINT8, usFlags: UINT16): UINT16 {
-  let usNumNodes: UINT16;
+  function LightInsertRayNode(
+    iLight: INT32,
+    usIndex: UINT16,
+    iX: INT16,
+    iY: INT16,
+    ubLight: UINT8,
+    usFlags: UINT16,
+  ): UINT16 {
+    let usNumNodes: UINT16;
 
-  // create a new list
-  if (pLightRayList[iLight] == null) {
-    pLightRayList[iLight] = [0];
+    // create a new list
+    if (pLightRayList[iLight] == null) {
+      pLightRayList[iLight] = [0];
 
-    pLightRayList[iLight][0] = (LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags);
+      pLightRayList[iLight][0] =
+        LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags;
 
-    usRaySize[iLight] = 1;
-    return 0;
-  } else {
-    usNumNodes = usRaySize[iLight];
-    pLightRayList[iLight].push(0);
+      usRaySize[iLight] = 1;
+      return 0;
+    } else {
+      usNumNodes = usRaySize[iLight];
+      pLightRayList[iLight].push(0);
 
-    if (usIndex < usRaySize[iLight]) {
-      pLightRayList[iLight].copyWithin(usIndex + 1, usIndex, usRaySize[iLight] - usIndex);
+      if (usIndex < usRaySize[iLight]) {
+        pLightRayList[iLight].copyWithin(
+          usIndex + 1,
+          usIndex,
+          usRaySize[iLight] - usIndex,
+        );
+      }
+
+      pLightRayList[iLight][usIndex] =
+        LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags;
+      usRaySize[iLight] = usNumNodes + 1;
+      return usNumNodes;
     }
-
-    pLightRayList[iLight][usIndex] = (LightAddTemplateNode(iLight, iX, iY, ubLight) | usFlags);
-    usRaySize[iLight] = usNumNodes + 1;
-    return usNumNodes;
   }
-}
 
-/****************************************************************************************
+  /****************************************************************************************
  LightTileBlocked
 
         Returns TRUE/FALSE if the tile at the specified tile number can block light.
 
 ***************************************************************************************/
-function LightTileBlocked(iSrcX: INT16, iSrcY: INT16, iX: INT16, iY: INT16): boolean {
-  let usTileNo: UINT16;
-  let usSrcTileNo: UINT16;
-
-  Assert(gpWorldLevelData != null);
-
-  usTileNo = MAPROWCOLTOPOS(iY, iX);
-  usSrcTileNo = MAPROWCOLTOPOS(iSrcY, iSrcX);
-
-  if (usTileNo >= NOWHERE) {
-    return false;
-  }
-
-  if (usSrcTileNo >= NOWHERE) {
-    return false;
-  }
-
-  if (gpWorldLevelData[usTileNo].sHeight > gpWorldLevelData[usSrcTileNo].sHeight)
-    return true;
-  {
+  function LightTileBlocked(
+    iSrcX: INT16,
+    iSrcY: INT16,
+    iX: INT16,
+    iY: INT16,
+  ): boolean {
     let usTileNo: UINT16;
-    let pStruct: LEVELNODE | null;
+    let usSrcTileNo: UINT16;
+
+    Assert(gpWorldLevelData != null);
 
     usTileNo = MAPROWCOLTOPOS(iY, iX);
+    usSrcTileNo = MAPROWCOLTOPOS(iSrcY, iSrcX);
 
-    pStruct = gpWorldLevelData[usTileNo].pStructHead;
-    if (pStruct != null) {
-      // IF WE ARE A WINDOW, DO NOT BLOCK!
-      if (FindStructure(usTileNo, STRUCTURE_WALLNWINDOW) != null) {
-        return false;
+    if (usTileNo >= NOWHERE) {
+      return false;
+    }
+
+    if (usSrcTileNo >= NOWHERE) {
+      return false;
+    }
+
+    if (
+      gpWorldLevelData[usTileNo].sHeight > gpWorldLevelData[usSrcTileNo].sHeight
+    )
+      return true;
+    {
+      let usTileNo: UINT16;
+      let pStruct: LEVELNODE | null;
+
+      usTileNo = MAPROWCOLTOPOS(iY, iX);
+
+      pStruct = gpWorldLevelData[usTileNo].pStructHead;
+      if (pStruct != null) {
+        // IF WE ARE A WINDOW, DO NOT BLOCK!
+        if (FindStructure(usTileNo, STRUCTURE_WALLNWINDOW) != null) {
+          return false;
+        }
       }
     }
+
+    return LightTileHasWall(iSrcX, iSrcY, iX, iY);
   }
 
-  return LightTileHasWall(iSrcX, iSrcY, iX, iY);
-}
-
-/****************************************************************************************
+  /****************************************************************************************
  LightTileHasWall
 
         Returns TRUE/FALSE if the tile at the specified coordinates contains a wall.
 
 ***************************************************************************************/
-function LightTileHasWall(iSrcX: INT16, iSrcY: INT16, iX: INT16, iY: INT16): boolean {
-  // LEVELNODE *pStruct;
-  // UINT32 uiType;
-  let usTileNo: UINT16;
-  let usSrcTileNo: UINT16;
-  let bDirection: INT8;
-  let ubTravelCost: UINT8;
-  // INT8		bWallCount = 0;
-  // UINT16	usWallOrientation;
+  function LightTileHasWall(
+    iSrcX: INT16,
+    iSrcY: INT16,
+    iX: INT16,
+    iY: INT16,
+  ): boolean {
+    // LEVELNODE *pStruct;
+    // UINT32 uiType;
+    let usTileNo: UINT16;
+    let usSrcTileNo: UINT16;
+    let bDirection: INT8;
+    let ubTravelCost: UINT8;
+    // INT8		bWallCount = 0;
+    // UINT16	usWallOrientation;
 
-  Assert(gpWorldLevelData != null);
+    Assert(gpWorldLevelData != null);
 
-  usTileNo = MAPROWCOLTOPOS(iY, iX);
-  usSrcTileNo = MAPROWCOLTOPOS(iSrcY, iSrcX);
+    usTileNo = MAPROWCOLTOPOS(iY, iX);
+    usSrcTileNo = MAPROWCOLTOPOS(iSrcY, iSrcX);
 
-  if (usTileNo == usSrcTileNo) {
-    return false;
-  }
+    if (usTileNo == usSrcTileNo) {
+      return false;
+    }
 
-  // if ( usTileNo == 10125 || usTileNo == 10126 )
-  //{
-  //	int i = 0;
-  //}
+    // if ( usTileNo == 10125 || usTileNo == 10126 )
+    //{
+    //	int i = 0;
+    //}
 
-  if (usTileNo >= NOWHERE) {
-    return false;
-  }
+    if (usTileNo >= NOWHERE) {
+      return false;
+    }
 
-  if (usSrcTileNo >= NOWHERE) {
-    return false;
-  }
+    if (usSrcTileNo >= NOWHERE) {
+      return false;
+    }
 
-  // Get direction
-  // bDirection = atan8( iX, iY, iSrcX, iSrcY );
-  bDirection = atan8(iSrcX, iSrcY, iX, iY);
+    // Get direction
+    // bDirection = atan8( iX, iY, iSrcX, iSrcY );
+    bDirection = atan8(iSrcX, iSrcY, iX, iY);
 
-  if (usTileNo == 20415 && bDirection == 3) {
-    let i: number = 0;
-  }
+    if (usTileNo == 20415 && bDirection == 3) {
+      let i: number = 0;
+    }
 
-  ubTravelCost = gubWorldMovementCosts[usTileNo][bDirection][0];
+    ubTravelCost = gubWorldMovementCosts[usTileNo][bDirection][0];
 
-  if (ubTravelCost == TRAVELCOST_WALL) {
-    return true;
-  }
-
-  if (IS_TRAVELCOST_DOOR(ubTravelCost)) {
-    ubTravelCost = DoorTravelCost(null, usTileNo, ubTravelCost, true, null);
-
-    if (ubTravelCost == TRAVELCOST_OBSTACLE || ubTravelCost == TRAVELCOST_DOOR) {
+    if (ubTravelCost == TRAVELCOST_WALL) {
       return true;
     }
+
+    if (IS_TRAVELCOST_DOOR(ubTravelCost)) {
+      ubTravelCost = DoorTravelCost(null, usTileNo, ubTravelCost, true, null);
+
+      if (
+        ubTravelCost == TRAVELCOST_OBSTACLE ||
+        ubTravelCost == TRAVELCOST_DOOR
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  return false;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
  LightDelete
 
         Removes a light template from the list, and frees up the associated node memory.
 
 ***************************************************************************************/
-function LightDelete(iLight: INT32): boolean {
-  if (pLightList[iLight] != null) {
+  function LightDelete(iLight: INT32): boolean {
     if (pLightList[iLight] != null) {
-      pLightList[iLight] = <LIGHT_NODE[]><unknown>null;
-    }
+      if (pLightList[iLight] != null) {
+        pLightList[iLight] = <LIGHT_NODE[]>(<unknown>null);
+      }
 
-    if (pLightRayList[iLight] != null) {
-      pLightRayList[iLight] = <UINT16[]><unknown>null;
-    }
+      if (pLightRayList[iLight] != null) {
+        pLightRayList[iLight] = <UINT16[]>(<unknown>null);
+      }
 
-    if (pLightNames[iLight] != null) {
-      pLightNames[iLight] = '';
-    }
+      if (pLightNames[iLight] != null) {
+        pLightNames[iLight] = "";
+      }
 
-    usTemplateSize[iLight] = 0;
-    usRaySize[iLight] = 0;
+      usTemplateSize[iLight] = 0;
+      usRaySize[iLight] = 0;
 
-    return true;
-  } else
-    return false;
-}
+      return true;
+    } else return false;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
  LightGetFree
 
         Returns an available slot for a new light template. If none are available, (-1) is
         returned.
 
 ***************************************************************************************/
-function LightGetFree(): INT32 {
-  let uiCount: UINT32;
+  function LightGetFree(): INT32 {
+    let uiCount: UINT32;
 
-  for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++)
-    if (pLightList[uiCount] == null)
-      return uiCount;
+    for (uiCount = 0; uiCount < MAX_LIGHT_TEMPLATES; uiCount++)
+      if (pLightList[uiCount] == null) return uiCount;
 
-  return -1;
-}
+    return -1;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
  LinearDistance
 
         Calculates the 2D linear distance between two points.
 
 ***************************************************************************************/
-function LinearDistance(iX1: INT16, iY1: INT16, iX2: INT16, iY2: INT16): INT32 {
-  let iDx: INT32;
-  let iDy: INT32;
+  function LinearDistance(
+    iX1: INT16,
+    iY1: INT16,
+    iX2: INT16,
+    iY2: INT16,
+  ): INT32 {
+    let iDx: INT32;
+    let iDy: INT32;
 
-  iDx = Math.abs(iX1 - iX2);
-  iDx *= iDx;
-  iDy = Math.abs(iY1 - iY2);
-  iDy *= iDy;
+    iDx = Math.abs(iX1 - iX2);
+    iDx *= iDx;
+    iDy = Math.abs(iY1 - iY2);
+    iDy *= iDy;
 
-  return Math.sqrt((iDx + iDy));
-}
+    return Math.sqrt(iDx + iDy);
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LinearDistanceDouble
 
                 Calculates the 2D linear distance between two points. Returns the result in a DOUBLE
         for greater accuracy.
 
 ***************************************************************************************/
-function LinearDistanceDouble(iX1: INT16, iY1: INT16, iX2: INT16, iY2: INT16): DOUBLE {
-  let iDx: INT32;
-  let iDy: INT32;
+  function LinearDistanceDouble(
+    iX1: INT16,
+    iY1: INT16,
+    iX2: INT16,
+    iY2: INT16,
+  ): DOUBLE {
+    let iDx: INT32;
+    let iDy: INT32;
 
-  iDx = Math.abs(iX1 - iX2);
-  iDx *= iDx;
-  iDy = Math.abs(iY1 - iY2);
-  iDy *= iDy;
+    iDx = Math.abs(iX1 - iX2);
+    iDx *= iDx;
+    iDy = Math.abs(iY1 - iY2);
+    iDy *= iDy;
 
-  return Math.sqrt((iDx + iDy));
-}
+    return Math.sqrt(iDx + iDy);
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightTrueLevel
 
                 Returns the light level at a particular level without fake lights
 
 ***************************************************************************************/
-export function LightTrueLevel(sGridNo: INT16, bLevel: INT8): UINT8 {
-  let pNode: LEVELNODE | null;
-  let iSum: INT32;
+  export function LightTrueLevel(sGridNo: INT16, bLevel: INT8): UINT8 {
+    let pNode: LEVELNODE | null;
+    let iSum: INT32;
 
-  if (bLevel == 0) {
-    pNode = gpWorldLevelData[sGridNo].pLandHead;
-  } else {
-    pNode = gpWorldLevelData[sGridNo].pRoofHead;
+    if (bLevel == 0) {
+      pNode = gpWorldLevelData[sGridNo].pLandHead;
+    } else {
+      pNode = gpWorldLevelData[sGridNo].pRoofHead;
+    }
+
+    if (pNode == null) {
+      return ubAmbientLightLevel;
+    } else {
+      iSum =
+        pNode.ubNaturalShadeLevel -
+        (pNode.ubSumLights - pNode.ubFakeShadeLevel);
+
+      iSum = Math.min(SHADE_MIN, iSum);
+      iSum = Math.max(SHADE_MAX, iSum);
+      return iSum;
+    }
   }
 
-  if (pNode == null) {
-    return ubAmbientLightLevel;
-  } else {
-    iSum = pNode.ubNaturalShadeLevel - (pNode.ubSumLights - pNode.ubFakeShadeLevel);
-
-    iSum = Math.min(SHADE_MIN, iSum);
-    iSum = Math.max(SHADE_MAX, iSum);
-    return iSum;
-  }
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightAddNodeTile
 
                 Does the addition of light values to individual LEVELNODEs in the world tile list.
 
 ***************************************************************************************/
-function LightAddTileNode(pNode: LEVELNODE, uiLightType: UINT32, ubShadeAdd: UINT8, fFake: boolean): void {
-  let sSum: INT16;
+  function LightAddTileNode(
+    pNode: LEVELNODE,
+    uiLightType: UINT32,
+    ubShadeAdd: UINT8,
+    fFake: boolean,
+  ): void {
+    let sSum: INT16;
 
-  pNode.ubSumLights += ubShadeAdd;
-  if (fFake) {
-    pNode.ubFakeShadeLevel += ubShadeAdd;
+    pNode.ubSumLights += ubShadeAdd;
+    if (fFake) {
+      pNode.ubFakeShadeLevel += ubShadeAdd;
+    }
+
+    // Now set max
+    pNode.ubMaxLights = Math.max(pNode.ubMaxLights, ubShadeAdd);
+
+    sSum = pNode.ubNaturalShadeLevel - pNode.ubMaxLights;
+
+    sSum = Math.min(SHADE_MIN, sSum);
+    sSum = Math.max(SHADE_MAX, sSum);
+
+    pNode.ubShadeLevel = sSum;
   }
 
-  // Now set max
-  pNode.ubMaxLights = Math.max(pNode.ubMaxLights, ubShadeAdd);
-
-  sSum = pNode.ubNaturalShadeLevel - pNode.ubMaxLights;
-
-  sSum = Math.min(SHADE_MIN, sSum);
-  sSum = Math.max(SHADE_MAX, sSum);
-
-  pNode.ubShadeLevel = sSum;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightAddNodeTile
 
                 Does the subtraction of light values to individual LEVELNODEs in the world tile list.
 
 ***************************************************************************************/
-function LightSubtractTileNode(pNode: LEVELNODE, uiLightType: UINT32, ubShadeSubtract: UINT8, fFake: boolean): void {
-  let sSum: INT16;
+  function LightSubtractTileNode(
+    pNode: LEVELNODE,
+    uiLightType: UINT32,
+    ubShadeSubtract: UINT8,
+    fFake: boolean,
+  ): void {
+    let sSum: INT16;
 
-  if (ubShadeSubtract > pNode.ubSumLights) {
-    pNode.ubSumLights = 0;
-  } else {
-    pNode.ubSumLights -= ubShadeSubtract;
-  }
-  if (fFake) {
-    if (ubShadeSubtract > pNode.ubFakeShadeLevel) {
-      pNode.ubFakeShadeLevel = 0;
+    if (ubShadeSubtract > pNode.ubSumLights) {
+      pNode.ubSumLights = 0;
     } else {
-      pNode.ubFakeShadeLevel -= ubShadeSubtract;
+      pNode.ubSumLights -= ubShadeSubtract;
     }
+    if (fFake) {
+      if (ubShadeSubtract > pNode.ubFakeShadeLevel) {
+        pNode.ubFakeShadeLevel = 0;
+      } else {
+        pNode.ubFakeShadeLevel -= ubShadeSubtract;
+      }
+    }
+
+    // Now set max
+    pNode.ubMaxLights = Math.min(pNode.ubMaxLights, pNode.ubSumLights);
+
+    sSum = pNode.ubNaturalShadeLevel - pNode.ubMaxLights;
+
+    sSum = Math.min(SHADE_MIN, sSum);
+    sSum = Math.max(SHADE_MAX, sSum);
+
+    pNode.ubShadeLevel = sSum;
   }
 
-  // Now set max
-  pNode.ubMaxLights = Math.min(pNode.ubMaxLights, pNode.ubSumLights);
-
-  sSum = pNode.ubNaturalShadeLevel - pNode.ubMaxLights;
-
-  sSum = Math.min(SHADE_MIN, sSum);
-  sSum = Math.max(SHADE_MAX, sSum);
-
-  pNode.ubShadeLevel = sSum;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightAddTile
 
                 Adds a specified amount of light to all objects on a given tile.
 
 ***************************************************************************************/
-function LightAddTile(uiLightType: UINT32, iSrcX: INT16, iSrcY: INT16, iX: INT16, iY: INT16, ubShade: UINT8, uiFlags: UINT32, fOnlyWalls: boolean): boolean {
-  let pLand: LEVELNODE | null;
-  let pStruct: LEVELNODE | null;
-  let pObject: LEVELNODE | null;
-  let pMerc: LEVELNODE | null;
-  let pRoof: LEVELNODE | null;
-  let pOnRoof: LEVELNODE | null;
-  let ubShadeAdd: UINT8;
-  let uiTile: UINT32;
-  let fLitWall: boolean = false;
-  let fFake: boolean;
+  function LightAddTile(
+    uiLightType: UINT32,
+    iSrcX: INT16,
+    iSrcY: INT16,
+    iX: INT16,
+    iY: INT16,
+    ubShade: UINT8,
+    uiFlags: UINT32,
+    fOnlyWalls: boolean,
+  ): boolean {
+    let pLand: LEVELNODE | null;
+    let pStruct: LEVELNODE | null;
+    let pObject: LEVELNODE | null;
+    let pMerc: LEVELNODE | null;
+    let pRoof: LEVELNODE | null;
+    let pOnRoof: LEVELNODE | null;
+    let ubShadeAdd: UINT8;
+    let uiTile: UINT32;
+    let fLitWall: boolean = false;
+    let fFake: boolean;
 
-  Assert(gpWorldLevelData != null);
+    Assert(gpWorldLevelData != null);
 
-  uiTile = MAPROWCOLTOPOS(iY, iX);
+    uiTile = MAPROWCOLTOPOS(iY, iX);
 
-  if (uiTile >= NOWHERE) {
-    return false;
-  }
-
-  gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
-
-  // if((uiFlags&LIGHT_BACKLIGHT) && !(uiFlags&LIGHT_ROOF_ONLY))
-  //	ubShadeAdd=ubShade*7/10;
-  // else
-  ubShadeAdd = ubShade;
-
-  if (uiFlags & LIGHT_FAKE) {
-    fFake = true;
-  } else {
-    fFake = false;
-  }
-
-  if (!(uiFlags & LIGHT_ROOF_ONLY) || (uiFlags & LIGHT_EVERYTHING)) {
-    pStruct = gpWorldLevelData[uiTile].pStructHead;
-    while (pStruct != null) {
-      if (pStruct.usIndex < Enum312.NUMBEROFTILES) {
-        if ((gTileDatabase[pStruct.usIndex].fType != Enum313.FIRSTCLIFFHANG) || (uiFlags & LIGHT_EVERYTHING)) {
-          if ((uiFlags & LIGHT_IGNORE_WALLS) || gfCaves)
-            LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
-          else if (LightIlluminateWall(iSrcX, iSrcY, iX, iY, pStruct)) {
-            if (LightTileHasWall(iSrcX, iSrcY, iX, iY))
-              fLitWall = true;
-
-            // ATE: Limit shade for walls if in caves
-            if (fLitWall && gfCaves) {
-              LightAddTileNode(pStruct, uiLightType, Math.min(ubShadeAdd, (SHADE_MAX + 5)), false);
-            } else if (fLitWall) {
-              LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
-            } else if (!fOnlyWalls) {
-              LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
-            }
-          }
-        }
-      } else {
-        LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
-      }
-      pStruct = pStruct.pNext;
+    if (uiTile >= NOWHERE) {
+      return false;
     }
 
+    gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+
+    // if((uiFlags&LIGHT_BACKLIGHT) && !(uiFlags&LIGHT_ROOF_ONLY))
+    //	ubShadeAdd=ubShade*7/10;
+    // else
     ubShadeAdd = ubShade;
 
-    if (!fOnlyWalls) {
-      pLand = gpWorldLevelData[uiTile].pLandHead;
+    if (uiFlags & LIGHT_FAKE) {
+      fFake = true;
+    } else {
+      fFake = false;
+    }
 
-      while (pLand) {
-        if (gfCaves || !fLitWall) {
-          LightAddTileNode(pLand, uiLightType, ubShadeAdd, fFake);
+    if (!(uiFlags & LIGHT_ROOF_ONLY) || uiFlags & LIGHT_EVERYTHING) {
+      pStruct = gpWorldLevelData[uiTile].pStructHead;
+      while (pStruct != null) {
+        if (pStruct.usIndex < Enum312.NUMBEROFTILES) {
+          if (
+            gTileDatabase[pStruct.usIndex].fType != Enum313.FIRSTCLIFFHANG ||
+            uiFlags & LIGHT_EVERYTHING
+          ) {
+            if (uiFlags & LIGHT_IGNORE_WALLS || gfCaves)
+              LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
+            else if (LightIlluminateWall(iSrcX, iSrcY, iX, iY, pStruct)) {
+              if (LightTileHasWall(iSrcX, iSrcY, iX, iY)) fLitWall = true;
+
+              // ATE: Limit shade for walls if in caves
+              if (fLitWall && gfCaves) {
+                LightAddTileNode(
+                  pStruct,
+                  uiLightType,
+                  Math.min(ubShadeAdd, SHADE_MAX + 5),
+                  false,
+                );
+              } else if (fLitWall) {
+                LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
+              } else if (!fOnlyWalls) {
+                LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
+              }
+            }
+          }
+        } else {
+          LightAddTileNode(pStruct, uiLightType, ubShadeAdd, false);
         }
-        pLand = pLand.pNext;
+        pStruct = pStruct.pNext;
       }
 
-      pObject = gpWorldLevelData[uiTile].pObjectHead;
-      while (pObject != null) {
-        if (pObject.usIndex < Enum312.NUMBEROFTILES) {
-          LightAddTileNode(pObject, uiLightType, ubShadeAdd, false);
+      ubShadeAdd = ubShade;
+
+      if (!fOnlyWalls) {
+        pLand = gpWorldLevelData[uiTile].pLandHead;
+
+        while (pLand) {
+          if (gfCaves || !fLitWall) {
+            LightAddTileNode(pLand, uiLightType, ubShadeAdd, fFake);
+          }
+          pLand = pLand.pNext;
         }
-        pObject = pObject.pNext;
-      }
 
-      if (uiFlags & LIGHT_BACKLIGHT)
-        ubShadeAdd = Math.trunc(ubShade * 7 / 10);
+        pObject = gpWorldLevelData[uiTile].pObjectHead;
+        while (pObject != null) {
+          if (pObject.usIndex < Enum312.NUMBEROFTILES) {
+            LightAddTileNode(pObject, uiLightType, ubShadeAdd, false);
+          }
+          pObject = pObject.pNext;
+        }
 
-      pMerc = gpWorldLevelData[uiTile].pMercHead;
-      while (pMerc != null) {
-        LightAddTileNode(pMerc, uiLightType, ubShadeAdd, false);
-        pMerc = pMerc.pNext;
+        if (uiFlags & LIGHT_BACKLIGHT)
+          ubShadeAdd = Math.trunc((ubShade * 7) / 10);
+
+        pMerc = gpWorldLevelData[uiTile].pMercHead;
+        while (pMerc != null) {
+          LightAddTileNode(pMerc, uiLightType, ubShadeAdd, false);
+          pMerc = pMerc.pNext;
+        }
       }
     }
+
+    if (uiFlags & LIGHT_ROOF_ONLY || uiFlags & LIGHT_EVERYTHING) {
+      pRoof = gpWorldLevelData[uiTile].pRoofHead;
+      while (pRoof != null) {
+        if (pRoof.usIndex < Enum312.NUMBEROFTILES) {
+          LightAddTileNode(pRoof, uiLightType, ubShadeAdd, fFake);
+        }
+        pRoof = pRoof.pNext;
+      }
+
+      pOnRoof = gpWorldLevelData[uiTile].pOnRoofHead;
+      while (pOnRoof != null) {
+        LightAddTileNode(pOnRoof, uiLightType, ubShadeAdd, false);
+
+        pOnRoof = pOnRoof.pNext;
+      }
+    }
+    return true;
   }
 
-  if ((uiFlags & LIGHT_ROOF_ONLY) || (uiFlags & LIGHT_EVERYTHING)) {
-    pRoof = gpWorldLevelData[uiTile].pRoofHead;
-    while (pRoof != null) {
-      if (pRoof.usIndex < Enum312.NUMBEROFTILES) {
-        LightAddTileNode(pRoof, uiLightType, ubShadeAdd, fFake);
-      }
-      pRoof = pRoof.pNext;
-    }
-
-    pOnRoof = gpWorldLevelData[uiTile].pOnRoofHead;
-    while (pOnRoof != null) {
-      LightAddTileNode(pOnRoof, uiLightType, ubShadeAdd, false);
-
-      pOnRoof = pOnRoof.pNext;
-    }
-  }
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightSubtractTile
 
                 Subtracts a specified amount of light to a given tile.
 
 ***************************************************************************************/
-function LightSubtractTile(uiLightType: UINT32, iSrcX: INT16, iSrcY: INT16, iX: INT16, iY: INT16, ubShade: UINT8, uiFlags: UINT32, fOnlyWalls: boolean): boolean {
-  let pLand: LEVELNODE | null;
-  let pStruct: LEVELNODE | null;
-  let pObject: LEVELNODE | null;
-  let pMerc: LEVELNODE | null;
-  let pRoof: LEVELNODE | null;
-  let pOnRoof: LEVELNODE | null;
-  let ubShadeSubtract: UINT8;
-  let uiTile: UINT32;
-  let fLitWall: boolean = false;
-  let fFake: boolean; // only passed in to land and roof layers; others get fed FALSE
+  function LightSubtractTile(
+    uiLightType: UINT32,
+    iSrcX: INT16,
+    iSrcY: INT16,
+    iX: INT16,
+    iY: INT16,
+    ubShade: UINT8,
+    uiFlags: UINT32,
+    fOnlyWalls: boolean,
+  ): boolean {
+    let pLand: LEVELNODE | null;
+    let pStruct: LEVELNODE | null;
+    let pObject: LEVELNODE | null;
+    let pMerc: LEVELNODE | null;
+    let pRoof: LEVELNODE | null;
+    let pOnRoof: LEVELNODE | null;
+    let ubShadeSubtract: UINT8;
+    let uiTile: UINT32;
+    let fLitWall: boolean = false;
+    let fFake: boolean; // only passed in to land and roof layers; others get fed FALSE
 
-  Assert(gpWorldLevelData != null);
+    Assert(gpWorldLevelData != null);
 
-  uiTile = MAPROWCOLTOPOS(iY, iX);
+    uiTile = MAPROWCOLTOPOS(iY, iX);
 
-  if (uiTile >= NOWHERE) {
-    return false;
-  }
-
-  gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
-
-  //	if((uiFlags&LIGHT_BACKLIGHT) && !(uiFlags&LIGHT_ROOF_ONLY))
-  //		ubShadeSubtract=ubShade*7/10;
-  //	else
-  ubShadeSubtract = ubShade;
-
-  if (uiFlags & LIGHT_FAKE) {
-    fFake = true;
-  } else {
-    fFake = false;
-  }
-
-  if (!(uiFlags & LIGHT_ROOF_ONLY) || (uiFlags & LIGHT_EVERYTHING)) {
-    pStruct = gpWorldLevelData[uiTile].pStructHead;
-    while (pStruct != null) {
-      if (pStruct.usIndex < Enum312.NUMBEROFTILES) {
-        if ((gTileDatabase[pStruct.usIndex].fType != Enum313.FIRSTCLIFFHANG) || (uiFlags & LIGHT_EVERYTHING)) {
-          if ((uiFlags & LIGHT_IGNORE_WALLS) || gfCaves)
-            LightSubtractTileNode(pStruct, uiLightType, ubShadeSubtract, false);
-          else if (LightIlluminateWall(iSrcX, iSrcY, iX, iY, pStruct)) {
-            if (LightTileHasWall(iSrcX, iSrcY, iX, iY))
-              fLitWall = true;
-
-            // ATE: Limit shade for walls if in caves
-            if (fLitWall && gfCaves) {
-              LightSubtractTileNode(pStruct, uiLightType, Math.max((ubShadeSubtract - 5), 0), false);
-            } else if (fLitWall) {
-              LightSubtractTileNode(pStruct, uiLightType, ubShadeSubtract, false);
-            } else if (!fOnlyWalls) {
-              LightSubtractTileNode(pStruct, uiLightType, ubShadeSubtract, false);
-            }
-          }
-        }
-      } else {
-        LightSubtractTileNode(pStruct, uiLightType, ubShadeSubtract, false);
-      }
-      pStruct = pStruct.pNext;
+    if (uiTile >= NOWHERE) {
+      return false;
     }
 
+    gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+
+    //	if((uiFlags&LIGHT_BACKLIGHT) && !(uiFlags&LIGHT_ROOF_ONLY))
+    //		ubShadeSubtract=ubShade*7/10;
+    //	else
     ubShadeSubtract = ubShade;
 
-    if (!fOnlyWalls) {
-      pLand = gpWorldLevelData[uiTile].pLandHead;
+    if (uiFlags & LIGHT_FAKE) {
+      fFake = true;
+    } else {
+      fFake = false;
+    }
 
-      while (pLand) {
-        if (gfCaves || !fLitWall) {
-          LightSubtractTileNode(pLand, uiLightType, ubShadeSubtract, fFake);
+    if (!(uiFlags & LIGHT_ROOF_ONLY) || uiFlags & LIGHT_EVERYTHING) {
+      pStruct = gpWorldLevelData[uiTile].pStructHead;
+      while (pStruct != null) {
+        if (pStruct.usIndex < Enum312.NUMBEROFTILES) {
+          if (
+            gTileDatabase[pStruct.usIndex].fType != Enum313.FIRSTCLIFFHANG ||
+            uiFlags & LIGHT_EVERYTHING
+          ) {
+            if (uiFlags & LIGHT_IGNORE_WALLS || gfCaves)
+              LightSubtractTileNode(
+                pStruct,
+                uiLightType,
+                ubShadeSubtract,
+                false,
+              );
+            else if (LightIlluminateWall(iSrcX, iSrcY, iX, iY, pStruct)) {
+              if (LightTileHasWall(iSrcX, iSrcY, iX, iY)) fLitWall = true;
+
+              // ATE: Limit shade for walls if in caves
+              if (fLitWall && gfCaves) {
+                LightSubtractTileNode(
+                  pStruct,
+                  uiLightType,
+                  Math.max(ubShadeSubtract - 5, 0),
+                  false,
+                );
+              } else if (fLitWall) {
+                LightSubtractTileNode(
+                  pStruct,
+                  uiLightType,
+                  ubShadeSubtract,
+                  false,
+                );
+              } else if (!fOnlyWalls) {
+                LightSubtractTileNode(
+                  pStruct,
+                  uiLightType,
+                  ubShadeSubtract,
+                  false,
+                );
+              }
+            }
+          }
+        } else {
+          LightSubtractTileNode(pStruct, uiLightType, ubShadeSubtract, false);
         }
-        pLand = pLand.pNext;
+        pStruct = pStruct.pNext;
       }
 
-      pObject = gpWorldLevelData[uiTile].pObjectHead;
-      while (pObject != null) {
-        if (pObject.usIndex < Enum312.NUMBEROFTILES) {
-          LightSubtractTileNode(pObject, uiLightType, ubShadeSubtract, false);
+      ubShadeSubtract = ubShade;
+
+      if (!fOnlyWalls) {
+        pLand = gpWorldLevelData[uiTile].pLandHead;
+
+        while (pLand) {
+          if (gfCaves || !fLitWall) {
+            LightSubtractTileNode(pLand, uiLightType, ubShadeSubtract, fFake);
+          }
+          pLand = pLand.pNext;
         }
-        pObject = pObject.pNext;
-      }
 
-      if (uiFlags & LIGHT_BACKLIGHT)
-        ubShadeSubtract = Math.trunc(ubShade * 7 / 10);
+        pObject = gpWorldLevelData[uiTile].pObjectHead;
+        while (pObject != null) {
+          if (pObject.usIndex < Enum312.NUMBEROFTILES) {
+            LightSubtractTileNode(pObject, uiLightType, ubShadeSubtract, false);
+          }
+          pObject = pObject.pNext;
+        }
 
-      pMerc = gpWorldLevelData[uiTile].pMercHead;
-      while (pMerc != null) {
-        LightSubtractTileNode(pMerc, uiLightType, ubShadeSubtract, false);
-        pMerc = pMerc.pNext;
+        if (uiFlags & LIGHT_BACKLIGHT)
+          ubShadeSubtract = Math.trunc((ubShade * 7) / 10);
+
+        pMerc = gpWorldLevelData[uiTile].pMercHead;
+        while (pMerc != null) {
+          LightSubtractTileNode(pMerc, uiLightType, ubShadeSubtract, false);
+          pMerc = pMerc.pNext;
+        }
       }
     }
+
+    if (uiFlags & LIGHT_ROOF_ONLY || uiFlags & LIGHT_EVERYTHING) {
+      pRoof = gpWorldLevelData[uiTile].pRoofHead;
+      while (pRoof != null) {
+        if (pRoof.usIndex < Enum312.NUMBEROFTILES) {
+          LightSubtractTileNode(pRoof, uiLightType, ubShadeSubtract, fFake);
+        }
+        pRoof = pRoof.pNext;
+      }
+
+      pOnRoof = gpWorldLevelData[uiTile].pOnRoofHead;
+      while (pOnRoof != null) {
+        if (pOnRoof.usIndex < Enum312.NUMBEROFTILES) {
+          LightSubtractTileNode(pOnRoof, uiLightType, ubShadeSubtract, false);
+        }
+        pOnRoof = pOnRoof.pNext;
+      }
+    }
+
+    return true;
   }
 
-  if ((uiFlags & LIGHT_ROOF_ONLY) || (uiFlags & LIGHT_EVERYTHING)) {
-    pRoof = gpWorldLevelData[uiTile].pRoofHead;
-    while (pRoof != null) {
-      if (pRoof.usIndex < Enum312.NUMBEROFTILES) {
-        LightSubtractTileNode(pRoof, uiLightType, ubShadeSubtract, fFake);
-      }
-      pRoof = pRoof.pNext;
-    }
-
-    pOnRoof = gpWorldLevelData[uiTile].pOnRoofHead;
-    while (pOnRoof != null) {
-      if (pOnRoof.usIndex < Enum312.NUMBEROFTILES) {
-        LightSubtractTileNode(pOnRoof, uiLightType, ubShadeSubtract, false);
-      }
-      pOnRoof = pOnRoof.pNext;
-    }
-  }
-
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightSetNaturalTileNode
 
                 Sets the natural light level (as well as the current) on individual LEVELNODEs.
 
 ***************************************************************************************/
-function LightSetNaturalTileNode(pNode: LEVELNODE, ubShade: UINT8): void {
-  Assert(pNode != null);
+  function LightSetNaturalTileNode(pNode: LEVELNODE, ubShade: UINT8): void {
+    Assert(pNode != null);
 
-  pNode.ubSumLights = 0;
-  pNode.ubMaxLights = 0;
-  pNode.ubNaturalShadeLevel = ubShade;
-  pNode.ubShadeLevel = ubShade;
-  // LightAddTileNode(pNode, 0, (INT16)(SHADE_MIN-ubShade));
-}
+    pNode.ubSumLights = 0;
+    pNode.ubMaxLights = 0;
+    pNode.ubNaturalShadeLevel = ubShade;
+    pNode.ubShadeLevel = ubShade;
+    // LightAddTileNode(pNode, 0, (INT16)(SHADE_MIN-ubShade));
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightSetNaturalTile
 
                 Sets the natural light value of all objects on a given tile to the specified value.
         This is the light value a tile has with no artificial lighting affecting it.
 
 ***************************************************************************************/
-function LightSetNaturalTile(iX: INT16, iY: INT16, ubShade: UINT8): boolean {
-  let pLand: LEVELNODE | null;
-  let pStruct: LEVELNODE | null;
-  let pObject: LEVELNODE | null;
-  let pRoof: LEVELNODE | null;
-  let pOnRoof: LEVELNODE | null;
-  let pTopmost: LEVELNODE | null;
-  let pMerc: LEVELNODE | null;
-  let uiIndex: UINT32;
+  function LightSetNaturalTile(iX: INT16, iY: INT16, ubShade: UINT8): boolean {
+    let pLand: LEVELNODE | null;
+    let pStruct: LEVELNODE | null;
+    let pObject: LEVELNODE | null;
+    let pRoof: LEVELNODE | null;
+    let pOnRoof: LEVELNODE | null;
+    let pTopmost: LEVELNODE | null;
+    let pMerc: LEVELNODE | null;
+    let uiIndex: UINT32;
 
-  if (gpWorldLevelData == null) {
-    return false;
+    if (gpWorldLevelData == null) {
+      return false;
+    }
+
+    uiIndex = MAPROWCOLTOPOS(iY, iX);
+
+    Assert(uiIndex != 0xffff);
+
+    ubShade = Math.max(SHADE_MAX, ubShade);
+    ubShade = Math.min(SHADE_MIN, ubShade);
+
+    pLand = gpWorldLevelData[uiIndex].pLandHead;
+
+    while (pLand != null) {
+      LightSetNaturalTileNode(pLand, ubShade);
+      pLand = pLand.pNext;
+    }
+
+    pStruct = gpWorldLevelData[uiIndex].pStructHead;
+
+    while (pStruct != null) {
+      LightSetNaturalTileNode(pStruct, ubShade);
+      pStruct = pStruct.pNext;
+    }
+
+    pObject = gpWorldLevelData[uiIndex].pObjectHead;
+    while (pObject != null) {
+      LightSetNaturalTileNode(pObject, ubShade);
+      pObject = pObject.pNext;
+    }
+
+    pRoof = gpWorldLevelData[uiIndex].pRoofHead;
+    while (pRoof != null) {
+      LightSetNaturalTileNode(pRoof, ubShade);
+      pRoof = pRoof.pNext;
+    }
+
+    pOnRoof = gpWorldLevelData[uiIndex].pOnRoofHead;
+    while (pOnRoof != null) {
+      LightSetNaturalTileNode(pOnRoof, ubShade);
+      pOnRoof = pOnRoof.pNext;
+    }
+
+    pTopmost = gpWorldLevelData[uiIndex].pTopmostHead;
+    while (pTopmost != null) {
+      LightSetNaturalTileNode(pTopmost, ubShade);
+      pTopmost = pTopmost.pNext;
+    }
+
+    pMerc = gpWorldLevelData[uiIndex].pMercHead;
+    while (pMerc != null) {
+      LightSetNaturalTileNode(pMerc, ubShade);
+      pMerc = pMerc.pNext;
+    }
+    return true;
   }
 
-  uiIndex = MAPROWCOLTOPOS(iY, iX);
-
-  Assert(uiIndex != 0xffff);
-
-  ubShade = Math.max(SHADE_MAX, ubShade);
-  ubShade = Math.min(SHADE_MIN, ubShade);
-
-  pLand = gpWorldLevelData[uiIndex].pLandHead;
-
-  while (pLand != null) {
-    LightSetNaturalTileNode(pLand, ubShade);
-    pLand = pLand.pNext;
-  }
-
-  pStruct = gpWorldLevelData[uiIndex].pStructHead;
-
-  while (pStruct != null) {
-    LightSetNaturalTileNode(pStruct, ubShade);
-    pStruct = pStruct.pNext;
-  }
-
-  pObject = gpWorldLevelData[uiIndex].pObjectHead;
-  while (pObject != null) {
-    LightSetNaturalTileNode(pObject, ubShade);
-    pObject = pObject.pNext;
-  }
-
-  pRoof = gpWorldLevelData[uiIndex].pRoofHead;
-  while (pRoof != null) {
-    LightSetNaturalTileNode(pRoof, ubShade);
-    pRoof = pRoof.pNext;
-  }
-
-  pOnRoof = gpWorldLevelData[uiIndex].pOnRoofHead;
-  while (pOnRoof != null) {
-    LightSetNaturalTileNode(pOnRoof, ubShade);
-    pOnRoof = pOnRoof.pNext;
-  }
-
-  pTopmost = gpWorldLevelData[uiIndex].pTopmostHead;
-  while (pTopmost != null) {
-    LightSetNaturalTileNode(pTopmost, ubShade);
-    pTopmost = pTopmost.pNext;
-  }
-
-  pMerc = gpWorldLevelData[uiIndex].pMercHead;
-  while (pMerc != null) {
-    LightSetNaturalTileNode(pMerc, ubShade);
-    pMerc = pMerc.pNext;
-  }
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightResetTileNode
 
         Resets the light level of individual LEVELNODEs to the value contained in the
         natural light level.
 
 ***************************************************************************************/
-function LightResetTileNode(pNode: LEVELNODE): void {
-  pNode.ubSumLights = 0;
-  pNode.ubMaxLights = 0;
-  pNode.ubShadeLevel = pNode.ubNaturalShadeLevel;
-  pNode.ubFakeShadeLevel = 0;
-}
+  function LightResetTileNode(pNode: LEVELNODE): void {
+    pNode.ubSumLights = 0;
+    pNode.ubMaxLights = 0;
+    pNode.ubShadeLevel = pNode.ubNaturalShadeLevel;
+    pNode.ubFakeShadeLevel = 0;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightResetTile
 
                 Resets the light values of all objects on a given tile to the "natural" light level
         for that tile.
 
 ***************************************************************************************/
-function LightResetTile(iX: INT16, iY: INT16): boolean {
-  let pLand: LEVELNODE | null;
-  let pStruct: LEVELNODE | null;
-  let pObject: LEVELNODE | null;
-  let pRoof: LEVELNODE | null;
-  let pOnRoof: LEVELNODE | null;
-  let pTopmost: LEVELNODE | null;
-  let pMerc: LEVELNODE | null;
-  let uiTile: UINT32;
+  function LightResetTile(iX: INT16, iY: INT16): boolean {
+    let pLand: LEVELNODE | null;
+    let pStruct: LEVELNODE | null;
+    let pObject: LEVELNODE | null;
+    let pRoof: LEVELNODE | null;
+    let pOnRoof: LEVELNODE | null;
+    let pTopmost: LEVELNODE | null;
+    let pMerc: LEVELNODE | null;
+    let uiTile: UINT32;
 
-  if (gpWorldLevelData == null) {
-    return false;
+    if (gpWorldLevelData == null) {
+      return false;
+    }
+
+    uiTile = MAPROWCOLTOPOS(iY, iX);
+
+    if (uiTile == 0xffff) {
+      return false;
+    }
+
+    pLand = gpWorldLevelData[uiTile].pLandHead;
+
+    while (pLand != null) {
+      LightResetTileNode(pLand);
+      pLand = pLand.pNext;
+    }
+
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
+
+    while (pStruct != null) {
+      LightResetTileNode(pStruct);
+      pStruct = pStruct.pNext;
+    }
+
+    pObject = gpWorldLevelData[uiTile].pObjectHead;
+    while (pObject != null) {
+      LightResetTileNode(pObject);
+      pObject = pObject.pNext;
+    }
+
+    pRoof = gpWorldLevelData[uiTile].pRoofHead;
+    while (pRoof != null) {
+      LightResetTileNode(pRoof);
+      pRoof = pRoof.pNext;
+    }
+
+    pOnRoof = gpWorldLevelData[uiTile].pOnRoofHead;
+    while (pOnRoof != null) {
+      LightResetTileNode(pOnRoof);
+      pOnRoof = pOnRoof.pNext;
+    }
+
+    pTopmost = gpWorldLevelData[uiTile].pTopmostHead;
+    while (pTopmost != null) {
+      LightResetTileNode(pTopmost);
+      pTopmost = pTopmost.pNext;
+    }
+
+    pMerc = gpWorldLevelData[uiTile].pMercHead;
+    while (pMerc != null) {
+      LightResetTileNode(pMerc);
+      pMerc = pMerc.pNext;
+    }
+
+    return true;
   }
 
-  uiTile = MAPROWCOLTOPOS(iY, iX);
-
-  if (uiTile == 0xffff) {
-    return false;
-  }
-
-  pLand = gpWorldLevelData[uiTile].pLandHead;
-
-  while (pLand != null) {
-    LightResetTileNode(pLand);
-    pLand = pLand.pNext;
-  }
-
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
-
-  while (pStruct != null) {
-    LightResetTileNode(pStruct);
-    pStruct = pStruct.pNext;
-  }
-
-  pObject = gpWorldLevelData[uiTile].pObjectHead;
-  while (pObject != null) {
-    LightResetTileNode(pObject);
-    pObject = pObject.pNext;
-  }
-
-  pRoof = gpWorldLevelData[uiTile].pRoofHead;
-  while (pRoof != null) {
-    LightResetTileNode(pRoof);
-    pRoof = pRoof.pNext;
-  }
-
-  pOnRoof = gpWorldLevelData[uiTile].pOnRoofHead;
-  while (pOnRoof != null) {
-    LightResetTileNode(pOnRoof);
-    pOnRoof = pOnRoof.pNext;
-  }
-
-  pTopmost = gpWorldLevelData[uiTile].pTopmostHead;
-  while (pTopmost != null) {
-    LightResetTileNode(pTopmost);
-    pTopmost = pTopmost.pNext;
-  }
-
-  pMerc = gpWorldLevelData[uiTile].pMercHead;
-  while (pMerc != null) {
-    LightResetTileNode(pMerc);
-    pMerc = pMerc.pNext;
-  }
-
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightResetAllTiles
 
                 Resets all tiles on the map to their baseline values.
 
 ***************************************************************************************/
-function LightResetAllTiles(): boolean {
-  let iCountY: INT16;
-  let iCountX: INT16;
+  function LightResetAllTiles(): boolean {
+    let iCountY: INT16;
+    let iCountX: INT16;
 
-  for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
-    for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
-      LightResetTile(iCountX, iCountY);
+    for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
+      for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
+        LightResetTile(iCountX, iCountY);
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightSetTile
 
                 Sets the current light value of all objects on a given tile to the specified value.
 
 ***************************************************************************************/
-function LightSetTile(iX: INT16, iY: INT16, ubShade: UINT8, uiLightType: UINT32): boolean {
-  /*LEVELNODE *pLand, *pStruct, *pObject, *pRoof, *pOnRoof, *pTopmost, *pFog;
+  function LightSetTile(
+    iX: INT16,
+    iY: INT16,
+    ubShade: UINT8,
+    uiLightType: UINT32,
+  ): boolean {
+    /*LEVELNODE *pLand, *pStruct, *pObject, *pRoof, *pOnRoof, *pTopmost, *pFog;
   UINT32 uiIndex;
 
           ubShade=__max(SHADE_MAX, ubShade);
@@ -1169,508 +1335,686 @@ function LightSetTile(iX: INT16, iY: INT16, ubShade: UINT8, uiLightType: UINT32)
                   pTopmost->ubShadeLevel = ubShade;
                   pTopmost=pTopmost->pNext;
           } */
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightGetLastNode
 
                 Returns a pointer to the last node in a light list. If the list is empty, NULL is
         returned.
 
 ***************************************************************************************/
-function LightGetLastNode(iLight: INT32): UINT16 {
-  return usRaySize[iLight];
-}
+  function LightGetLastNode(iLight: INT32): UINT16 {
+    return usRaySize[iLight];
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightAddNode
 
                 Creates a new node, and adds it to the end of a light list.
 
 ***************************************************************************************/
-function LightAddNode(iLight: INT32, iHotSpotX: INT16, iHotSpotY: INT16, iX: INT16, iY: INT16, ubIntensity: UINT8, uiFlags: UINT16): boolean {
-  let fDuplicate: boolean = false;
-  let dDistance: DOUBLE;
-  let ubShade: UINT8;
-  let iLightDecay: INT32;
+  function LightAddNode(
+    iLight: INT32,
+    iHotSpotX: INT16,
+    iHotSpotY: INT16,
+    iX: INT16,
+    iY: INT16,
+    ubIntensity: UINT8,
+    uiFlags: UINT16,
+  ): boolean {
+    let fDuplicate: boolean = false;
+    let dDistance: DOUBLE;
+    let ubShade: UINT8;
+    let iLightDecay: INT32;
 
-  dDistance = LinearDistanceDouble(iX, iY, iHotSpotX, iHotSpotY);
-  dDistance /= DISTANCE_SCALE;
+    dDistance = LinearDistanceDouble(iX, iY, iHotSpotX, iHotSpotY);
+    dDistance /= DISTANCE_SCALE;
 
-  iLightDecay = Math.trunc(dDistance * LIGHT_DECAY);
+    iLightDecay = Math.trunc(dDistance * LIGHT_DECAY);
 
-  if ((iLightDecay >= ubIntensity))
-    ubShade = 0;
-  else
-    ubShade = ubIntensity - iLightDecay;
+    if (iLightDecay >= ubIntensity) ubShade = 0;
+    else ubShade = ubIntensity - iLightDecay;
 
-  iX = Math.trunc(iX / DISTANCE_SCALE);
-  iY = Math.trunc(iY / DISTANCE_SCALE);
+    iX = Math.trunc(iX / DISTANCE_SCALE);
+    iY = Math.trunc(iY / DISTANCE_SCALE);
 
-  LightAddRayNode(iLight, iX, iY, ubShade, uiFlags);
-  return true;
-}
+    LightAddRayNode(iLight, iX, iY, ubShade, uiFlags);
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightInsertNode
 
                 Creates a new node, and inserts it after the specified node.
 
 ***************************************************************************************/
-function LightInsertNode(iLight: INT32, usLightIns: UINT16, iHotSpotX: INT16, iHotSpotY: INT16, iX: INT16, iY: INT16, ubIntensity: UINT8, uiFlags: UINT16): boolean {
-  let dDistance: DOUBLE;
-  let ubShade: UINT8;
-  let iLightDecay: INT32;
+  function LightInsertNode(
+    iLight: INT32,
+    usLightIns: UINT16,
+    iHotSpotX: INT16,
+    iHotSpotY: INT16,
+    iX: INT16,
+    iY: INT16,
+    ubIntensity: UINT8,
+    uiFlags: UINT16,
+  ): boolean {
+    let dDistance: DOUBLE;
+    let ubShade: UINT8;
+    let iLightDecay: INT32;
 
-  dDistance = LinearDistanceDouble(iX, iY, iHotSpotX, iHotSpotY);
-  dDistance /= DISTANCE_SCALE;
+    dDistance = LinearDistanceDouble(iX, iY, iHotSpotX, iHotSpotY);
+    dDistance /= DISTANCE_SCALE;
 
-  iLightDecay = Math.trunc(dDistance * LIGHT_DECAY);
+    iLightDecay = Math.trunc(dDistance * LIGHT_DECAY);
 
-  if ((iLightDecay >= ubIntensity))
-    ubShade = 0;
-  else
-    ubShade = ubIntensity - iLightDecay;
+    if (iLightDecay >= ubIntensity) ubShade = 0;
+    else ubShade = ubIntensity - iLightDecay;
 
-  iX = Math.trunc(iX / DISTANCE_SCALE);
-  iY = Math.trunc(iY / DISTANCE_SCALE);
+    iX = Math.trunc(iX / DISTANCE_SCALE);
+    iY = Math.trunc(iY / DISTANCE_SCALE);
 
-  LightInsertRayNode(iLight, usLightIns, iX, iY, ubShade, uiFlags);
+    LightInsertRayNode(iLight, usLightIns, iX, iY, ubShade, uiFlags);
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightFindNextRay
 
                 Traverses the linked list until a node with the LIGHT_NEW_RAY marker, and returns
         the pointer. If the end of list is reached, NULL is returned.
 
 ***************************************************************************************/
-function LightFindNextRay(iLight: INT32, usIndex: UINT16): UINT16 {
-  let usNodeIndex: UINT16;
+  function LightFindNextRay(iLight: INT32, usIndex: UINT16): UINT16 {
+    let usNodeIndex: UINT16;
 
-  usNodeIndex = usIndex;
-  while ((usNodeIndex < usRaySize[iLight]) && !(pLightRayList[iLight][usNodeIndex] & LIGHT_NEW_RAY))
-    usNodeIndex++;
+    usNodeIndex = usIndex;
+    while (
+      usNodeIndex < usRaySize[iLight] &&
+      !(pLightRayList[iLight][usNodeIndex] & LIGHT_NEW_RAY)
+    )
+      usNodeIndex++;
 
-  return usNodeIndex;
-}
+    return usNodeIndex;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightCastRay
 
                 Casts a ray from an origin to an end point, creating nodes and adding them to the
         light list.
 
 ***************************************************************************************/
-function LightCastRay(iLight: INT32, iStartX: INT16, iStartY: INT16, iEndPointX: INT16, iEndPointY: INT16, ubStartIntens: UINT8, ubEndIntens: UINT8): boolean {
-  let AdjUp: INT16;
-  let AdjDown: INT16;
-  let ErrorTerm: INT16;
-  let XAdvance: INT16;
-  let XDelta: INT16;
-  let YDelta: INT16;
-  let WholeStep: INT32;
-  let InitialPixelCount: INT32;
-  let FinalPixelCount: INT32;
-  let i: INT32;
-  let j: INT32;
-  let RunLength: INT32;
-  let iXPos: INT16;
-  let iYPos: INT16;
-  let iEndY: INT16;
-  let iEndX: INT16;
-  let usCurNode: UINT16 = 0;
-  let usFlags: UINT16 = 0;
-  let fInsertNodes: boolean = false;
+  function LightCastRay(
+    iLight: INT32,
+    iStartX: INT16,
+    iStartY: INT16,
+    iEndPointX: INT16,
+    iEndPointY: INT16,
+    ubStartIntens: UINT8,
+    ubEndIntens: UINT8,
+  ): boolean {
+    let AdjUp: INT16;
+    let AdjDown: INT16;
+    let ErrorTerm: INT16;
+    let XAdvance: INT16;
+    let XDelta: INT16;
+    let YDelta: INT16;
+    let WholeStep: INT32;
+    let InitialPixelCount: INT32;
+    let FinalPixelCount: INT32;
+    let i: INT32;
+    let j: INT32;
+    let RunLength: INT32;
+    let iXPos: INT16;
+    let iYPos: INT16;
+    let iEndY: INT16;
+    let iEndX: INT16;
+    let usCurNode: UINT16 = 0;
+    let usFlags: UINT16 = 0;
+    let fInsertNodes: boolean = false;
 
-  if ((iEndPointX > 0) && (iEndPointY > 0))
-    usFlags = LIGHT_BACKLIGHT;
+    if (iEndPointX > 0 && iEndPointY > 0) usFlags = LIGHT_BACKLIGHT;
 
-  /* We'll always draw top to bottom, to reduce the number of cases we have to
+    /* We'll always draw top to bottom, to reduce the number of cases we have to
   handle, and to make lines between the same endpoints draw the same pixels */
-  if (iStartY > iEndPointY) {
-    iXPos = iEndPointX;
-    iEndX = iStartX;
-    iYPos = iEndPointY;
-    iEndY = iStartY;
-    fInsertNodes = true;
-  } else {
-    iXPos = iStartX;
-    iEndX = iEndPointX;
-    iYPos = iStartY;
-    iEndY = iEndPointY;
-  }
+    if (iStartY > iEndPointY) {
+      iXPos = iEndPointX;
+      iEndX = iStartX;
+      iYPos = iEndPointY;
+      iEndY = iStartY;
+      fInsertNodes = true;
+    } else {
+      iXPos = iStartX;
+      iEndX = iEndPointX;
+      iYPos = iStartY;
+      iEndY = iEndPointY;
+    }
 
-  /* Figure out whether we're going left or right, and how far we're
+    /* Figure out whether we're going left or right, and how far we're
 going horizontally */
-  if ((XDelta = (iEndX - iXPos)) < 0) {
-    XAdvance = -1;
-    XDelta = -XDelta;
-  } else {
-    XAdvance = 1;
-  }
-  /* Figure out how far we're going vertically */
-  YDelta = iEndY - iYPos;
+    if ((XDelta = iEndX - iXPos) < 0) {
+      XAdvance = -1;
+      XDelta = -XDelta;
+    } else {
+      XAdvance = 1;
+    }
+    /* Figure out how far we're going vertically */
+    YDelta = iEndY - iYPos;
 
-  // Check for 0 length ray
-  if ((XDelta == 0) && (YDelta == 0))
-    return false;
+    // Check for 0 length ray
+    if (XDelta == 0 && YDelta == 0) return false;
 
-  // DebugMsg(TOPIC_GAME, DBG_LEVEL_0, String("Drawing (%d,%d) to (%d,%d)", iXPos, iYPos, iEndX, iEndY));
-  LightAddNode(iLight, 32767, 32767, 32767, 32767, 0, LIGHT_NEW_RAY);
-  if (fInsertNodes)
-    usCurNode = LightGetLastNode(iLight);
+    // DebugMsg(TOPIC_GAME, DBG_LEVEL_0, String("Drawing (%d,%d) to (%d,%d)", iXPos, iYPos, iEndX, iEndY));
+    LightAddNode(iLight, 32767, 32767, 32767, 32767, 0, LIGHT_NEW_RAY);
+    if (fInsertNodes) usCurNode = LightGetLastNode(iLight);
 
-  /* Special-case horizontal, vertical, and diagonal lines, for speed
+    /* Special-case horizontal, vertical, and diagonal lines, for speed
 and to avoid nasty boundary conditions and division by 0 */
-  if (XDelta == 0) {
-    /* Vertical line */
-    if (fInsertNodes) {
-      for (i = 0; i <= YDelta; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iYPos++;
-      }
-    } else {
-      for (i = 0; i <= YDelta; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iYPos++;
-      }
-    }
-    return true;
-  }
-  if (YDelta == 0) {
-    /* Horizontal line */
-    if (fInsertNodes) {
-      for (i = 0; i <= XDelta; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-      }
-    } else {
-      for (i = 0; i <= XDelta; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-      }
-    }
-    return true;
-  }
-  if (XDelta == YDelta) {
-    /* Diagonal line */
-    if (fInsertNodes) {
-      for (i = 0; i <= XDelta; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-        iYPos++;
-      }
-    } else {
-      for (i = 0; i <= XDelta; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-        iYPos++;
-      }
-    }
-    return true;
-  }
-
-  /* Determine whether the line is X or Y major, and handle accordingly */
-  if (XDelta >= YDelta) {
-    /* X major line */
-    /* Minimum # of pixels in a run in this line */
-    WholeStep = Math.trunc(XDelta / YDelta);
-
-    /* Error term adjust each time Y steps by 1; used to tell when one
-       extra pixel should be drawn as part of a run, to account for
-       fractional steps along the X axis per 1-pixel steps along Y */
-    AdjUp = (XDelta % YDelta) * 2;
-
-    /* Error term adjust when the error term turns over, used to factor
-       out the X step made at that time */
-    AdjDown = YDelta * 2;
-
-    /* Initial error term; reflects an initial step of 0.5 along the Y
-       axis */
-    ErrorTerm = (XDelta % YDelta) - (YDelta * 2);
-
-    /* The initial and last runs are partial, because Y advances only 0.5
-       for these runs, rather than 1. Divide one full run, plus the
-       initial pixel, between the initial and last runs */
-    InitialPixelCount = Math.trunc(WholeStep / 2) + 1;
-    FinalPixelCount = InitialPixelCount;
-
-    /* If the basic run length is even and there's no fractional
-       advance, we have one pixel that could go to either the initial
-       or last partial run, which we'll arbitrarily allocate to the
-       last run */
-    if ((AdjUp == 0) && ((WholeStep & 0x01) == 0)) {
-      InitialPixelCount--;
-    }
-    /* If there're an odd number of pixels per run, we have 1 pixel that can't
-       be allocated to either the initial or last partial run, so we'll add 0.5
-       to error term so this pixel will be handled by the normal full-run loop */
-    if ((WholeStep & 0x01) != 0) {
-      ErrorTerm += YDelta;
-    }
-    /* Draw the first, partial run of pixels */
-    // DrawHorizontalRun(&ScreenPtr, XAdvance, InitialPixelCount, Color);
-    if (fInsertNodes) {
-      for (i = 0; i < InitialPixelCount; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-      }
-    } else {
-      for (i = 0; i < InitialPixelCount; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-      }
-    }
-    iYPos++;
-
-    /* Draw all full runs */
-    for (j = 0; j < (YDelta - 1); j++) {
-      RunLength = WholeStep; /* run is at least this long */
-      /* Advance the error term and add an extra pixel if the error
-         term so indicates */
-      if ((ErrorTerm += AdjUp) > 0) {
-        RunLength++;
-        ErrorTerm -= AdjDown; /* reset the error term */
-      }
-      /* Draw this scan line's run */
-      // DrawHorizontalRun(&ScreenPtr, XAdvance, RunLength, Color);
+    if (XDelta == 0) {
+      /* Vertical line */
       if (fInsertNodes) {
-        for (i = 0; i < RunLength; i++) {
-          LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
+        for (i = 0; i <= YDelta; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iYPos++;
+        }
+      } else {
+        for (i = 0; i <= YDelta; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iYPos++;
+        }
+      }
+      return true;
+    }
+    if (YDelta == 0) {
+      /* Horizontal line */
+      if (fInsertNodes) {
+        for (i = 0; i <= XDelta; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
           iXPos += XAdvance;
         }
       } else {
-        for (i = 0; i < RunLength; i++) {
-          LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
+        for (i = 0; i <= XDelta; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iXPos += XAdvance;
+        }
+      }
+      return true;
+    }
+    if (XDelta == YDelta) {
+      /* Diagonal line */
+      if (fInsertNodes) {
+        for (i = 0; i <= XDelta; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iXPos += XAdvance;
+          iYPos++;
+        }
+      } else {
+        for (i = 0; i <= XDelta; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iXPos += XAdvance;
+          iYPos++;
+        }
+      }
+      return true;
+    }
+
+    /* Determine whether the line is X or Y major, and handle accordingly */
+    if (XDelta >= YDelta) {
+      /* X major line */
+      /* Minimum # of pixels in a run in this line */
+      WholeStep = Math.trunc(XDelta / YDelta);
+
+      /* Error term adjust each time Y steps by 1; used to tell when one
+       extra pixel should be drawn as part of a run, to account for
+       fractional steps along the X axis per 1-pixel steps along Y */
+      AdjUp = (XDelta % YDelta) * 2;
+
+      /* Error term adjust when the error term turns over, used to factor
+       out the X step made at that time */
+      AdjDown = YDelta * 2;
+
+      /* Initial error term; reflects an initial step of 0.5 along the Y
+       axis */
+      ErrorTerm = (XDelta % YDelta) - YDelta * 2;
+
+      /* The initial and last runs are partial, because Y advances only 0.5
+       for these runs, rather than 1. Divide one full run, plus the
+       initial pixel, between the initial and last runs */
+      InitialPixelCount = Math.trunc(WholeStep / 2) + 1;
+      FinalPixelCount = InitialPixelCount;
+
+      /* If the basic run length is even and there's no fractional
+       advance, we have one pixel that could go to either the initial
+       or last partial run, which we'll arbitrarily allocate to the
+       last run */
+      if (AdjUp == 0 && (WholeStep & 0x01) == 0) {
+        InitialPixelCount--;
+      }
+      /* If there're an odd number of pixels per run, we have 1 pixel that can't
+       be allocated to either the initial or last partial run, so we'll add 0.5
+       to error term so this pixel will be handled by the normal full-run loop */
+      if ((WholeStep & 0x01) != 0) {
+        ErrorTerm += YDelta;
+      }
+      /* Draw the first, partial run of pixels */
+      // DrawHorizontalRun(&ScreenPtr, XAdvance, InitialPixelCount, Color);
+      if (fInsertNodes) {
+        for (i = 0; i < InitialPixelCount; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iXPos += XAdvance;
+        }
+      } else {
+        for (i = 0; i < InitialPixelCount; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
           iXPos += XAdvance;
         }
       }
       iYPos++;
-    }
-    /* Draw the final run of pixels */
-    // DrawHorizontalRun(&ScreenPtr, XAdvance, FinalPixelCount, Color);
-    if (fInsertNodes) {
-      for (i = 0; i < FinalPixelCount; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
+
+      /* Draw all full runs */
+      for (j = 0; j < YDelta - 1; j++) {
+        RunLength = WholeStep; /* run is at least this long */
+        /* Advance the error term and add an extra pixel if the error
+         term so indicates */
+        if ((ErrorTerm += AdjUp) > 0) {
+          RunLength++;
+          ErrorTerm -= AdjDown; /* reset the error term */
+        }
+        /* Draw this scan line's run */
+        // DrawHorizontalRun(&ScreenPtr, XAdvance, RunLength, Color);
+        if (fInsertNodes) {
+          for (i = 0; i < RunLength; i++) {
+            LightInsertNode(
+              iLight,
+              usCurNode,
+              iStartX,
+              iStartY,
+              iXPos,
+              iYPos,
+              ubStartIntens,
+              usFlags,
+            );
+            iXPos += XAdvance;
+          }
+        } else {
+          for (i = 0; i < RunLength; i++) {
+            LightAddNode(
+              iLight,
+              iStartX,
+              iStartY,
+              iXPos,
+              iYPos,
+              ubStartIntens,
+              usFlags,
+            );
+            iXPos += XAdvance;
+          }
+        }
+        iYPos++;
       }
+      /* Draw the final run of pixels */
+      // DrawHorizontalRun(&ScreenPtr, XAdvance, FinalPixelCount, Color);
+      if (fInsertNodes) {
+        for (i = 0; i < FinalPixelCount; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iXPos += XAdvance;
+        }
+      } else {
+        for (i = 0; i < FinalPixelCount; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iXPos += XAdvance;
+        }
+      }
+      iYPos++;
     } else {
-      for (i = 0; i < FinalPixelCount; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iXPos += XAdvance;
-      }
-    }
-    iYPos++;
-  } else {
-    /* Y major line */
+      /* Y major line */
 
-    /* Minimum # of pixels in a run in this line */
-    WholeStep = Math.trunc(YDelta / XDelta);
+      /* Minimum # of pixels in a run in this line */
+      WholeStep = Math.trunc(YDelta / XDelta);
 
-    /* Error term adjust each time X steps by 1; used to tell when 1 extra
+      /* Error term adjust each time X steps by 1; used to tell when 1 extra
        pixel should be drawn as part of a run, to account for
        fractional steps along the Y axis per 1-pixel steps along X */
-    AdjUp = (YDelta % XDelta) * 2;
+      AdjUp = (YDelta % XDelta) * 2;
 
-    /* Error term adjust when the error term turns over, used to factor
+      /* Error term adjust when the error term turns over, used to factor
        out the Y step made at that time */
-    AdjDown = XDelta * 2;
+      AdjDown = XDelta * 2;
 
-    /* Initial error term; reflects initial step of 0.5 along the X axis */
-    ErrorTerm = (YDelta % XDelta) - (XDelta * 2);
+      /* Initial error term; reflects initial step of 0.5 along the X axis */
+      ErrorTerm = (YDelta % XDelta) - XDelta * 2;
 
-    /* The initial and last runs are partial, because X advances only 0.5
+      /* The initial and last runs are partial, because X advances only 0.5
        for these runs, rather than 1. Divide one full run, plus the
        initial pixel, between the initial and last runs */
-    InitialPixelCount = Math.trunc(WholeStep / 2) + 1;
-    FinalPixelCount = InitialPixelCount;
+      InitialPixelCount = Math.trunc(WholeStep / 2) + 1;
+      FinalPixelCount = InitialPixelCount;
 
-    /* If the basic run length is even and there's no fractional advance, we
+      /* If the basic run length is even and there's no fractional advance, we
        have 1 pixel that could go to either the initial or last partial run,
        which we'll arbitrarily allocate to the last run */
-    if ((AdjUp == 0) && ((WholeStep & 0x01) == 0)) {
-      InitialPixelCount--;
-    }
-    /* If there are an odd number of pixels per run, we have one pixel
+      if (AdjUp == 0 && (WholeStep & 0x01) == 0) {
+        InitialPixelCount--;
+      }
+      /* If there are an odd number of pixels per run, we have one pixel
        that can't be allocated to either the initial or last partial
        run, so we'll add 0.5 to the error term so this pixel will be
        handled by the normal full-run loop */
-    if ((WholeStep & 0x01) != 0) {
-      ErrorTerm += XDelta;
-    }
-    /* Draw the first, partial run of pixels */
-    if (fInsertNodes) {
-      for (i = 0; i < InitialPixelCount; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iYPos++;
+      if ((WholeStep & 0x01) != 0) {
+        ErrorTerm += XDelta;
       }
-    } else {
-      for (i = 0; i < InitialPixelCount; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iYPos++;
-      }
-    }
-    iXPos += XAdvance;
-    // DrawVerticalRun(&ScreenPtr, XAdvance, InitialPixelCount, Color);
-
-    /* Draw all full runs */
-    for (j = 0; j < (XDelta - 1); j++) {
-      RunLength = WholeStep; /* run is at least this long */
-      /* Advance the error term and add an extra pixel if the error
-         term so indicates */
-      if ((ErrorTerm += AdjUp) > 0) {
-        RunLength++;
-        ErrorTerm -= AdjDown; /* reset the error term */
-      }
-      /* Draw this scan line's run */
-      // DrawVerticalRun(&ScreenPtr, XAdvance, RunLength, Color);
+      /* Draw the first, partial run of pixels */
       if (fInsertNodes) {
-        for (i = 0; i < RunLength; i++) {
-          LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
+        for (i = 0; i < InitialPixelCount; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
           iYPos++;
         }
       } else {
-        for (i = 0; i < RunLength; i++) {
-          LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
+        for (i = 0; i < InitialPixelCount; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iYPos++;
+        }
+      }
+      iXPos += XAdvance;
+      // DrawVerticalRun(&ScreenPtr, XAdvance, InitialPixelCount, Color);
+
+      /* Draw all full runs */
+      for (j = 0; j < XDelta - 1; j++) {
+        RunLength = WholeStep; /* run is at least this long */
+        /* Advance the error term and add an extra pixel if the error
+         term so indicates */
+        if ((ErrorTerm += AdjUp) > 0) {
+          RunLength++;
+          ErrorTerm -= AdjDown; /* reset the error term */
+        }
+        /* Draw this scan line's run */
+        // DrawVerticalRun(&ScreenPtr, XAdvance, RunLength, Color);
+        if (fInsertNodes) {
+          for (i = 0; i < RunLength; i++) {
+            LightInsertNode(
+              iLight,
+              usCurNode,
+              iStartX,
+              iStartY,
+              iXPos,
+              iYPos,
+              ubStartIntens,
+              usFlags,
+            );
+            iYPos++;
+          }
+        } else {
+          for (i = 0; i < RunLength; i++) {
+            LightAddNode(
+              iLight,
+              iStartX,
+              iStartY,
+              iXPos,
+              iYPos,
+              ubStartIntens,
+              usFlags,
+            );
+            iYPos++;
+          }
+        }
+        iXPos += XAdvance;
+      }
+      /* Draw the final run of pixels */
+      // DrawVerticalRun(&ScreenPtr, XAdvance, FinalPixelCount, Color);
+      if (fInsertNodes) {
+        for (i = 0; i < FinalPixelCount; i++) {
+          LightInsertNode(
+            iLight,
+            usCurNode,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
+          iYPos++;
+        }
+      } else {
+        for (i = 0; i < FinalPixelCount; i++) {
+          LightAddNode(
+            iLight,
+            iStartX,
+            iStartY,
+            iXPos,
+            iYPos,
+            ubStartIntens,
+            usFlags,
+          );
           iYPos++;
         }
       }
       iXPos += XAdvance;
     }
-    /* Draw the final run of pixels */
-    // DrawVerticalRun(&ScreenPtr, XAdvance, FinalPixelCount, Color);
-    if (fInsertNodes) {
-      for (i = 0; i < FinalPixelCount; i++) {
-        LightInsertNode(iLight, usCurNode, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iYPos++;
-      }
-    } else {
-      for (i = 0; i < FinalPixelCount; i++) {
-        LightAddNode(iLight, iStartX, iStartY, iXPos, iYPos, ubStartIntens, usFlags);
-        iYPos++;
-      }
-    }
-    iXPos += XAdvance;
+    return true;
   }
-  return true;
-}
 
-/****************************************************************************************
+  /****************************************************************************************
         LightGenerateElliptical
 
                 Creates an elliptical light, taking two radii.
 
 ***************************************************************************************/
-function LightGenerateElliptical(iLight: INT32, iIntensity: UINT8, iA: INT16, iB: INT16): boolean {
-  let iX: INT16;
-  let iY: INT16;
-  let WorkingX: INT32;
-  let WorkingY: INT32;
-  let ASquared: DOUBLE;
-  let BSquared: DOUBLE;
-  let Temp: DOUBLE;
+  function LightGenerateElliptical(
+    iLight: INT32,
+    iIntensity: UINT8,
+    iA: INT16,
+    iB: INT16,
+  ): boolean {
+    let iX: INT16;
+    let iY: INT16;
+    let WorkingX: INT32;
+    let WorkingY: INT32;
+    let ASquared: DOUBLE;
+    let BSquared: DOUBLE;
+    let Temp: DOUBLE;
 
-  iX = 0;
-  iY = 0;
-  ASquared = iA * iA;
-  BSquared = iB * iB;
+    iX = 0;
+    iY = 0;
+    ASquared = iA * iA;
+    BSquared = iB * iB;
 
-  /* Draw the four symmetric arcs for which X advances faster (that is,
+    /* Draw the four symmetric arcs for which X advances faster (that is,
      for which X is the major axis) */
-  /* Draw the initial top & bottom points */
-  LightCastRay(iLight, iX, iY, iX, (iY + iB), iIntensity, 1);
-  LightCastRay(iLight, iX, iY, iX, (iY - iB), iIntensity, 1);
+    /* Draw the initial top & bottom points */
+    LightCastRay(iLight, iX, iY, iX, iY + iB, iIntensity, 1);
+    LightCastRay(iLight, iX, iY, iX, iY - iB, iIntensity, 1);
 
-  /* Draw the four arcs */
-  for (WorkingX = 0;;) {
-    /* Advance one pixel along the X axis */
-    WorkingX++;
+    /* Draw the four arcs */
+    for (WorkingX = 0; ; ) {
+      /* Advance one pixel along the X axis */
+      WorkingX++;
 
-    /* Calculate the corresponding point along the Y axis. Guard
+      /* Calculate the corresponding point along the Y axis. Guard
        against floating-point roundoff making the intermediate term
        less than 0 */
-    Temp = BSquared - (BSquared * WorkingX * WorkingX / ASquared);
+      Temp = BSquared - (BSquared * WorkingX * WorkingX) / ASquared;
 
-    if (Temp >= 0)
-      WorkingY = Math.trunc(Math.sqrt(Temp) + 0.5);
-    else
-      WorkingY = 0;
+      if (Temp >= 0) WorkingY = Math.trunc(Math.sqrt(Temp) + 0.5);
+      else WorkingY = 0;
 
-    /* Stop if X is no longer the major axis (the arc has passed the
+      /* Stop if X is no longer the major axis (the arc has passed the
        45-degree point) */
-    if ((WorkingY / BSquared) <= (WorkingX / ASquared))
-      break;
+      if (WorkingY / BSquared <= WorkingX / ASquared) break;
 
-    /* Draw the 4 symmetries of the current point */
-    LightCastRay(iLight, iX, iY, (iX + WorkingX), (iY - WorkingY), iIntensity, 1);
-    LightCastRay(iLight, iX, iY, (iX - WorkingX), (iY - WorkingY), iIntensity, 1);
-    LightCastRay(iLight, iX, iY, (iX + WorkingX), (iY + WorkingY), iIntensity, 1);
-    LightCastRay(iLight, iX, iY, (iX - WorkingX), (iY + WorkingY), iIntensity, 1);
-  }
+      /* Draw the 4 symmetries of the current point */
+      LightCastRay(iLight, iX, iY, iX + WorkingX, iY - WorkingY, iIntensity, 1);
+      LightCastRay(iLight, iX, iY, iX - WorkingX, iY - WorkingY, iIntensity, 1);
+      LightCastRay(iLight, iX, iY, iX + WorkingX, iY + WorkingY, iIntensity, 1);
+      LightCastRay(iLight, iX, iY, iX - WorkingX, iY + WorkingY, iIntensity, 1);
+    }
 
-  /* Draw the four symmetric arcs for which Y advances faster (that is,
+    /* Draw the four symmetric arcs for which Y advances faster (that is,
      for which Y is the major axis) */
-  /* Draw the initial left & right points */
-  LightCastRay(iLight, iX, iY, (iX + iA), iY, iIntensity, 1);
-  LightCastRay(iLight, iX, iY, (iX - iA), iY, iIntensity, 1);
+    /* Draw the initial left & right points */
+    LightCastRay(iLight, iX, iY, iX + iA, iY, iIntensity, 1);
+    LightCastRay(iLight, iX, iY, iX - iA, iY, iIntensity, 1);
 
-  /* Draw the four arcs */
-  for (WorkingY = 0;;) {
-    /* Advance one pixel along the Y axis */
-    WorkingY++;
+    /* Draw the four arcs */
+    for (WorkingY = 0; ; ) {
+      /* Advance one pixel along the Y axis */
+      WorkingY++;
 
-    /* Calculate the corresponding point along the X axis. Guard
+      /* Calculate the corresponding point along the X axis. Guard
        against floating-point roundoff making the intermediate term
        less than 0 */
-    Temp = ASquared - (ASquared * WorkingY * WorkingY / BSquared);
+      Temp = ASquared - (ASquared * WorkingY * WorkingY) / BSquared;
 
-    if (Temp >= 0)
-      WorkingX = Math.trunc(Math.sqrt(Temp) + 0.5);
-    else
-      WorkingX = 0;
+      if (Temp >= 0) WorkingX = Math.trunc(Math.sqrt(Temp) + 0.5);
+      else WorkingX = 0;
 
-    /* Stop if Y is no longer the major axis (the arc has passed the
+      /* Stop if Y is no longer the major axis (the arc has passed the
        45-degree point) */
-    if ((WorkingX / ASquared) < (WorkingY / BSquared))
-      break;
+      if (WorkingX / ASquared < WorkingY / BSquared) break;
 
-    /* Draw the 4 symmetries of the current point */
-    LightCastRay(iLight, iX, iY, (iX + WorkingX), (iY - WorkingY), iIntensity, 1);
-    LightCastRay(iLight, iX, iY, (iX - WorkingX), (iY - WorkingY), iIntensity, 1);
-    LightCastRay(iLight, iX, iY, (iX + WorkingX), (iY + WorkingY), iIntensity, 1);
-    LightCastRay(iLight, iX, iY, (iX - WorkingX), (iY + WorkingY), iIntensity, 1);
+      /* Draw the 4 symmetries of the current point */
+      LightCastRay(iLight, iX, iY, iX + WorkingX, iY - WorkingY, iIntensity, 1);
+      LightCastRay(iLight, iX, iY, iX - WorkingX, iY - WorkingY, iIntensity, 1);
+      LightCastRay(iLight, iX, iY, iX + WorkingX, iY + WorkingY, iIntensity, 1);
+      LightCastRay(iLight, iX, iY, iX - WorkingX, iY + WorkingY, iIntensity, 1);
+    }
+
+    return true;
   }
 
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightGenerateSquare
 
                 Creates an square light, taking two radii.
 
 ***************************************************************************************/
-function LightGenerateSquare(iLight: INT32, iIntensity: UINT8, iA: INT16, iB: INT16): boolean {
-  let iX: INT16;
-  let iY: INT16;
+  function LightGenerateSquare(
+    iLight: INT32,
+    iIntensity: UINT8,
+    iA: INT16,
+    iB: INT16,
+  ): boolean {
+    let iX: INT16;
+    let iY: INT16;
 
-  for (iX = 0 - iA; iX <= 0 + iA; iX++)
-    LightCastRay(iLight, 0, 0, iX, (0 - iB), iIntensity, 1);
+    for (iX = 0 - iA; iX <= 0 + iA; iX++)
+      LightCastRay(iLight, 0, 0, iX, 0 - iB, iIntensity, 1);
 
-  for (iX = 0 - iA; iX <= 0 + iA; iX++)
-    LightCastRay(iLight, 0, 0, iX, (0 + iB), iIntensity, 1);
+    for (iX = 0 - iA; iX <= 0 + iA; iX++)
+      LightCastRay(iLight, 0, 0, iX, 0 + iB, iIntensity, 1);
 
-  for (iY = 0 - iB; iY <= 0 + iB; iY++)
-    LightCastRay(iLight, 0, 0, (0 - iA), iY, iIntensity, 1);
+    for (iY = 0 - iB; iY <= 0 + iB; iY++)
+      LightCastRay(iLight, 0, 0, 0 - iA, iY, iIntensity, 1);
 
-  for (iY = 0 - iB; iY <= 0 + iB; iY++)
-    LightCastRay(iLight, 0, 0, (0 + iA), iY, iIntensity, 1);
+    for (iY = 0 - iB; iY <= 0 + iB; iY++)
+      LightCastRay(iLight, 0, 0, 0 + iA, iY, iIntensity, 1);
 
-  /*for(iY=0-iB; iY <= 0+iB; iY++)
+    /*for(iY=0-iB; iY <= 0+iB; iY++)
           LightCastRay(iLight, 0, iY, (INT16)(0+iA), iY, iIntensity, 1);
 
   for(iY=0+iB; iY >= 0-iB; iY--)
@@ -1682,211 +2026,269 @@ function LightGenerateSquare(iLight: INT32, iIntensity: UINT8, iA: INT16, iB: IN
   for(iX=0+iA; iX >= 0-iA; iX--)
           LightCastRay(iLight, iX, 0, iX, (INT16)(0-iB), iIntensity, 1); */
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightGenerateBeam
 
                 Creates a directional light.
 
 ***************************************************************************************/
-function LightGenerateBeam(iLight: INT32, iIntensity: UINT8, iLength: INT16, iRadius: INT16, iDirection: INT16): boolean {
-  return false;
-}
+  function LightGenerateBeam(
+    iLight: INT32,
+    iIntensity: UINT8,
+    iLength: INT16,
+    iRadius: INT16,
+    iDirection: INT16,
+  ): boolean {
+    return false;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightSetBaseLevel
 
                 Sets the current and natural light settings for all tiles in the world.
 
 ***************************************************************************************/
-export function LightSetBaseLevel(iIntensity: UINT8): boolean {
-  let iCountY: INT16;
-  let iCountX: INT16;
-  let cnt: UINT32;
-  let pSoldier: SOLDIERTYPE;
+  export function LightSetBaseLevel(iIntensity: UINT8): boolean {
+    let iCountY: INT16;
+    let iCountX: INT16;
+    let cnt: UINT32;
+    let pSoldier: SOLDIERTYPE;
 
-  ubAmbientLightLevel = iIntensity;
+    ubAmbientLightLevel = iIntensity;
 
-  if (!gfEditMode) {
-    // Loop for all good guys in tactical map and add a light if required
-    for (cnt = 0; cnt < guiNumMercSlots; cnt++) {
-      pSoldier = MercSlots[cnt];
+    if (!gfEditMode) {
+      // Loop for all good guys in tactical map and add a light if required
+      for (cnt = 0; cnt < guiNumMercSlots; cnt++) {
+        pSoldier = MercSlots[cnt];
 
-      if (pSoldier != null) {
-        if (pSoldier.bTeam == gbPlayerNum) {
-          // Re-create soldier lights
-          ReCreateSoldierLight(pSoldier);
+        if (pSoldier != null) {
+          if (pSoldier.bTeam == gbPlayerNum) {
+            // Re-create soldier lights
+            ReCreateSoldierLight(pSoldier);
+          }
         }
       }
     }
+
+    for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
+      for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
+        LightSetNaturalTile(iCountX, iCountY, iIntensity);
+
+    LightSpriteRenderAll();
+
+    if (iIntensity >= LIGHT_DUSK_CUTOFF) RenderSetShadows(false);
+    else RenderSetShadows(true);
+
+    return true;
   }
 
-  for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
-    for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
-      LightSetNaturalTile(iCountX, iCountY, iIntensity);
-
-  LightSpriteRenderAll();
-
-  if (iIntensity >= LIGHT_DUSK_CUTOFF)
-    RenderSetShadows(false);
-  else
-    RenderSetShadows(true);
-
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightAddBaseLevel
 
                 Adds a light value to all the tiles in the world
 
 ***************************************************************************************/
-export function LightAddBaseLevel(uiLightType: UINT32, iIntensity: UINT8): boolean {
-  let iCountY: INT16;
-  let iCountX: INT16;
+  export function LightAddBaseLevel(
+    uiLightType: UINT32,
+    iIntensity: UINT8,
+  ): boolean {
+    let iCountY: INT16;
+    let iCountX: INT16;
 
-  ubAmbientLightLevel = Math.max(SHADE_MAX, ubAmbientLightLevel - iIntensity);
+    ubAmbientLightLevel = Math.max(SHADE_MAX, ubAmbientLightLevel - iIntensity);
 
-  for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
-    for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
-      LightAddTile(uiLightType, iCountX, iCountY, iCountX, iCountY, iIntensity, LIGHT_IGNORE_WALLS | LIGHT_EVERYTHING, false);
+    for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
+      for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
+        LightAddTile(
+          uiLightType,
+          iCountX,
+          iCountY,
+          iCountX,
+          iCountY,
+          iIntensity,
+          LIGHT_IGNORE_WALLS | LIGHT_EVERYTHING,
+          false,
+        );
 
-  if (ubAmbientLightLevel >= LIGHT_DUSK_CUTOFF)
-    RenderSetShadows(false);
-  else
-    RenderSetShadows(true);
+    if (ubAmbientLightLevel >= LIGHT_DUSK_CUTOFF) RenderSetShadows(false);
+    else RenderSetShadows(true);
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightSubtractBaseLevel
 
                 Sets the current and natural light settings for all tiles in the world.
 
 ***************************************************************************************/
-export function LightSubtractBaseLevel(uiLightType: UINT32, iIntensity: UINT8): boolean {
-  let iCountY: INT16;
-  let iCountX: INT16;
+  export function LightSubtractBaseLevel(
+    uiLightType: UINT32,
+    iIntensity: UINT8,
+  ): boolean {
+    let iCountY: INT16;
+    let iCountX: INT16;
 
-  ubAmbientLightLevel = Math.min(SHADE_MIN, ubAmbientLightLevel + iIntensity);
+    ubAmbientLightLevel = Math.min(SHADE_MIN, ubAmbientLightLevel + iIntensity);
 
-  for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
-    for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
-      LightSubtractTile(uiLightType, iCountX, iCountY, iCountX, iCountY, iIntensity, LIGHT_IGNORE_WALLS | LIGHT_EVERYTHING, false);
+    for (iCountY = 0; iCountY < WORLD_ROWS; iCountY++)
+      for (iCountX = 0; iCountX < WORLD_COLS; iCountX++)
+        LightSubtractTile(
+          uiLightType,
+          iCountX,
+          iCountY,
+          iCountX,
+          iCountY,
+          iIntensity,
+          LIGHT_IGNORE_WALLS | LIGHT_EVERYTHING,
+          false,
+        );
 
-  if (ubAmbientLightLevel >= LIGHT_DUSK_CUTOFF)
-    RenderSetShadows(false);
-  else
-    RenderSetShadows(true);
+    if (ubAmbientLightLevel >= LIGHT_DUSK_CUTOFF) RenderSetShadows(false);
+    else RenderSetShadows(true);
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightCreateOmni
 
                 Creates a circular light.
 
 ***************************************************************************************/
-export function LightCreateOmni(ubIntensity: UINT8, iRadius: INT16): INT32 {
-  let iLight: INT32;
-  let usName: string /* UINT8[14] */;
+  export function LightCreateOmni(ubIntensity: UINT8, iRadius: INT16): INT32 {
+    let iLight: INT32;
+    let usName: string /* UINT8[14] */;
 
-  iLight = LightGetFree();
-  if (iLight != (-1)) {
-    LightGenerateElliptical(iLight, ubIntensity, (iRadius * DISTANCE_SCALE), (iRadius * DISTANCE_SCALE));
+    iLight = LightGetFree();
+    if (iLight != -1) {
+      LightGenerateElliptical(
+        iLight,
+        ubIntensity,
+        iRadius * DISTANCE_SCALE,
+        iRadius * DISTANCE_SCALE,
+      );
+    }
+
+    usName = sprintf("LTO%d.LHT", iRadius);
+    pLightNames[iLight] = usName;
+
+    return iLight;
   }
 
-  usName = sprintf("LTO%d.LHT", iRadius);
-  pLightNames[iLight] = usName;
-
-  return iLight;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightCreateSquare
 
                 Creates a square light.
 
 ***************************************************************************************/
-function LightCreateSquare(ubIntensity: UINT8, iRadius1: INT16, iRadius2: INT16): INT32 {
-  let iLight: INT32;
-  let usName: string /* UINT8[14] */;
+  function LightCreateSquare(
+    ubIntensity: UINT8,
+    iRadius1: INT16,
+    iRadius2: INT16,
+  ): INT32 {
+    let iLight: INT32;
+    let usName: string /* UINT8[14] */;
 
-  iLight = LightGetFree();
-  if (iLight != (-1)) {
-    LightGenerateSquare(iLight, ubIntensity, (iRadius1 * DISTANCE_SCALE), (iRadius2 * DISTANCE_SCALE));
+    iLight = LightGetFree();
+    if (iLight != -1) {
+      LightGenerateSquare(
+        iLight,
+        ubIntensity,
+        iRadius1 * DISTANCE_SCALE,
+        iRadius2 * DISTANCE_SCALE,
+      );
+    }
+
+    usName = sprintf("LTS%d-%d.LHT", iRadius1, iRadius2);
+    pLightNames[iLight] = usName;
+
+    return iLight;
   }
 
-  usName = sprintf("LTS%d-%d.LHT", iRadius1, iRadius2);
-  pLightNames[iLight] = usName;
-
-  return iLight;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightCreateOval
 
                 Creates an elliptical light.
 
 ***************************************************************************************/
-function LightCreateElliptical(ubIntensity: UINT8, iRadius1: INT16, iRadius2: INT16): INT32 {
-  let iLight: INT32;
-  let usName: string /* UINT8[14] */;
+  function LightCreateElliptical(
+    ubIntensity: UINT8,
+    iRadius1: INT16,
+    iRadius2: INT16,
+  ): INT32 {
+    let iLight: INT32;
+    let usName: string /* UINT8[14] */;
 
-  iLight = LightGetFree();
-  if (iLight != (-1))
-    LightGenerateElliptical(iLight, ubIntensity, (iRadius1 * DISTANCE_SCALE), (iRadius2 * DISTANCE_SCALE));
+    iLight = LightGetFree();
+    if (iLight != -1)
+      LightGenerateElliptical(
+        iLight,
+        ubIntensity,
+        iRadius1 * DISTANCE_SCALE,
+        iRadius2 * DISTANCE_SCALE,
+      );
 
-  usName = sprintf("LTE%d-%d.LHT", iRadius1, iRadius2);
-  pLightNames[iLight] = usName;
+    usName = sprintf("LTE%d-%d.LHT", iRadius1, iRadius2);
+    pLightNames[iLight] = usName;
 
-  return iLight;
-}
+    return iLight;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightIlluminateWall
 
                 Renders a light template at the specified X,Y coordinates.
 
 ***************************************************************************************/
-function LightIlluminateWall(iSourceX: INT16, iSourceY: INT16, iTileX: INT16, iTileY: INT16, pStruct: LEVELNODE | null): boolean {
-  //	return( LightTileHasWall( iSourceX, iSourceY, iTileX, iTileY ) );
+  function LightIlluminateWall(
+    iSourceX: INT16,
+    iSourceY: INT16,
+    iTileX: INT16,
+    iTileY: INT16,
+    pStruct: LEVELNODE | null,
+  ): boolean {
+    //	return( LightTileHasWall( iSourceX, iSourceY, iTileX, iTileY ) );
 
-  return true;
-}
+    return true;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightDraw
 
                 Renders a light template at the specified X,Y coordinates.
 
 ***************************************************************************************/
-export function LightDraw(uiLightType: UINT32, iLight: INT32, iX: INT16, iY: INT16, uiSprite: UINT32): boolean {
-  let pLight: LIGHT_NODE;
-  let uiCount: UINT16;
-  let usNodeIndex: UINT16;
-  let uiFlags: UINT32;
-  let iOldX: INT32;
-  let iOldY: INT32;
-  let fBlocked: boolean = false;
-  let fOnlyWalls: boolean;
+  export function LightDraw(
+    uiLightType: UINT32,
+    iLight: INT32,
+    iX: INT16,
+    iY: INT16,
+    uiSprite: UINT32,
+  ): boolean {
+    let pLight: LIGHT_NODE;
+    let uiCount: UINT16;
+    let usNodeIndex: UINT16;
+    let uiFlags: UINT32;
+    let iOldX: INT32;
+    let iOldY: INT32;
+    let fBlocked: boolean = false;
+    let fOnlyWalls: boolean;
 
-  // MAP_ELEMENT * pMapElement;
+    // MAP_ELEMENT * pMapElement;
 
-  if (pLightList[iLight] == null)
-    return false;
+    if (pLightList[iLight] == null) return false;
 
-  // clear out all the flags
-  for (uiCount = 0; uiCount < usTemplateSize[iLight]; uiCount++) {
-    pLight = pLightList[iLight][uiCount];
-    pLight.uiFlags &= (~LIGHT_NODE_DRAWN);
-  }
+    // clear out all the flags
+    for (uiCount = 0; uiCount < usTemplateSize[iLight]; uiCount++) {
+      pLight = pLightList[iLight][uiCount];
+      pLight.uiFlags &= ~LIGHT_NODE_DRAWN;
+    }
 
-  /*
+    /*
           if (!(LightSprites[uiSprite].uiFlags & MERC_LIGHT))
           {
                   uiFlags |= LIGHT_FAKE
@@ -1910,945 +2312,1062 @@ export function LightDraw(uiLightType: UINT32, iLight: INT32, iX: INT16, iY: INT
           }
   */
 
-  iOldX = iX;
-  iOldY = iY;
+    iOldX = iX;
+    iOldY = iY;
 
-  for (uiCount = 0; uiCount < usRaySize[iLight]; uiCount++) {
-    usNodeIndex = pLightRayList[iLight][uiCount];
+    for (uiCount = 0; uiCount < usRaySize[iLight]; uiCount++) {
+      usNodeIndex = pLightRayList[iLight][uiCount];
 
-    if (!(usNodeIndex & LIGHT_NEW_RAY)) {
-      fBlocked = false;
-      fOnlyWalls = false;
+      if (!(usNodeIndex & LIGHT_NEW_RAY)) {
+        fBlocked = false;
+        fOnlyWalls = false;
 
-      pLight = pLightList[iLight][usNodeIndex & (~LIGHT_BACKLIGHT)];
+        pLight = pLightList[iLight][usNodeIndex & ~LIGHT_BACKLIGHT];
 
-      if (!(LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)) {
-        if (LightTileBlocked(iOldX, iOldY, (iX + pLight.iDX), (iY + pLight.iDY))) {
-          uiCount = LightFindNextRay(iLight, uiCount);
+        if (!(LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)) {
+          if (
+            LightTileBlocked(iOldX, iOldY, iX + pLight.iDX, iY + pLight.iDY)
+          ) {
+            uiCount = LightFindNextRay(iLight, uiCount);
 
-          fOnlyWalls = true;
-          fBlocked = true;
+            fOnlyWalls = true;
+            fBlocked = true;
+          }
         }
-      }
 
-      if (!(pLight.uiFlags & LIGHT_NODE_DRAWN) && (pLight.ubLight)) {
-        uiFlags = (usNodeIndex & LIGHT_BACKLIGHT);
-        if (LightSprites[uiSprite].uiFlags & MERC_LIGHT)
-          uiFlags |= LIGHT_FAKE;
-        if (LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)
-          uiFlags |= LIGHT_ROOF_ONLY;
+        if (!(pLight.uiFlags & LIGHT_NODE_DRAWN) && pLight.ubLight) {
+          uiFlags = usNodeIndex & LIGHT_BACKLIGHT;
+          if (LightSprites[uiSprite].uiFlags & MERC_LIGHT)
+            uiFlags |= LIGHT_FAKE;
+          if (LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)
+            uiFlags |= LIGHT_ROOF_ONLY;
 
-        LightAddTile(uiLightType, iOldX, iOldY, (iX + pLight.iDX), (iY + pLight.iDY), pLight.ubLight, uiFlags, fOnlyWalls);
+          LightAddTile(
+            uiLightType,
+            iOldX,
+            iOldY,
+            iX + pLight.iDX,
+            iY + pLight.iDY,
+            pLight.ubLight,
+            uiFlags,
+            fOnlyWalls,
+          );
 
-        pLight.uiFlags |= LIGHT_NODE_DRAWN;
-      }
+          pLight.uiFlags |= LIGHT_NODE_DRAWN;
+        }
 
-      if (fBlocked) {
+        if (fBlocked) {
+          iOldX = iX;
+          iOldY = iY;
+        } else {
+          iOldX = iX + pLight.iDX;
+          iOldY = iY + pLight.iDY;
+        }
+      } else {
         iOldX = iX;
         iOldY = iY;
-      } else {
-        iOldX = iX + pLight.iDX;
-        iOldY = iY + pLight.iDY;
       }
-    } else {
-      iOldX = iX;
-      iOldY = iY;
     }
+
+    return true;
   }
 
-  return true;
-}
+  function LightRevealWall(
+    sX: INT16,
+    sY: INT16,
+    sSrcX: INT16,
+    sSrcY: INT16,
+  ): boolean {
+    let pStruct: LEVELNODE | null;
+    let uiTile: UINT32;
+    let fRerender: boolean = false;
+    let fHitWall: boolean = false;
+    let fDoRightWalls: boolean = true;
+    let fDoLeftWalls: boolean = true;
+    let TileElem: TILE_ELEMENT;
 
-function LightRevealWall(sX: INT16, sY: INT16, sSrcX: INT16, sSrcY: INT16): boolean {
-  let pStruct: LEVELNODE | null;
-  let uiTile: UINT32;
-  let fRerender: boolean = false;
-  let fHitWall: boolean = false;
-  let fDoRightWalls: boolean = true;
-  let fDoLeftWalls: boolean = true;
-  let TileElem: TILE_ELEMENT;
+    Assert(gpWorldLevelData != null);
 
-  Assert(gpWorldLevelData != null);
+    uiTile = MAPROWCOLTOPOS(sY, sX);
 
-  uiTile = MAPROWCOLTOPOS(sY, sX);
+    if (sX < sSrcX) fDoRightWalls = false;
 
-  if (sX < sSrcX)
-    fDoRightWalls = false;
+    if (sY < sSrcY) fDoLeftWalls = false;
 
-  if (sY < sSrcY)
-    fDoLeftWalls = false;
-
-  // IF A FENCE, RETURN FALSE
-  if (IsFencePresentAtGridno(uiTile)) {
-    return false;
-  }
-
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
-  while (pStruct != null) {
-    TileElem = gTileDatabase[pStruct.usIndex];
-    switch (TileElem.usWallOrientation) {
-      case Enum314.INSIDE_TOP_RIGHT:
-      case Enum314.OUTSIDE_TOP_RIGHT:
-        if (!fDoRightWalls)
-          fDoLeftWalls = false;
-        break;
-
-      case Enum314.INSIDE_TOP_LEFT:
-      case Enum314.OUTSIDE_TOP_LEFT:
-        if (!fDoLeftWalls)
-          fDoRightWalls = false;
-        break;
+    // IF A FENCE, RETURN FALSE
+    if (IsFencePresentAtGridno(uiTile)) {
+      return false;
     }
-    pStruct = pStruct.pNext;
-  }
 
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
-  while (pStruct != null) {
-    TileElem = gTileDatabase[pStruct.usIndex];
-    switch (TileElem.usWallOrientation) {
-      case Enum314.NO_ORIENTATION:
-        break;
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
+    while (pStruct != null) {
+      TileElem = gTileDatabase[pStruct.usIndex];
+      switch (TileElem.usWallOrientation) {
+        case Enum314.INSIDE_TOP_RIGHT:
+        case Enum314.OUTSIDE_TOP_RIGHT:
+          if (!fDoRightWalls) fDoLeftWalls = false;
+          break;
 
-      case Enum314.INSIDE_TOP_RIGHT:
-      case Enum314.OUTSIDE_TOP_RIGHT:
-        fHitWall = true;
-        if ((fDoRightWalls) && (sX >= sSrcX)) {
-          pStruct.uiFlags |= LEVELNODE_REVEAL;
-          fRerender = true;
-        }
-        break;
-
-      case Enum314.INSIDE_TOP_LEFT:
-      case Enum314.OUTSIDE_TOP_LEFT:
-        fHitWall = true;
-        if ((fDoLeftWalls) && (sY >= sSrcY)) {
-          pStruct.uiFlags |= LEVELNODE_REVEAL;
-          fRerender = true;
-        }
-        break;
+        case Enum314.INSIDE_TOP_LEFT:
+        case Enum314.OUTSIDE_TOP_LEFT:
+          if (!fDoLeftWalls) fDoRightWalls = false;
+          break;
+      }
+      pStruct = pStruct.pNext;
     }
-    pStruct = pStruct.pNext;
-  }
 
-  if (fRerender)
-    SetRenderFlags(RENDER_FLAG_FULL);
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
+    while (pStruct != null) {
+      TileElem = gTileDatabase[pStruct.usIndex];
+      switch (TileElem.usWallOrientation) {
+        case Enum314.NO_ORIENTATION:
+          break;
 
-  return fHitWall;
-}
+        case Enum314.INSIDE_TOP_RIGHT:
+        case Enum314.OUTSIDE_TOP_RIGHT:
+          fHitWall = true;
+          if (fDoRightWalls && sX >= sSrcX) {
+            pStruct.uiFlags |= LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
 
-function LightHideWall(sX: INT16, sY: INT16, sSrcX: INT16, sSrcY: INT16): boolean {
-  let pStruct: LEVELNODE | null;
-  let uiTile: UINT32;
-  let fRerender: boolean = false;
-  let fHitWall: boolean = false;
-  let fDoRightWalls: boolean = true;
-  let fDoLeftWalls: boolean = true;
-  let TileElem: TILE_ELEMENT;
-
-  Assert(gpWorldLevelData != null);
-
-  uiTile = MAPROWCOLTOPOS(sY, sX);
-
-  if (sX < sSrcX)
-    fDoRightWalls = false;
-
-  if (sY < sSrcY)
-    fDoLeftWalls = false;
-
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
-  while (pStruct != null) {
-    TileElem = gTileDatabase[pStruct.usIndex];
-    switch (TileElem.usWallOrientation) {
-      case Enum314.INSIDE_TOP_RIGHT:
-      case Enum314.OUTSIDE_TOP_RIGHT:
-        if (!fDoRightWalls)
-          fDoLeftWalls = false;
-        break;
-
-      case Enum314.INSIDE_TOP_LEFT:
-      case Enum314.OUTSIDE_TOP_LEFT:
-        if (!fDoLeftWalls)
-          fDoRightWalls = false;
-        break;
+        case Enum314.INSIDE_TOP_LEFT:
+        case Enum314.OUTSIDE_TOP_LEFT:
+          fHitWall = true;
+          if (fDoLeftWalls && sY >= sSrcY) {
+            pStruct.uiFlags |= LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
+      }
+      pStruct = pStruct.pNext;
     }
-    pStruct = pStruct.pNext;
+
+    if (fRerender) SetRenderFlags(RENDER_FLAG_FULL);
+
+    return fHitWall;
   }
 
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
-  while (pStruct != null) {
-    TileElem = gTileDatabase[pStruct.usIndex];
-    switch (TileElem.usWallOrientation) {
-      case Enum314.NO_ORIENTATION:
-        break;
+  function LightHideWall(
+    sX: INT16,
+    sY: INT16,
+    sSrcX: INT16,
+    sSrcY: INT16,
+  ): boolean {
+    let pStruct: LEVELNODE | null;
+    let uiTile: UINT32;
+    let fRerender: boolean = false;
+    let fHitWall: boolean = false;
+    let fDoRightWalls: boolean = true;
+    let fDoLeftWalls: boolean = true;
+    let TileElem: TILE_ELEMENT;
 
-      case Enum314.INSIDE_TOP_RIGHT:
-      case Enum314.OUTSIDE_TOP_RIGHT:
-        fHitWall = true;
-        if ((fDoRightWalls) && (sX >= sSrcX)) {
-          pStruct.uiFlags &= (~LEVELNODE_REVEAL);
-          fRerender = true;
-        }
-        break;
+    Assert(gpWorldLevelData != null);
 
-      case Enum314.INSIDE_TOP_LEFT:
-      case Enum314.OUTSIDE_TOP_LEFT:
-        fHitWall = true;
-        if ((fDoLeftWalls) && (sY >= sSrcY)) {
-          pStruct.uiFlags &= (~LEVELNODE_REVEAL);
-          fRerender = true;
-        }
-        break;
+    uiTile = MAPROWCOLTOPOS(sY, sX);
+
+    if (sX < sSrcX) fDoRightWalls = false;
+
+    if (sY < sSrcY) fDoLeftWalls = false;
+
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
+    while (pStruct != null) {
+      TileElem = gTileDatabase[pStruct.usIndex];
+      switch (TileElem.usWallOrientation) {
+        case Enum314.INSIDE_TOP_RIGHT:
+        case Enum314.OUTSIDE_TOP_RIGHT:
+          if (!fDoRightWalls) fDoLeftWalls = false;
+          break;
+
+        case Enum314.INSIDE_TOP_LEFT:
+        case Enum314.OUTSIDE_TOP_LEFT:
+          if (!fDoLeftWalls) fDoRightWalls = false;
+          break;
+      }
+      pStruct = pStruct.pNext;
     }
-    pStruct = pStruct.pNext;
+
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
+    while (pStruct != null) {
+      TileElem = gTileDatabase[pStruct.usIndex];
+      switch (TileElem.usWallOrientation) {
+        case Enum314.NO_ORIENTATION:
+          break;
+
+        case Enum314.INSIDE_TOP_RIGHT:
+        case Enum314.OUTSIDE_TOP_RIGHT:
+          fHitWall = true;
+          if (fDoRightWalls && sX >= sSrcX) {
+            pStruct.uiFlags &= ~LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
+
+        case Enum314.INSIDE_TOP_LEFT:
+        case Enum314.OUTSIDE_TOP_LEFT:
+          fHitWall = true;
+          if (fDoLeftWalls && sY >= sSrcY) {
+            pStruct.uiFlags &= ~LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
+      }
+      pStruct = pStruct.pNext;
+    }
+
+    if (fRerender) SetRenderFlags(RENDER_FLAG_FULL);
+
+    return fHitWall;
   }
 
-  if (fRerender)
-    SetRenderFlags(RENDER_FLAG_FULL);
-
-  return fHitWall;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         CalcTranslucentWalls
 
                 Tags walls as being translucent using a light template.
 
 ***************************************************************************************/
-function CalcTranslucentWalls(iX: INT16, iY: INT16): boolean {
-  let pLight: LIGHT_NODE;
-  let uiCount: UINT16;
-  let usNodeIndex: UINT16;
-  if (pLightList[0] == null)
-    return false;
-  for (uiCount = 0; uiCount < usRaySize[0]; uiCount++) {
-    usNodeIndex = pLightRayList[0][uiCount];
+  function CalcTranslucentWalls(iX: INT16, iY: INT16): boolean {
+    let pLight: LIGHT_NODE;
+    let uiCount: UINT16;
+    let usNodeIndex: UINT16;
+    if (pLightList[0] == null) return false;
+    for (uiCount = 0; uiCount < usRaySize[0]; uiCount++) {
+      usNodeIndex = pLightRayList[0][uiCount];
 
-    if (!(usNodeIndex & LIGHT_NEW_RAY)) {
-      pLight = pLightList[0][usNodeIndex & (~LIGHT_BACKLIGHT)];
+      if (!(usNodeIndex & LIGHT_NEW_RAY)) {
+        pLight = pLightList[0][usNodeIndex & ~LIGHT_BACKLIGHT];
 
-      // Kris:  added map boundary checking!!!
-      if (LightRevealWall(Math.min(Math.max((iX + pLight.iDX), 0), WORLD_COLS - 1), Math.min(Math.max((iY + pLight.iDY), 0), WORLD_ROWS - 1), Math.min(Math.max(iX, 0), WORLD_COLS - 1), Math.min(Math.max(iY, 0), WORLD_ROWS - 1))) {
-        uiCount = LightFindNextRay(0, uiCount);
-        SetRenderFlags(RENDER_FLAG_FULL);
+        // Kris:  added map boundary checking!!!
+        if (
+          LightRevealWall(
+            Math.min(Math.max(iX + pLight.iDX, 0), WORLD_COLS - 1),
+            Math.min(Math.max(iY + pLight.iDY, 0), WORLD_ROWS - 1),
+            Math.min(Math.max(iX, 0), WORLD_COLS - 1),
+            Math.min(Math.max(iY, 0), WORLD_ROWS - 1),
+          )
+        ) {
+          uiCount = LightFindNextRay(0, uiCount);
+          SetRenderFlags(RENDER_FLAG_FULL);
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
+  function LightGreenTile(
+    sX: INT16,
+    sY: INT16,
+    sSrcX: INT16,
+    sSrcY: INT16,
+  ): boolean {
+    let pStruct: LEVELNODE | null;
+    let pLand: LEVELNODE | null;
+    let uiTile: UINT32;
+    let fRerender: boolean = false;
+    let fHitWall: boolean = false;
+    let fThroughWall: boolean = false;
+    let TileElem: TILE_ELEMENT;
 
-function LightGreenTile(sX: INT16, sY: INT16, sSrcX: INT16, sSrcY: INT16): boolean {
-  let pStruct: LEVELNODE | null;
-  let pLand: LEVELNODE | null;
-  let uiTile: UINT32;
-  let fRerender: boolean = false;
-  let fHitWall: boolean = false;
-  let fThroughWall: boolean = false;
-  let TileElem: TILE_ELEMENT;
+    Assert(gpWorldLevelData != null);
 
-  Assert(gpWorldLevelData != null);
+    uiTile = MAPROWCOLTOPOS(sY, sX);
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
 
-  uiTile = MAPROWCOLTOPOS(sY, sX);
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
+    if (sX < sSrcX || sY < sSrcY) fThroughWall = true;
 
-  if ((sX < sSrcX) || (sY < sSrcY))
-    fThroughWall = true;
+    while (pStruct != null) {
+      TileElem = gTileDatabase[pStruct.usIndex];
+      switch (TileElem.usWallOrientation) {
+        case Enum314.NO_ORIENTATION:
+          break;
 
-  while (pStruct != null) {
-    TileElem = gTileDatabase[pStruct.usIndex];
-    switch (TileElem.usWallOrientation) {
-      case Enum314.NO_ORIENTATION:
-        break;
+        case Enum314.INSIDE_TOP_RIGHT:
+        case Enum314.OUTSIDE_TOP_RIGHT:
+          fHitWall = true;
+          if (sX >= sSrcX) {
+            pStruct.uiFlags |= LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
 
-      case Enum314.INSIDE_TOP_RIGHT:
-      case Enum314.OUTSIDE_TOP_RIGHT:
-        fHitWall = true;
-        if (sX >= sSrcX) {
-          pStruct.uiFlags |= LEVELNODE_REVEAL;
-          fRerender = true;
-        }
-        break;
-
-      case Enum314.INSIDE_TOP_LEFT:
-      case Enum314.OUTSIDE_TOP_LEFT:
-        fHitWall = true;
-        if (sY >= sSrcY) {
-          pStruct.uiFlags |= LEVELNODE_REVEAL;
-          fRerender = true;
-        }
-        break;
+        case Enum314.INSIDE_TOP_LEFT:
+        case Enum314.OUTSIDE_TOP_LEFT:
+          fHitWall = true;
+          if (sY >= sSrcY) {
+            pStruct.uiFlags |= LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
+      }
+      pStruct = pStruct.pNext;
     }
-    pStruct = pStruct.pNext;
+
+    // if(fRerender)
+    //{
+    pLand = gpWorldLevelData[uiTile].pLandHead;
+    while (pLand != null) {
+      pLand.ubShadeLevel = 0;
+      pLand = pLand.pNext;
+    }
+
+    gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+    SetRenderFlags(RENDER_FLAG_MARKED);
+    //}
+
+    return fHitWall;
   }
 
-  // if(fRerender)
-  //{
-  pLand = gpWorldLevelData[uiTile].pLandHead;
-  while (pLand != null) {
-    pLand.ubShadeLevel = 0;
-    pLand = pLand.pNext;
-  }
-
-  gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
-  SetRenderFlags(RENDER_FLAG_MARKED);
-  //}
-
-  return fHitWall;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightShowRays
 
                 Draws a template by making the ground tiles green. Must be polled once for
 each tile drawn to facilitate animating the drawing process for debugging.
 
 ***************************************************************************************/
-/* static */ let LightShowRays__uiCount: UINT16 = 0;
-export function LightShowRays(iX: INT16, iY: INT16, fReset: boolean): boolean {
-  let pLight: LIGHT_NODE;
-  let usNodeIndex: UINT16;
+  /* static */ let LightShowRays__uiCount: UINT16 = 0;
+  export function LightShowRays(
+    iX: INT16,
+    iY: INT16,
+    fReset: boolean,
+  ): boolean {
+    let pLight: LIGHT_NODE;
+    let usNodeIndex: UINT16;
 
-  if (fReset)
-    LightShowRays__uiCount = 0;
+    if (fReset) LightShowRays__uiCount = 0;
 
-  if (pLightList[0] == null)
-    return false;
+    if (pLightList[0] == null) return false;
 
-  if (LightShowRays__uiCount < usRaySize[0]) {
-    usNodeIndex = pLightRayList[0][LightShowRays__uiCount];
+    if (LightShowRays__uiCount < usRaySize[0]) {
+      usNodeIndex = pLightRayList[0][LightShowRays__uiCount];
 
-    if (!(usNodeIndex & LIGHT_NEW_RAY)) {
-      pLight = pLightList[0][usNodeIndex & (~LIGHT_BACKLIGHT)];
+      if (!(usNodeIndex & LIGHT_NEW_RAY)) {
+        pLight = pLightList[0][usNodeIndex & ~LIGHT_BACKLIGHT];
 
-      if (LightGreenTile((iX + pLight.iDX), (iY + pLight.iDY), iX, iY)) {
-        LightShowRays__uiCount = LightFindNextRay(0, LightShowRays__uiCount);
-        SetRenderFlags(RENDER_FLAG_MARKED);
+        if (LightGreenTile(iX + pLight.iDX, iY + pLight.iDY, iX, iY)) {
+          LightShowRays__uiCount = LightFindNextRay(0, LightShowRays__uiCount);
+          SetRenderFlags(RENDER_FLAG_MARKED);
+        }
       }
-    }
 
-    LightShowRays__uiCount++;
-    return true;
-  } else
-    return false;
-}
+      LightShowRays__uiCount++;
+      return true;
+    } else return false;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightHideGreen
 
         Removes the green from the tiles that was drawn to show the path of the rays.
 
 ***************************************************************************************/
-function LightHideGreen(sX: INT16, sY: INT16, sSrcX: INT16, sSrcY: INT16): boolean {
-  let pStruct: LEVELNODE | null;
-  let pLand: LEVELNODE | null;
-  let uiTile: UINT32;
-  let fRerender: boolean = false;
-  let fHitWall: boolean = false;
-  let TileElem: TILE_ELEMENT;
+  function LightHideGreen(
+    sX: INT16,
+    sY: INT16,
+    sSrcX: INT16,
+    sSrcY: INT16,
+  ): boolean {
+    let pStruct: LEVELNODE | null;
+    let pLand: LEVELNODE | null;
+    let uiTile: UINT32;
+    let fRerender: boolean = false;
+    let fHitWall: boolean = false;
+    let TileElem: TILE_ELEMENT;
 
-  Assert(gpWorldLevelData != null);
+    Assert(gpWorldLevelData != null);
 
-  uiTile = MAPROWCOLTOPOS(sY, sX);
-  pStruct = gpWorldLevelData[uiTile].pStructHead;
+    uiTile = MAPROWCOLTOPOS(sY, sX);
+    pStruct = gpWorldLevelData[uiTile].pStructHead;
 
-  while (pStruct != null) {
-    TileElem = gTileDatabase[pStruct.usIndex];
-    switch (TileElem.usWallOrientation) {
-      case Enum314.NO_ORIENTATION:
-        break;
+    while (pStruct != null) {
+      TileElem = gTileDatabase[pStruct.usIndex];
+      switch (TileElem.usWallOrientation) {
+        case Enum314.NO_ORIENTATION:
+          break;
 
-      case Enum314.INSIDE_TOP_RIGHT:
-      case Enum314.OUTSIDE_TOP_RIGHT:
-        fHitWall = true;
-        if (sX >= sSrcX) {
-          pStruct.uiFlags &= (~LEVELNODE_REVEAL);
-          fRerender = true;
-        }
-        break;
+        case Enum314.INSIDE_TOP_RIGHT:
+        case Enum314.OUTSIDE_TOP_RIGHT:
+          fHitWall = true;
+          if (sX >= sSrcX) {
+            pStruct.uiFlags &= ~LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
 
-      case Enum314.INSIDE_TOP_LEFT:
-      case Enum314.OUTSIDE_TOP_LEFT:
-        fHitWall = true;
-        if (sY >= sSrcY) {
-          pStruct.uiFlags &= (~LEVELNODE_REVEAL);
-          fRerender = true;
-        }
-        break;
+        case Enum314.INSIDE_TOP_LEFT:
+        case Enum314.OUTSIDE_TOP_LEFT:
+          fHitWall = true;
+          if (sY >= sSrcY) {
+            pStruct.uiFlags &= ~LEVELNODE_REVEAL;
+            fRerender = true;
+          }
+          break;
+      }
+      pStruct = pStruct.pNext;
     }
-    pStruct = pStruct.pNext;
+
+    // if(fRerender)
+    //{
+    pLand = gpWorldLevelData[uiTile].pLandHead;
+    while (pLand != null) {
+      pLand.ubShadeLevel = pLand.ubNaturalShadeLevel;
+      pLand = pLand.pNext;
+    }
+
+    gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+    SetRenderFlags(RENDER_FLAG_MARKED);
+    //}
+
+    return fHitWall;
   }
 
-  // if(fRerender)
-  //{
-  pLand = gpWorldLevelData[uiTile].pLandHead;
-  while (pLand != null) {
-    pLand.ubShadeLevel = pLand.ubNaturalShadeLevel;
-    pLand = pLand.pNext;
-  }
-
-  gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
-  SetRenderFlags(RENDER_FLAG_MARKED);
-  //}
-
-  return fHitWall;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightHideRays
 
                 Hides walls that were revealed by CalcTranslucentWalls.
 
 ***************************************************************************************/
-export function LightHideRays(iX: INT16, iY: INT16): boolean {
-  let pLight: LIGHT_NODE;
-  let uiCount: UINT16;
-  let usNodeIndex: UINT16;
+  export function LightHideRays(iX: INT16, iY: INT16): boolean {
+    let pLight: LIGHT_NODE;
+    let uiCount: UINT16;
+    let usNodeIndex: UINT16;
 
-  if (pLightList[0] == null)
-    return false;
+    if (pLightList[0] == null) return false;
 
-  for (uiCount = 0; uiCount < usRaySize[0]; uiCount++) {
-    usNodeIndex = pLightRayList[0][uiCount];
+    for (uiCount = 0; uiCount < usRaySize[0]; uiCount++) {
+      usNodeIndex = pLightRayList[0][uiCount];
 
-    if (!(usNodeIndex & LIGHT_NEW_RAY)) {
-      pLight = pLightList[0][usNodeIndex & (~LIGHT_BACKLIGHT)];
+      if (!(usNodeIndex & LIGHT_NEW_RAY)) {
+        pLight = pLightList[0][usNodeIndex & ~LIGHT_BACKLIGHT];
 
-      if (LightHideWall((iX + pLight.iDX), (iY + pLight.iDY), iX, iY)) {
-        uiCount = LightFindNextRay(0, uiCount);
-        SetRenderFlags(RENDER_FLAG_MARKED);
+        if (LightHideWall(iX + pLight.iDX, iY + pLight.iDY, iX, iY)) {
+          uiCount = LightFindNextRay(0, uiCount);
+          SetRenderFlags(RENDER_FLAG_MARKED);
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         ApplyTranslucencyToWalls
 
                 Hides walls that were revealed by CalcTranslucentWalls.
 
 ***************************************************************************************/
-export function ApplyTranslucencyToWalls(iX: INT16, iY: INT16): boolean {
-  let pLight: LIGHT_NODE;
-  let uiCount: UINT16;
-  let usNodeIndex: UINT16;
+  export function ApplyTranslucencyToWalls(iX: INT16, iY: INT16): boolean {
+    let pLight: LIGHT_NODE;
+    let uiCount: UINT16;
+    let usNodeIndex: UINT16;
 
-  if (pLightList[0] == null)
-    return false;
+    if (pLightList[0] == null) return false;
 
-  for (uiCount = 0; uiCount < usRaySize[0]; uiCount++) {
-    usNodeIndex = pLightRayList[0][uiCount];
+    for (uiCount = 0; uiCount < usRaySize[0]; uiCount++) {
+      usNodeIndex = pLightRayList[0][uiCount];
 
-    if (!(usNodeIndex & LIGHT_NEW_RAY)) {
-      pLight = pLightList[0][usNodeIndex & (~LIGHT_BACKLIGHT)];
-      // Kris:  added map boundary checking!!!
-      if (LightHideWall(Math.min(Math.max((iX + pLight.iDX), 0), WORLD_COLS - 1), Math.min(Math.max((iY + pLight.iDY), 0), WORLD_ROWS - 1), Math.min(Math.max(iX, 0), WORLD_COLS - 1), Math.min(Math.max(iY, 0), WORLD_ROWS - 1))) {
-        uiCount = LightFindNextRay(0, uiCount);
-        SetRenderFlags(RENDER_FLAG_FULL);
+      if (!(usNodeIndex & LIGHT_NEW_RAY)) {
+        pLight = pLightList[0][usNodeIndex & ~LIGHT_BACKLIGHT];
+        // Kris:  added map boundary checking!!!
+        if (
+          LightHideWall(
+            Math.min(Math.max(iX + pLight.iDX, 0), WORLD_COLS - 1),
+            Math.min(Math.max(iY + pLight.iDY, 0), WORLD_ROWS - 1),
+            Math.min(Math.max(iX, 0), WORLD_COLS - 1),
+            Math.min(Math.max(iY, 0), WORLD_ROWS - 1),
+          )
+        ) {
+          uiCount = LightFindNextRay(0, uiCount);
+          SetRenderFlags(RENDER_FLAG_FULL);
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightTranslucentTrees
 
                 Makes all the near-side trees around a given coordinate translucent.
 ***************************************************************************************/
-function LightTranslucentTrees(iX: INT16, iY: INT16): boolean {
-  let iCountX: INT32;
-  let iCountY: INT32;
-  let uiTile: UINT32;
-  let pNode: LEVELNODE | null;
-  let fRerender: boolean = false;
-  let fTileFlags: UINT32;
+  function LightTranslucentTrees(iX: INT16, iY: INT16): boolean {
+    let iCountX: INT32;
+    let iCountY: INT32;
+    let uiTile: UINT32;
+    let pNode: LEVELNODE | null;
+    let fRerender: boolean = false;
+    let fTileFlags: UINT32;
 
-  for (iCountY = iY; iCountY < (iY + LIGHT_TREE_REVEAL); iCountY++)
-    for (iCountX = iX; iCountX < (iX + LIGHT_TREE_REVEAL); iCountX++) {
-      uiTile = MAPROWCOLTOPOS(iCountY, iCountX);
-      pNode = gpWorldLevelData[uiTile].pStructHead;
-      while (pNode != null) {
-        fTileFlags = GetTileFlags(pNode.usIndex);
+    for (iCountY = iY; iCountY < iY + LIGHT_TREE_REVEAL; iCountY++)
+      for (iCountX = iX; iCountX < iX + LIGHT_TREE_REVEAL; iCountX++) {
+        uiTile = MAPROWCOLTOPOS(iCountY, iCountX);
+        pNode = gpWorldLevelData[uiTile].pStructHead;
+        while (pNode != null) {
+          fTileFlags = GetTileFlags(pNode.usIndex);
 
-        if (fTileFlags & FULL3D_TILE) {
-          if (!(pNode.uiFlags & LEVELNODE_REVEALTREES)) {
-            // pNode->uiFlags |= ( LEVELNODE_REVEALTREES | LEVELNODE_ERASEZ );
-            pNode.uiFlags |= (LEVELNODE_REVEALTREES);
-            gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+          if (fTileFlags & FULL3D_TILE) {
+            if (!(pNode.uiFlags & LEVELNODE_REVEALTREES)) {
+              // pNode->uiFlags |= ( LEVELNODE_REVEALTREES | LEVELNODE_ERASEZ );
+              pNode.uiFlags |= LEVELNODE_REVEALTREES;
+              gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+            }
+
+            fRerender = true;
           }
-
-          fRerender = true;
+          pNode = pNode.pNext;
         }
-        pNode = pNode.pNext;
       }
-    }
 
-  if (fRerender) {
-    // SetRenderFlags(RENDER_FLAG_MARKED);
-    SetRenderFlags(RENDER_FLAG_FULL);
-    return true;
-  } else
-    return false;
-}
+    if (fRerender) {
+      // SetRenderFlags(RENDER_FLAG_MARKED);
+      SetRenderFlags(RENDER_FLAG_FULL);
+      return true;
+    } else return false;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightHideTrees
 
                 Removes the translucency from any trees in the area.
 ***************************************************************************************/
-function LightHideTrees(iX: INT16, iY: INT16): boolean {
-  let iCountX: INT32;
-  let iCountY: INT32;
-  let uiTile: UINT32;
-  let pNode: LEVELNODE | null;
-  let fRerender: boolean = false;
-  let fTileFlags: UINT32;
+  function LightHideTrees(iX: INT16, iY: INT16): boolean {
+    let iCountX: INT32;
+    let iCountY: INT32;
+    let uiTile: UINT32;
+    let pNode: LEVELNODE | null;
+    let fRerender: boolean = false;
+    let fTileFlags: UINT32;
 
-  // Kris:  added map boundary checking!!!
-  for (iCountY = Math.max(iY - LIGHT_TREE_REVEAL, 0); iCountY < Math.min(iY + LIGHT_TREE_REVEAL, WORLD_ROWS - 1); iCountY++)
-    for (iCountX = Math.max(iX - LIGHT_TREE_REVEAL, 0); iCountX < Math.min(iX + LIGHT_TREE_REVEAL, WORLD_COLS - 1); iCountX++) {
-      uiTile = MAPROWCOLTOPOS(iCountY, iCountX);
-      pNode = gpWorldLevelData[uiTile].pStructHead;
-      while (pNode != null) {
-        fTileFlags = GetTileFlags(pNode.usIndex);
+    // Kris:  added map boundary checking!!!
+    for (
+      iCountY = Math.max(iY - LIGHT_TREE_REVEAL, 0);
+      iCountY < Math.min(iY + LIGHT_TREE_REVEAL, WORLD_ROWS - 1);
+      iCountY++
+    )
+      for (
+        iCountX = Math.max(iX - LIGHT_TREE_REVEAL, 0);
+        iCountX < Math.min(iX + LIGHT_TREE_REVEAL, WORLD_COLS - 1);
+        iCountX++
+      ) {
+        uiTile = MAPROWCOLTOPOS(iCountY, iCountX);
+        pNode = gpWorldLevelData[uiTile].pStructHead;
+        while (pNode != null) {
+          fTileFlags = GetTileFlags(pNode.usIndex);
 
-        if (fTileFlags & FULL3D_TILE) {
-          if ((pNode.uiFlags & LEVELNODE_REVEALTREES)) {
-            // pNode->uiFlags  &=(~( LEVELNODE_REVEALTREES | LEVELNODE_ERASEZ ) );
-            pNode.uiFlags &= (~(LEVELNODE_REVEALTREES));
-            gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+          if (fTileFlags & FULL3D_TILE) {
+            if (pNode.uiFlags & LEVELNODE_REVEALTREES) {
+              // pNode->uiFlags  &=(~( LEVELNODE_REVEALTREES | LEVELNODE_ERASEZ ) );
+              pNode.uiFlags &= ~LEVELNODE_REVEALTREES;
+              gpWorldLevelData[uiTile].uiFlags |= MAPELEMENT_REDRAW;
+            }
+
+            fRerender = true;
           }
-
-          fRerender = true;
+          pNode = pNode.pNext;
         }
-        pNode = pNode.pNext;
       }
-    }
 
-  if (fRerender) {
-    // SetRenderFlags(RENDER_FLAG_MARKED);
-    SetRenderFlags(RENDER_FLAG_FULL);
-    return true;
-  } else
-    return false;
-}
+    if (fRerender) {
+      // SetRenderFlags(RENDER_FLAG_MARKED);
+      SetRenderFlags(RENDER_FLAG_FULL);
+      return true;
+    } else return false;
+  }
 
-/****************************************************************************************
+  /****************************************************************************************
         LightErase
 
                 Reverts all tiles a given light affects to their natural light levels.
 
 ***************************************************************************************/
-function LightErase(uiLightType: UINT32, iLight: INT32, iX: INT16, iY: INT16, uiSprite: UINT32): boolean {
-  let pLight: LIGHT_NODE;
-  let uiCount: UINT16;
-  let usNodeIndex: UINT16;
-  let uiFlags: UINT32;
-  let iOldX: INT32;
-  let iOldY: INT32;
-  let fBlocked: boolean = false;
-  let fOnlyWalls: boolean;
+  function LightErase(
+    uiLightType: UINT32,
+    iLight: INT32,
+    iX: INT16,
+    iY: INT16,
+    uiSprite: UINT32,
+  ): boolean {
+    let pLight: LIGHT_NODE;
+    let uiCount: UINT16;
+    let usNodeIndex: UINT16;
+    let uiFlags: UINT32;
+    let iOldX: INT32;
+    let iOldY: INT32;
+    let fBlocked: boolean = false;
+    let fOnlyWalls: boolean;
 
-  if (pLightList[iLight] == null)
-    return false;
+    if (pLightList[iLight] == null) return false;
 
-  // clear out all the flags
-  for (uiCount = 0; uiCount < usTemplateSize[iLight]; uiCount++) {
-    pLight = pLightList[iLight][uiCount];
-    pLight.uiFlags &= (~LIGHT_NODE_DRAWN);
-  }
+    // clear out all the flags
+    for (uiCount = 0; uiCount < usTemplateSize[iLight]; uiCount++) {
+      pLight = pLightList[iLight][uiCount];
+      pLight.uiFlags &= ~LIGHT_NODE_DRAWN;
+    }
 
-  iOldX = iX;
-  iOldY = iY;
+    iOldX = iX;
+    iOldY = iY;
 
-  for (uiCount = 0; uiCount < usRaySize[iLight]; uiCount++) {
-    usNodeIndex = pLightRayList[iLight][uiCount];
-    if (!(usNodeIndex & LIGHT_NEW_RAY)) {
-      fBlocked = false;
-      fOnlyWalls = false;
+    for (uiCount = 0; uiCount < usRaySize[iLight]; uiCount++) {
+      usNodeIndex = pLightRayList[iLight][uiCount];
+      if (!(usNodeIndex & LIGHT_NEW_RAY)) {
+        fBlocked = false;
+        fOnlyWalls = false;
 
-      pLight = pLightList[iLight][usNodeIndex & (~LIGHT_BACKLIGHT)];
+        pLight = pLightList[iLight][usNodeIndex & ~LIGHT_BACKLIGHT];
 
-      if (!(LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)) {
-        if (LightTileBlocked(iOldX, iOldY, (iX + pLight.iDX), (iY + pLight.iDY))) {
-          uiCount = LightFindNextRay(iLight, uiCount);
+        if (!(LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)) {
+          if (
+            LightTileBlocked(iOldX, iOldY, iX + pLight.iDX, iY + pLight.iDY)
+          ) {
+            uiCount = LightFindNextRay(iLight, uiCount);
 
-          fOnlyWalls = true;
-          fBlocked = true;
+            fOnlyWalls = true;
+            fBlocked = true;
+          }
         }
-      }
 
-      if (!(pLight.uiFlags & LIGHT_NODE_DRAWN) && (pLight.ubLight)) {
-        uiFlags = (usNodeIndex & LIGHT_BACKLIGHT);
-        if (LightSprites[uiSprite].uiFlags & MERC_LIGHT)
-          uiFlags |= LIGHT_FAKE;
-        if (LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)
-          uiFlags |= LIGHT_ROOF_ONLY;
+        if (!(pLight.uiFlags & LIGHT_NODE_DRAWN) && pLight.ubLight) {
+          uiFlags = usNodeIndex & LIGHT_BACKLIGHT;
+          if (LightSprites[uiSprite].uiFlags & MERC_LIGHT)
+            uiFlags |= LIGHT_FAKE;
+          if (LightSprites[uiSprite].uiFlags & LIGHT_SPR_ONROOF)
+            uiFlags |= LIGHT_ROOF_ONLY;
 
-        LightSubtractTile(uiLightType, iOldX, iOldY, (iX + pLight.iDX), (iY + pLight.iDY), pLight.ubLight, uiFlags, fOnlyWalls);
-        pLight.uiFlags |= LIGHT_NODE_DRAWN;
-      }
+          LightSubtractTile(
+            uiLightType,
+            iOldX,
+            iOldY,
+            iX + pLight.iDX,
+            iY + pLight.iDY,
+            pLight.ubLight,
+            uiFlags,
+            fOnlyWalls,
+          );
+          pLight.uiFlags |= LIGHT_NODE_DRAWN;
+        }
 
-      if (fBlocked) {
+        if (fBlocked) {
+          iOldX = iX;
+          iOldY = iY;
+        } else {
+          iOldX = iX + pLight.iDX;
+          iOldY = iY + pLight.iDY;
+        }
+      } else {
         iOldX = iX;
         iOldY = iY;
-      } else {
-        iOldX = iX + pLight.iDX;
-        iOldY = iY + pLight.iDY;
       }
-    } else {
-      iOldX = iX;
-      iOldY = iY;
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightCalcRect
 
                 Calculates the rect size of a given light, used in dirtying the screen after updating
         a light.
 
 ***************************************************************************************/
-function LightCalcRect(iLight: INT32): boolean {
-  let MaxRect: SGPRect = createSGPRect();
-  let sXValue: INT16;
-  let sYValue: INT16;
-  let sDummy: INT16;
-  let uiCount: UINT32;
-  let pLight: LIGHT_NODE;
+  function LightCalcRect(iLight: INT32): boolean {
+    let MaxRect: SGPRect = createSGPRect();
+    let sXValue: INT16;
+    let sYValue: INT16;
+    let sDummy: INT16;
+    let uiCount: UINT32;
+    let pLight: LIGHT_NODE;
 
-  if (pLightList[iLight] == null)
-    return false;
+    if (pLightList[iLight] == null) return false;
 
-  pLight = pLightList[iLight][0];
+    pLight = pLightList[iLight][0];
 
-  MaxRect.iLeft = 99999;
-  MaxRect.iRight = -99999;
-  MaxRect.iTop = 99999;
-  MaxRect.iBottom = -99999;
+    MaxRect.iLeft = 99999;
+    MaxRect.iRight = -99999;
+    MaxRect.iTop = 99999;
+    MaxRect.iBottom = -99999;
 
-  for (uiCount = 0; uiCount < usTemplateSize[iLight]; uiCount++) {
-    pLight = pLightList[iLight][uiCount];
-    if (pLight.ubLight) {
-      MaxRect.iLeft = Math.min(MaxRect.iLeft, pLight.iDX);
-      MaxRect.iRight = Math.max(MaxRect.iRight, pLight.iDX);
-      MaxRect.iTop = Math.min(MaxRect.iTop, pLight.iDY);
-      MaxRect.iBottom = Math.max(MaxRect.iBottom, pLight.iDY);
+    for (uiCount = 0; uiCount < usTemplateSize[iLight]; uiCount++) {
+      pLight = pLightList[iLight][uiCount];
+      if (pLight.ubLight) {
+        MaxRect.iLeft = Math.min(MaxRect.iLeft, pLight.iDX);
+        MaxRect.iRight = Math.max(MaxRect.iRight, pLight.iDX);
+        MaxRect.iTop = Math.min(MaxRect.iTop, pLight.iDY);
+        MaxRect.iBottom = Math.max(MaxRect.iBottom, pLight.iDY);
+      }
     }
+
+    ({ sScreenX: sDummy, sScreenY: sYValue } = FromCellToScreenCoordinates(
+      MaxRect.iLeft * CELL_X_SIZE,
+      MaxRect.iTop * CELL_Y_SIZE,
+    ));
+
+    LightMapLeft[iLight] = MaxRect.iLeft;
+    LightMapTop[iLight] = MaxRect.iTop;
+    LightMapRight[iLight] = MaxRect.iRight;
+    LightMapBottom[iLight] = MaxRect.iBottom;
+
+    LightHeight[iLight] = -sYValue;
+    LightYOffset[iLight] = sYValue;
+
+    ({ sScreenX: sDummy, sScreenY: sYValue } = FromCellToScreenCoordinates(
+      MaxRect.iRight * CELL_X_SIZE,
+      MaxRect.iBottom * CELL_Y_SIZE,
+    ));
+    LightHeight[iLight] += sYValue;
+
+    ({ sScreenX: sXValue, sScreenY: sDummy } = FromCellToScreenCoordinates(
+      MaxRect.iLeft * CELL_X_SIZE,
+      MaxRect.iBottom * CELL_Y_SIZE,
+    ));
+    LightWidth[iLight] = -sXValue;
+    LightXOffset[iLight] = sXValue;
+
+    ({ sScreenX: sXValue, sScreenY: sDummy } = FromCellToScreenCoordinates(
+      MaxRect.iRight * CELL_X_SIZE,
+      MaxRect.iTop * CELL_Y_SIZE,
+    ));
+    LightWidth[iLight] += sXValue;
+
+    LightHeight[iLight] += WORLD_TILE_X * 2;
+    LightWidth[iLight] += WORLD_TILE_Y * 3;
+    LightXOffset[iLight] -= WORLD_TILE_X * 2;
+    LightYOffset[iLight] -= WORLD_TILE_Y * 2;
+
+    return true;
   }
 
-  ({ sScreenX: sDummy, sScreenY: sYValue } = FromCellToScreenCoordinates((MaxRect.iLeft * CELL_X_SIZE), (MaxRect.iTop * CELL_Y_SIZE)));
-
-  LightMapLeft[iLight] = MaxRect.iLeft;
-  LightMapTop[iLight] = MaxRect.iTop;
-  LightMapRight[iLight] = MaxRect.iRight;
-  LightMapBottom[iLight] = MaxRect.iBottom;
-
-  LightHeight[iLight] = -sYValue;
-  LightYOffset[iLight] = sYValue;
-
-  ({ sScreenX: sDummy, sScreenY: sYValue } = FromCellToScreenCoordinates((MaxRect.iRight * CELL_X_SIZE), (MaxRect.iBottom * CELL_Y_SIZE)));
-  LightHeight[iLight] += sYValue;
-
-  ({ sScreenX: sXValue, sScreenY: sDummy } = FromCellToScreenCoordinates((MaxRect.iLeft * CELL_X_SIZE), (MaxRect.iBottom * CELL_Y_SIZE)));
-  LightWidth[iLight] = -sXValue;
-  LightXOffset[iLight] = sXValue;
-
-  ({ sScreenX: sXValue, sScreenY: sDummy } = FromCellToScreenCoordinates((MaxRect.iRight * CELL_X_SIZE), (MaxRect.iTop * CELL_Y_SIZE)));
-  LightWidth[iLight] += sXValue;
-
-  LightHeight[iLight] += WORLD_TILE_X * 2;
-  LightWidth[iLight] += WORLD_TILE_Y * 3;
-  LightXOffset[iLight] -= WORLD_TILE_X * 2;
-  LightYOffset[iLight] -= WORLD_TILE_Y * 2;
-
-  return true;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightSave
 
                 Saves the light list of a given template to a file. Passing in NULL for the
         filename forces the system to save the light with the internal filename (recommended).
 
 ***************************************************************************************/
-export function LightSave(iLight: INT32, pFilename: string /* STR */): boolean {
-  let hFile: HWFILE;
-  let pName: string /* STR */;
-  let buffer: Buffer;
+  export function LightSave(
+    iLight: INT32,
+    pFilename: string /* STR */,
+  ): boolean {
+    let hFile: HWFILE;
+    let pName: string /* STR */;
+    let buffer: Buffer;
 
-  if (pLightList[iLight] == null)
-    return false;
-  else {
-    if (pFilename == null)
-      pName = pLightNames[iLight];
-    else
-      pName = pFilename;
+    if (pLightList[iLight] == null) return false;
+    else {
+      if (pFilename == null) pName = pLightNames[iLight];
+      else pName = pFilename;
 
-    if ((hFile = FileOpen(pName, FILE_ACCESS_WRITE | FILE_CREATE_ALWAYS, false)) != 0) {
-      buffer = Buffer.allocUnsafe(2);
-      buffer.writeUInt16LE(usTemplateSize[iLight], 0);
-      FileWrite(hFile, buffer, 2);
+      if (
+        (hFile = FileOpen(
+          pName,
+          FILE_ACCESS_WRITE | FILE_CREATE_ALWAYS,
+          false,
+        )) != 0
+      ) {
+        buffer = Buffer.allocUnsafe(2);
+        buffer.writeUInt16LE(usTemplateSize[iLight], 0);
+        FileWrite(hFile, buffer, 2);
 
-      buffer = Buffer.allocUnsafe(LIGHT_NODE_SIZE * usTemplateSize[iLight]);
-      writeObjectArray(pLightList[iLight], buffer, 0, writeLightNode);
-      FileWrite(hFile, buffer, LIGHT_NODE_SIZE * usTemplateSize[iLight]);
+        buffer = Buffer.allocUnsafe(LIGHT_NODE_SIZE * usTemplateSize[iLight]);
+        writeObjectArray(pLightList[iLight], buffer, 0, writeLightNode);
+        FileWrite(hFile, buffer, LIGHT_NODE_SIZE * usTemplateSize[iLight]);
 
-      buffer = Buffer.allocUnsafe(2);
-      buffer.writeUInt16LE(usRaySize[iLight], 0);
-      FileWrite(hFile, buffer, 2);
+        buffer = Buffer.allocUnsafe(2);
+        buffer.writeUInt16LE(usRaySize[iLight], 0);
+        FileWrite(hFile, buffer, 2);
 
-      buffer = Buffer.allocUnsafe(2 * usRaySize[iLight]);
-      writeUIntArray(pLightRayList[iLight], buffer, 0, 2);
-      FileWrite(hFile, buffer, 2 * usRaySize[iLight]);
+        buffer = Buffer.allocUnsafe(2 * usRaySize[iLight]);
+        writeUIntArray(pLightRayList[iLight], buffer, 0, 2);
+        FileWrite(hFile, buffer, 2 * usRaySize[iLight]);
 
-      FileClose(hFile);
-    } else
-      return false;
+        FileClose(hFile);
+      } else return false;
+    }
+    return true;
   }
-  return true;
-}
 
-/****************************************************************************************
+  /****************************************************************************************
         LightLoad
 
                 Loads a light template from disk. The light template number is returned, or (-1)
         if the file wasn't loaded.
 
 ***************************************************************************************/
-function LightLoad(pFilename: string /* STR */): INT32 {
-  let hFile: HWFILE;
-  let pNewLight: LIGHT_NODE | null = null;
-  let pLastLight: LIGHT_NODE | null = null;
-  let iLight: INT32;
-  let buffer: Buffer;
+  function LightLoad(pFilename: string /* STR */): INT32 {
+    let hFile: HWFILE;
+    let pNewLight: LIGHT_NODE | null = null;
+    let pLastLight: LIGHT_NODE | null = null;
+    let iLight: INT32;
+    let buffer: Buffer;
 
-  if ((iLight = LightGetFree()) == (-1))
-    return -1;
-  else {
-    if ((hFile = FileOpen(pFilename, FILE_ACCESS_READ, false)) != 0) {
-      buffer = Buffer.allocUnsafe(2);
-      FileRead(hFile, buffer, 2);
-      usTemplateSize[iLight] = buffer.readUInt16LE(0);
-      pLightList[iLight] = createArrayFrom(usTemplateSize[iLight], createLightNode);
+    if ((iLight = LightGetFree()) == -1) return -1;
+    else {
+      if ((hFile = FileOpen(pFilename, FILE_ACCESS_READ, false)) != 0) {
+        buffer = Buffer.allocUnsafe(2);
+        FileRead(hFile, buffer, 2);
+        usTemplateSize[iLight] = buffer.readUInt16LE(0);
+        pLightList[iLight] = createArrayFrom(
+          usTemplateSize[iLight],
+          createLightNode,
+        );
 
-      buffer = Buffer.allocUnsafe(LIGHT_NODE_SIZE * usTemplateSize[iLight]);
-      FileRead(hFile, buffer, LIGHT_NODE_SIZE * usTemplateSize[iLight]);
-      readObjectArray(pLightList[iLight], buffer, 0, readLightNode);
+        buffer = Buffer.allocUnsafe(LIGHT_NODE_SIZE * usTemplateSize[iLight]);
+        FileRead(hFile, buffer, LIGHT_NODE_SIZE * usTemplateSize[iLight]);
+        readObjectArray(pLightList[iLight], buffer, 0, readLightNode);
 
-      buffer = Buffer.allocUnsafe(2);
-      FileRead(hFile, buffer, 2);
-      usRaySize[iLight] = buffer.readUInt16LE(0);
-      pLightRayList[iLight] = createArray(usRaySize[iLight], 0);
+        buffer = Buffer.allocUnsafe(2);
+        FileRead(hFile, buffer, 2);
+        usRaySize[iLight] = buffer.readUInt16LE(0);
+        pLightRayList[iLight] = createArray(usRaySize[iLight], 0);
 
-      buffer = Buffer.allocUnsafe(2 * usRaySize[iLight]);
-      FileRead(hFile, buffer, 2 * usRaySize[iLight]);
-      readUIntArray(pLightRayList[iLight], buffer, 0, 2);
+        buffer = Buffer.allocUnsafe(2 * usRaySize[iLight]);
+        FileRead(hFile, buffer, 2 * usRaySize[iLight]);
+        readUIntArray(pLightRayList[iLight], buffer, 0, 2);
 
-      FileClose(hFile);
+        FileClose(hFile);
 
-      pLightNames[iLight] = pFilename;
-    } else
-      return -1;
+        pLightNames[iLight] = pFilename;
+      } else return -1;
+    }
+    LightCalcRect(iLight);
+    return iLight;
   }
-  LightCalcRect(iLight);
-  return iLight;
-}
 
-/****************************************************************************************
+  /****************************************************************************************
         LightLoadCachedTemplate
 
                 Figures out whether a light template is already in memory, or needs to be loaded from
         disk. Returns the index of the template, or (-1) if it couldn't be loaded.
 
 ***************************************************************************************/
-function LightLoadCachedTemplate(pFilename: string /* STR */): INT32 {
-  let iCount: INT32;
+  function LightLoadCachedTemplate(pFilename: string /* STR */): INT32 {
+    let iCount: INT32;
 
-  for (iCount = 0; iCount < MAX_LIGHT_TEMPLATES; iCount++) {
-    if ((pLightNames[iCount] != null) && pFilename.toLowerCase() == pLightNames[iCount].toLowerCase())
-      return iCount;
+    for (iCount = 0; iCount < MAX_LIGHT_TEMPLATES; iCount++) {
+      if (
+        pLightNames[iCount] != null &&
+        pFilename.toLowerCase() == pLightNames[iCount].toLowerCase()
+      )
+        return iCount;
+    }
+
+    return LightLoad(pFilename);
   }
 
-  return LightLoad(pFilename);
-}
+  export function LightGetColors(pPal: SGPPaletteEntry[]): UINT8 {
+    if (pPal != null) copyObjectArray(pPal, gpOrigLights, copySGPPaletteEntry);
 
-export function LightGetColors(pPal: SGPPaletteEntry[]): UINT8 {
-  if (pPal != null)
-    copyObjectArray(pPal, gpOrigLights, copySGPPaletteEntry);
+    return gubNumLightColors;
+  }
 
-  return gubNumLightColors;
-}
-
-/****************************************************************************************
+  /****************************************************************************************
         LightSetColors
 
         Sets the number of light colors, and the RGB value for each.
 
 ***************************************************************************************/
-let gfEditorForceRebuildAllColors: boolean = false;
+  let gfEditorForceRebuildAllColors: boolean = false;
 
-export function LightSetColors(pPal: SGPPaletteEntry[], ubNumColors: UINT8): boolean {
-  let sRed: INT16;
-  let sGreen: INT16;
-  let sBlue: INT16;
+  export function LightSetColors(
+    pPal: SGPPaletteEntry[],
+    ubNumColors: UINT8,
+  ): boolean {
+    let sRed: INT16;
+    let sGreen: INT16;
+    let sBlue: INT16;
 
-  Assert(ubNumColors >= 1 && ubNumColors <= 2);
-  Assert(pPal);
+    Assert(ubNumColors >= 1 && ubNumColors <= 2);
+    Assert(pPal);
 
-  if (pPal[0].peRed != gpLightColors[0].peRed || pPal[0].peGreen != gpLightColors[0].peGreen || pPal[0].peBlue != gpLightColors[0].peBlue) {
-    // Set the entire tileset database so that it reloads everything.  It has to because the
-    // colors have changed.
-    SetAllNewTileSurfacesLoaded(true);
-  }
-
-  // before doing anything, get rid of all the old palettes
-  DestroyTileShadeTables();
-
-  // we will have at least one light color
-  copySGPPaletteEntry(gpLightColors[0], pPal[0]);
-  copySGPPaletteEntry(gpOrigLights[0], pPal[0]);
-  copySGPPaletteEntry(gpOrigLights[1], pPal[1]);
-
-  gubNumLightColors = ubNumColors;
-
-  // if there are two colors, calculate a third palette that is a mix of the two
-  if (ubNumColors == 2) {
-    sRed = Math.min((Math.trunc((pPal[0].peRed) * LVL1_L1_PER / 100) + Math.trunc((pPal[1].peRed) * LVL1_L2_PER / 100)), 255);
-    sGreen = Math.min((Math.trunc((pPal[0].peGreen) * LVL1_L1_PER / 100) + Math.trunc((pPal[1].peGreen) * LVL1_L2_PER / 100)), 255);
-    sBlue = Math.min((Math.trunc((pPal[0].peBlue) * LVL1_L1_PER / 100) + Math.trunc((pPal[1].peBlue) * LVL1_L2_PER / 100)), 255);
-
-    gpLightColors[1].peRed = (sRed);
-    gpLightColors[1].peGreen = (sGreen);
-    gpLightColors[1].peBlue = (sBlue);
-
-    sRed = Math.min((Math.trunc((pPal[0].peRed) * LVL2_L1_PER / 100) + Math.trunc((pPal[1].peRed) * LVL2_L2_PER / 100)), 255);
-    sGreen = Math.min((Math.trunc((pPal[0].peGreen) * LVL2_L1_PER / 100) + Math.trunc((pPal[1].peGreen) * LVL2_L2_PER / 100)), 255);
-    sBlue = Math.min((Math.trunc((pPal[0].peBlue) * LVL2_L1_PER / 100) + Math.trunc((pPal[1].peBlue) * LVL2_L2_PER / 100)), 255);
-
-    gpLightColors[2].peRed = (sRed);
-    gpLightColors[2].peGreen = (sGreen);
-    gpLightColors[2].peBlue = (sBlue);
-  }
-
-  BuildTileShadeTables();
-
-  // Build all palettes for all soldiers in the world
-  // ( THIS FUNCTION WILL ERASE THEM IF THEY EXIST )
-  RebuildAllSoldierShadeTables();
-
-  RebuildAllCorpseShadeTables();
-
-  SetRenderFlags(RENDER_FLAG_FULL);
-
-  return true;
-}
-
-//---------------------------------------------------------------------------------------
-// Light Manipulation Layer
-//---------------------------------------------------------------------------------------
-
-/********************************************************************************
- * LightSpriteGetFree
- *
- *		Returns the index of the next available sprite.
- *
- ********************************************************************************/
-function LightSpriteGetFree(): INT32 {
-  let iCount: INT32;
-
-  for (iCount = 0; iCount < MAX_LIGHT_SPRITES; iCount++) {
-    if (!(LightSprites[iCount].uiFlags & LIGHT_SPR_ACTIVE))
-      return iCount;
-  }
-
-  return -1;
-}
-
-/********************************************************************************
- * LightSpriteCreate
- *
- *		Creates an instance of a light. The template is loaded if it isn't already.
- * If this function fails (out of sprites, or bad template name) it returns (-1).
- *
- ********************************************************************************/
-export function LightSpriteCreate(pName: string /* STR */, uiLightType: UINT32): INT32 {
-  let iSprite: INT32;
-
-  if ((iSprite = LightSpriteGetFree()) != (-1)) {
-    resetLightSprite(LightSprites[iSprite]);
-    LightSprites[iSprite].iX = WORLD_COLS + 1;
-    LightSprites[iSprite].iY = WORLD_ROWS + 1;
-    LightSprites[iSprite].iOldX = WORLD_COLS + 1;
-    LightSprites[iSprite].iOldY = WORLD_ROWS + 1;
-    LightSprites[iSprite].uiLightType = uiLightType;
-
-    if ((LightSprites[iSprite].iTemplate = LightLoadCachedTemplate(pName)) == (-1))
-      return -1;
-
-    LightSprites[iSprite].uiFlags |= LIGHT_SPR_ACTIVE;
-  }
-
-  return iSprite;
-}
-
-/********************************************************************************
- * LightSpriteFake
- *
- *		Sets the flag of a light sprite to "fake" (in game for merc navig purposes)
- *
- ********************************************************************************/
-export function LightSpriteFake(iSprite: INT32): boolean {
-  if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
-    LightSprites[iSprite].uiFlags |= MERC_LIGHT;
-    return true;
-  } else {
-    return false;
-  }
-}
-
-/********************************************************************************
- * LightSpriteDestroy
- *
- *		Removes an instance of a light. If it was on, it is erased from the scene.
- *
- ********************************************************************************/
-export function LightSpriteDestroy(iSprite: INT32): boolean {
-  if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
-    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ERASE) {
-      if ((LightSprites[iSprite].iX < WORLD_COLS) && (LightSprites[iSprite].iY < WORLD_ROWS)) {
-        LightErase(LightSprites[iSprite].uiLightType, LightSprites[iSprite].iTemplate, LightSprites[iSprite].iX, LightSprites[iSprite].iY, iSprite);
-        LightSpriteDirty(iSprite);
-      }
-      LightSprites[iSprite].uiFlags &= (~LIGHT_SPR_ERASE);
+    if (
+      pPal[0].peRed != gpLightColors[0].peRed ||
+      pPal[0].peGreen != gpLightColors[0].peGreen ||
+      pPal[0].peBlue != gpLightColors[0].peBlue
+    ) {
+      // Set the entire tileset database so that it reloads everything.  It has to because the
+      // colors have changed.
+      SetAllNewTileSurfacesLoaded(true);
     }
 
-    LightSprites[iSprite].uiFlags &= (~LIGHT_SPR_ACTIVE);
+    // before doing anything, get rid of all the old palettes
+    DestroyTileShadeTables();
+
+    // we will have at least one light color
+    copySGPPaletteEntry(gpLightColors[0], pPal[0]);
+    copySGPPaletteEntry(gpOrigLights[0], pPal[0]);
+    copySGPPaletteEntry(gpOrigLights[1], pPal[1]);
+
+    gubNumLightColors = ubNumColors;
+
+    // if there are two colors, calculate a third palette that is a mix of the two
+    if (ubNumColors == 2) {
+      sRed = Math.min(
+        Math.trunc((pPal[0].peRed * LVL1_L1_PER) / 100) +
+          Math.trunc((pPal[1].peRed * LVL1_L2_PER) / 100),
+        255,
+      );
+      sGreen = Math.min(
+        Math.trunc((pPal[0].peGreen * LVL1_L1_PER) / 100) +
+          Math.trunc((pPal[1].peGreen * LVL1_L2_PER) / 100),
+        255,
+      );
+      sBlue = Math.min(
+        Math.trunc((pPal[0].peBlue * LVL1_L1_PER) / 100) +
+          Math.trunc((pPal[1].peBlue * LVL1_L2_PER) / 100),
+        255,
+      );
+
+      gpLightColors[1].peRed = sRed;
+      gpLightColors[1].peGreen = sGreen;
+      gpLightColors[1].peBlue = sBlue;
+
+      sRed = Math.min(
+        Math.trunc((pPal[0].peRed * LVL2_L1_PER) / 100) +
+          Math.trunc((pPal[1].peRed * LVL2_L2_PER) / 100),
+        255,
+      );
+      sGreen = Math.min(
+        Math.trunc((pPal[0].peGreen * LVL2_L1_PER) / 100) +
+          Math.trunc((pPal[1].peGreen * LVL2_L2_PER) / 100),
+        255,
+      );
+      sBlue = Math.min(
+        Math.trunc((pPal[0].peBlue * LVL2_L1_PER) / 100) +
+          Math.trunc((pPal[1].peBlue * LVL2_L2_PER) / 100),
+        255,
+      );
+
+      gpLightColors[2].peRed = sRed;
+      gpLightColors[2].peGreen = sGreen;
+      gpLightColors[2].peBlue = sBlue;
+    }
+
+    BuildTileShadeTables();
+
+    // Build all palettes for all soldiers in the world
+    // ( THIS FUNCTION WILL ERASE THEM IF THEY EXIST )
+    RebuildAllSoldierShadeTables();
+
+    RebuildAllCorpseShadeTables();
+
+    SetRenderFlags(RENDER_FLAG_FULL);
+
     return true;
   }
 
-  return false;
-}
+  //---------------------------------------------------------------------------------------
+  // Light Manipulation Layer
+  //---------------------------------------------------------------------------------------
 
-/********************************************************************************
- * LightSpriteRender
- *
- *		Currently unused.
- *
- ********************************************************************************/
-function LightSpriteRender(): boolean {
-  // INT32 iCount;
-  // BOOLEAN fRenderLights=FALSE;
+  /********************************************************************************
+   * LightSpriteGetFree
+   *
+   *		Returns the index of the next available sprite.
+   *
+   ********************************************************************************/
+  function LightSpriteGetFree(): INT32 {
+    let iCount: INT32;
 
-  return false;
+    for (iCount = 0; iCount < MAX_LIGHT_SPRITES; iCount++) {
+      if (!(LightSprites[iCount].uiFlags & LIGHT_SPR_ACTIVE)) return iCount;
+    }
 
-  /*	for(iCount=0; iCount < MAX_LIGHT_SPRITES; iCount++)
+    return -1;
+  }
+
+  /********************************************************************************
+   * LightSpriteCreate
+   *
+   *		Creates an instance of a light. The template is loaded if it isn't already.
+   * If this function fails (out of sprites, or bad template name) it returns (-1).
+   *
+   ********************************************************************************/
+  export function LightSpriteCreate(
+    pName: string /* STR */,
+    uiLightType: UINT32,
+  ): INT32 {
+    let iSprite: INT32;
+
+    if ((iSprite = LightSpriteGetFree()) != -1) {
+      resetLightSprite(LightSprites[iSprite]);
+      LightSprites[iSprite].iX = WORLD_COLS + 1;
+      LightSprites[iSprite].iY = WORLD_ROWS + 1;
+      LightSprites[iSprite].iOldX = WORLD_COLS + 1;
+      LightSprites[iSprite].iOldY = WORLD_ROWS + 1;
+      LightSprites[iSprite].uiLightType = uiLightType;
+
+      if (
+        (LightSprites[iSprite].iTemplate = LightLoadCachedTemplate(pName)) == -1
+      )
+        return -1;
+
+      LightSprites[iSprite].uiFlags |= LIGHT_SPR_ACTIVE;
+    }
+
+    return iSprite;
+  }
+
+  /********************************************************************************
+   * LightSpriteFake
+   *
+   *		Sets the flag of a light sprite to "fake" (in game for merc navig purposes)
+   *
+   ********************************************************************************/
+  export function LightSpriteFake(iSprite: INT32): boolean {
+    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
+      LightSprites[iSprite].uiFlags |= MERC_LIGHT;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /********************************************************************************
+   * LightSpriteDestroy
+   *
+   *		Removes an instance of a light. If it was on, it is erased from the scene.
+   *
+   ********************************************************************************/
+  export function LightSpriteDestroy(iSprite: INT32): boolean {
+    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
+      if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ERASE) {
+        if (
+          LightSprites[iSprite].iX < WORLD_COLS &&
+          LightSprites[iSprite].iY < WORLD_ROWS
+        ) {
+          LightErase(
+            LightSprites[iSprite].uiLightType,
+            LightSprites[iSprite].iTemplate,
+            LightSprites[iSprite].iX,
+            LightSprites[iSprite].iY,
+            iSprite,
+          );
+          LightSpriteDirty(iSprite);
+        }
+        LightSprites[iSprite].uiFlags &= ~LIGHT_SPR_ERASE;
+      }
+
+      LightSprites[iSprite].uiFlags &= ~LIGHT_SPR_ACTIVE;
+      return true;
+    }
+
+    return false;
+  }
+
+  /********************************************************************************
+   * LightSpriteRender
+   *
+   *		Currently unused.
+   *
+   ********************************************************************************/
+  function LightSpriteRender(): boolean {
+    // INT32 iCount;
+    // BOOLEAN fRenderLights=FALSE;
+
+    return false;
+
+    /*	for(iCount=0; iCount < MAX_LIGHT_SPRITES; iCount++)
           {
                   if(LightSprites[iCount].uiFlags&LIGHT_SPR_ACTIVE)
                   {
@@ -2886,186 +3405,265 @@ function LightSpriteRender(): boolean {
           }
 
           return(FALSE); */
-}
-
-/********************************************************************************
- * LightSpriteRenderAll
- *
- *		Resets all tiles in the world to the ambient light level, and redraws all
- * active lights.
- *
- ********************************************************************************/
-export function LightSpriteRenderAll(): boolean {
-  let iCount: INT32;
-  let fRenderLights: boolean = false;
-
-  LightResetAllTiles();
-  for (iCount = 0; iCount < MAX_LIGHT_SPRITES; iCount++) {
-    LightSprites[iCount].uiFlags &= (~LIGHT_SPR_ERASE);
-
-    if ((LightSprites[iCount].uiFlags & LIGHT_SPR_ACTIVE) && (LightSprites[iCount].uiFlags & LIGHT_SPR_ON)) {
-      LightDraw(LightSprites[iCount].uiLightType, LightSprites[iCount].iTemplate, LightSprites[iCount].iX, LightSprites[iCount].iY, iCount);
-      LightSprites[iCount].uiFlags |= LIGHT_SPR_ERASE;
-      LightSpriteDirty(iCount);
-    }
-
-    LightSprites[iCount].iOldX = LightSprites[iCount].iX;
-    LightSprites[iCount].iOldY = LightSprites[iCount].iY;
   }
 
-  return true;
-}
+  /********************************************************************************
+   * LightSpriteRenderAll
+   *
+   *		Resets all tiles in the world to the ambient light level, and redraws all
+   * active lights.
+   *
+   ********************************************************************************/
+  export function LightSpriteRenderAll(): boolean {
+    let iCount: INT32;
+    let fRenderLights: boolean = false;
 
-/********************************************************************************
- * LightSpritePosition
- *
- *		Sets the X,Y position (IN TILES) of a light instance.
- *
- ********************************************************************************/
-export function LightSpritePosition(iSprite: INT32, iX: INT16, iY: INT16): boolean {
-  if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
-    if ((LightSprites[iSprite].iX == iX) && (LightSprites[iSprite].iY == iY))
-      return true;
+    LightResetAllTiles();
+    for (iCount = 0; iCount < MAX_LIGHT_SPRITES; iCount++) {
+      LightSprites[iCount].uiFlags &= ~LIGHT_SPR_ERASE;
 
-    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ERASE) {
-      if ((LightSprites[iSprite].iX < WORLD_COLS) && (LightSprites[iSprite].iY < WORLD_ROWS)) {
-        LightErase(LightSprites[iSprite].uiLightType, LightSprites[iSprite].iTemplate, LightSprites[iSprite].iX, LightSprites[iSprite].iY, iSprite);
-        LightSpriteDirty(iSprite);
+      if (
+        LightSprites[iCount].uiFlags & LIGHT_SPR_ACTIVE &&
+        LightSprites[iCount].uiFlags & LIGHT_SPR_ON
+      ) {
+        LightDraw(
+          LightSprites[iCount].uiLightType,
+          LightSprites[iCount].iTemplate,
+          LightSprites[iCount].iX,
+          LightSprites[iCount].iY,
+          iCount,
+        );
+        LightSprites[iCount].uiFlags |= LIGHT_SPR_ERASE;
+        LightSpriteDirty(iCount);
       }
+
+      LightSprites[iCount].iOldX = LightSprites[iCount].iX;
+      LightSprites[iCount].iOldY = LightSprites[iCount].iY;
     }
 
-    // LightSprites[iSprite].iOldX=LightSprites[iSprite].iX;
-    // LightSprites[iSprite].iOldY=LightSprites[iSprite].iY;
-
-    LightSprites[iSprite].iX = iX;
-    LightSprites[iSprite].iY = iY;
-
-    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ON) {
-      if ((LightSprites[iSprite].iX < WORLD_COLS) && (LightSprites[iSprite].iY < WORLD_ROWS)) {
-        LightDraw(LightSprites[iSprite].uiLightType, LightSprites[iSprite].iTemplate, iX, iY, iSprite);
-        LightSprites[iSprite].uiFlags |= LIGHT_SPR_ERASE;
-        LightSpriteDirty(iSprite);
-      }
-    }
-  } else
-    return false;
-
-  return true;
-}
-
-/********************************************************************************
- * LightSpriteRoofStatus
- *
- *		Determines whether a light is on a roof or not.
- *
- ********************************************************************************/
-export function LightSpriteRoofStatus(iSprite: INT32, fOnRoof: boolean): boolean {
-  if (fOnRoof && (LightSprites[iSprite].uiFlags & LIGHT_SPR_ONROOF))
-    return false;
-
-  if (!fOnRoof && !(LightSprites[iSprite].uiFlags & LIGHT_SPR_ONROOF))
-    return false;
-
-  if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
-    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ERASE) {
-      if ((LightSprites[iSprite].iX < WORLD_COLS) && (LightSprites[iSprite].iY < WORLD_ROWS)) {
-        LightErase(LightSprites[iSprite].uiLightType, LightSprites[iSprite].iTemplate, LightSprites[iSprite].iX, LightSprites[iSprite].iY, iSprite);
-        LightSpriteDirty(iSprite);
-      }
-    }
-
-    if (fOnRoof)
-      LightSprites[iSprite].uiFlags |= LIGHT_SPR_ONROOF;
-    else
-      LightSprites[iSprite].uiFlags &= (~LIGHT_SPR_ONROOF);
-
-    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ON) {
-      if ((LightSprites[iSprite].iX < WORLD_COLS) && (LightSprites[iSprite].iY < WORLD_ROWS)) {
-        LightDraw(LightSprites[iSprite].uiLightType, LightSprites[iSprite].iTemplate, LightSprites[iSprite].iX, LightSprites[iSprite].iY, iSprite);
-        LightSprites[iSprite].uiFlags |= LIGHT_SPR_ERASE;
-        LightSpriteDirty(iSprite);
-      }
-    }
-  } else
-    return false;
-
-  return true;
-}
-
-/********************************************************************************
- * LightSpritePower
- *
- *		Turns on or off a light, based on the BOOLEAN.
- *
- ********************************************************************************/
-export function LightSpritePower(iSprite: INT32, fOn: boolean): boolean {
-  if (fOn) {
-    LightSprites[iSprite].uiFlags |= (LIGHT_SPR_ON | LIGHT_SPR_REDRAW);
-    LightSprites[iSprite].iOldX = WORLD_COLS;
-  } else
-    LightSprites[iSprite].uiFlags &= (~LIGHT_SPR_ON);
-
-  return true;
-}
-
-/********************************************************************************
- * LightSpriteDirty
- *
- *		Sets the flag for the renderer to draw all marked tiles.
- *
- ********************************************************************************/
-function LightSpriteDirty(iSprite: INT32): boolean {
-  // INT16 iLeft_s, iTop_s;
-  // INT16 iMapLeft, iMapTop, iMapRight, iMapBottom;
-
-  // CellXYToScreenXY((INT16)(LightSprites[iSprite].iX*CELL_X_SIZE),
-  //								(INT16)(LightSprites[iSprite].iY*CELL_Y_SIZE),  &iLeft_s, &iTop_s);
-
-  // iLeft_s+=LightXOffset[LightSprites[iSprite].iTemplate];
-  // iTop_s+=LightYOffset[LightSprites[iSprite].iTemplate];
-
-  // iMapLeft=LightSprites[iSprite].iX+LightMapLeft[LightSprites[iSprite].iTemplate];
-  // iMapTop=LightSprites[iSprite].iY+LightMapTop[LightSprites[iSprite].iTemplate];
-  // iMapRight=LightSprites[iSprite].iX+LightMapRight[LightSprites[iSprite].iTemplate];
-  // iMapBottom=LightSprites[iSprite].iY+LightMapBottom[LightSprites[iSprite].iTemplate];
-
-  // ReRenderWorld(iMapLeft, iMapTop, iMapRight, iMapBottom);
-  // UpdateSaveBuffer();
-  // AddBaseDirtyRect(gsVIEWPORT_START_X, gsVIEWPORT_START_Y, gsVIEWPORT_END_X, gsVIEWPORT_END_Y );
-  // AddBaseDirtyRect(iLeft_s, iTop_s,
-  //								(INT16)(iLeft_s+LightWidth[LightSprites[iSprite].iTemplate]),
-  //								(INT16)(iTop_s+LightHeight[LightSprites[iSprite].iTemplate]));
-
-  SetRenderFlags(RENDER_FLAG_MARKED);
-
-  return true;
-}
-
-function CreateObjectPalette(pObj: SGPVObject, uiBase: UINT32, pShadePal: SGPPaletteEntry[]): boolean {
-  let uiCount: UINT32;
-
-  pObj.pShades[uiBase] = Create16BPPPaletteShaded(pShadePal, gusShadeLevels[0][0], gusShadeLevels[0][1], gusShadeLevels[0][2], true);
-
-  for (uiCount = 1; uiCount < 16; uiCount++) {
-    pObj.pShades[uiBase + uiCount] = Create16BPPPaletteShaded(pShadePal, gusShadeLevels[uiCount][0], gusShadeLevels[uiCount][1], gusShadeLevels[uiCount][2], false);
+    return true;
   }
 
-  return true;
-}
+  /********************************************************************************
+   * LightSpritePosition
+   *
+   *		Sets the X,Y position (IN TILES) of a light instance.
+   *
+   ********************************************************************************/
+  export function LightSpritePosition(
+    iSprite: INT32,
+    iX: INT16,
+    iY: INT16,
+  ): boolean {
+    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
+      if (LightSprites[iSprite].iX == iX && LightSprites[iSprite].iY == iY)
+        return true;
 
-function CreateSoldierShadedPalette(pSoldier: SOLDIERTYPE, uiBase: UINT32, pShadePal: SGPPaletteEntry[]): boolean {
-  let uiCount: UINT32;
+      if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ERASE) {
+        if (
+          LightSprites[iSprite].iX < WORLD_COLS &&
+          LightSprites[iSprite].iY < WORLD_ROWS
+        ) {
+          LightErase(
+            LightSprites[iSprite].uiLightType,
+            LightSprites[iSprite].iTemplate,
+            LightSprites[iSprite].iX,
+            LightSprites[iSprite].iY,
+            iSprite,
+          );
+          LightSpriteDirty(iSprite);
+        }
+      }
 
-  pSoldier.pShades[uiBase] = Create16BPPPaletteShaded(pShadePal, gusShadeLevels[0][0], gusShadeLevels[0][1], gusShadeLevels[0][2], true);
+      // LightSprites[iSprite].iOldX=LightSprites[iSprite].iX;
+      // LightSprites[iSprite].iOldY=LightSprites[iSprite].iY;
 
-  for (uiCount = 1; uiCount < 16; uiCount++) {
-    pSoldier.pShades[uiBase + uiCount] = Create16BPPPaletteShaded(pShadePal, gusShadeLevels[uiCount][0], gusShadeLevels[uiCount][1], gusShadeLevels[uiCount][2], false);
+      LightSprites[iSprite].iX = iX;
+      LightSprites[iSprite].iY = iY;
+
+      if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ON) {
+        if (
+          LightSprites[iSprite].iX < WORLD_COLS &&
+          LightSprites[iSprite].iY < WORLD_ROWS
+        ) {
+          LightDraw(
+            LightSprites[iSprite].uiLightType,
+            LightSprites[iSprite].iTemplate,
+            iX,
+            iY,
+            iSprite,
+          );
+          LightSprites[iSprite].uiFlags |= LIGHT_SPR_ERASE;
+          LightSpriteDirty(iSprite);
+        }
+      }
+    } else return false;
+
+    return true;
   }
 
-  return true;
-}
+  /********************************************************************************
+   * LightSpriteRoofStatus
+   *
+   *		Determines whether a light is on a roof or not.
+   *
+   ********************************************************************************/
+  export function LightSpriteRoofStatus(
+    iSprite: INT32,
+    fOnRoof: boolean,
+  ): boolean {
+    if (fOnRoof && LightSprites[iSprite].uiFlags & LIGHT_SPR_ONROOF)
+      return false;
 
-/**********************************************************************************************
+    if (!fOnRoof && !(LightSprites[iSprite].uiFlags & LIGHT_SPR_ONROOF))
+      return false;
+
+    if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ACTIVE) {
+      if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ERASE) {
+        if (
+          LightSprites[iSprite].iX < WORLD_COLS &&
+          LightSprites[iSprite].iY < WORLD_ROWS
+        ) {
+          LightErase(
+            LightSprites[iSprite].uiLightType,
+            LightSprites[iSprite].iTemplate,
+            LightSprites[iSprite].iX,
+            LightSprites[iSprite].iY,
+            iSprite,
+          );
+          LightSpriteDirty(iSprite);
+        }
+      }
+
+      if (fOnRoof) LightSprites[iSprite].uiFlags |= LIGHT_SPR_ONROOF;
+      else LightSprites[iSprite].uiFlags &= ~LIGHT_SPR_ONROOF;
+
+      if (LightSprites[iSprite].uiFlags & LIGHT_SPR_ON) {
+        if (
+          LightSprites[iSprite].iX < WORLD_COLS &&
+          LightSprites[iSprite].iY < WORLD_ROWS
+        ) {
+          LightDraw(
+            LightSprites[iSprite].uiLightType,
+            LightSprites[iSprite].iTemplate,
+            LightSprites[iSprite].iX,
+            LightSprites[iSprite].iY,
+            iSprite,
+          );
+          LightSprites[iSprite].uiFlags |= LIGHT_SPR_ERASE;
+          LightSpriteDirty(iSprite);
+        }
+      }
+    } else return false;
+
+    return true;
+  }
+
+  /********************************************************************************
+   * LightSpritePower
+   *
+   *		Turns on or off a light, based on the BOOLEAN.
+   *
+   ********************************************************************************/
+  export function LightSpritePower(iSprite: INT32, fOn: boolean): boolean {
+    if (fOn) {
+      LightSprites[iSprite].uiFlags |= LIGHT_SPR_ON | LIGHT_SPR_REDRAW;
+      LightSprites[iSprite].iOldX = WORLD_COLS;
+    } else LightSprites[iSprite].uiFlags &= ~LIGHT_SPR_ON;
+
+    return true;
+  }
+
+  /********************************************************************************
+   * LightSpriteDirty
+   *
+   *		Sets the flag for the renderer to draw all marked tiles.
+   *
+   ********************************************************************************/
+  function LightSpriteDirty(iSprite: INT32): boolean {
+    // INT16 iLeft_s, iTop_s;
+    // INT16 iMapLeft, iMapTop, iMapRight, iMapBottom;
+
+    // CellXYToScreenXY((INT16)(LightSprites[iSprite].iX*CELL_X_SIZE),
+    //								(INT16)(LightSprites[iSprite].iY*CELL_Y_SIZE),  &iLeft_s, &iTop_s);
+
+    // iLeft_s+=LightXOffset[LightSprites[iSprite].iTemplate];
+    // iTop_s+=LightYOffset[LightSprites[iSprite].iTemplate];
+
+    // iMapLeft=LightSprites[iSprite].iX+LightMapLeft[LightSprites[iSprite].iTemplate];
+    // iMapTop=LightSprites[iSprite].iY+LightMapTop[LightSprites[iSprite].iTemplate];
+    // iMapRight=LightSprites[iSprite].iX+LightMapRight[LightSprites[iSprite].iTemplate];
+    // iMapBottom=LightSprites[iSprite].iY+LightMapBottom[LightSprites[iSprite].iTemplate];
+
+    // ReRenderWorld(iMapLeft, iMapTop, iMapRight, iMapBottom);
+    // UpdateSaveBuffer();
+    // AddBaseDirtyRect(gsVIEWPORT_START_X, gsVIEWPORT_START_Y, gsVIEWPORT_END_X, gsVIEWPORT_END_Y );
+    // AddBaseDirtyRect(iLeft_s, iTop_s,
+    //								(INT16)(iLeft_s+LightWidth[LightSprites[iSprite].iTemplate]),
+    //								(INT16)(iTop_s+LightHeight[LightSprites[iSprite].iTemplate]));
+
+    SetRenderFlags(RENDER_FLAG_MARKED);
+
+    return true;
+  }
+
+  function CreateObjectPalette(
+    pObj: SGPVObject,
+    uiBase: UINT32,
+    pShadePal: SGPPaletteEntry[],
+  ): boolean {
+    let uiCount: UINT32;
+
+    pObj.pShades[uiBase] = Create16BPPPaletteShaded(
+      pShadePal,
+      gusShadeLevels[0][0],
+      gusShadeLevels[0][1],
+      gusShadeLevels[0][2],
+      true,
+    );
+
+    for (uiCount = 1; uiCount < 16; uiCount++) {
+      pObj.pShades[uiBase + uiCount] = Create16BPPPaletteShaded(
+        pShadePal,
+        gusShadeLevels[uiCount][0],
+        gusShadeLevels[uiCount][1],
+        gusShadeLevels[uiCount][2],
+        false,
+      );
+    }
+
+    return true;
+  }
+
+  function CreateSoldierShadedPalette(
+    pSoldier: SOLDIERTYPE,
+    uiBase: UINT32,
+    pShadePal: SGPPaletteEntry[],
+  ): boolean {
+    let uiCount: UINT32;
+
+    pSoldier.pShades[uiBase] = Create16BPPPaletteShaded(
+      pShadePal,
+      gusShadeLevels[0][0],
+      gusShadeLevels[0][1],
+      gusShadeLevels[0][2],
+      true,
+    );
+
+    for (uiCount = 1; uiCount < 16; uiCount++) {
+      pSoldier.pShades[uiBase + uiCount] = Create16BPPPaletteShaded(
+        pShadePal,
+        gusShadeLevels[uiCount][0],
+        gusShadeLevels[uiCount][1],
+        gusShadeLevels[uiCount][2],
+        false,
+      );
+    }
+
+    return true;
+  }
+
+  /**********************************************************************************************
  CreateObjectPaletteTables
 
                 Creates the shading tables for 8-bit brushes. One highlight table is created, based on
@@ -3076,106 +3674,177 @@ function CreateSoldierShadedPalette(pSoldier: SOLDIERTYPE, uiBase: UINT32, pShad
 
 **********************************************************************************************/
 
-export function CreateTilePaletteTables(pObj: SGPVObject, uiTileIndex: UINT32, fForce: boolean): boolean {
-  let uiCount: UINT32;
-  let LightPal: SGPPaletteEntry[] /* [256] */ = createArrayFrom(256, createSGPPaletteEntry);
-  let fLoaded: boolean = false;
+  export function CreateTilePaletteTables(
+    pObj: SGPVObject,
+    uiTileIndex: UINT32,
+    fForce: boolean,
+  ): boolean {
+    let uiCount: UINT32;
+    let LightPal: SGPPaletteEntry[] /* [256] */ = createArrayFrom(
+      256,
+      createSGPPaletteEntry,
+    );
+    let fLoaded: boolean = false;
 
-  Assert(pObj != null);
+    Assert(pObj != null);
 
-  // create the basic shade table
-  if (!gfForceBuildShadeTables && !fForce) {
-    // The overwhelming majority of maps use the neutral 0,0,0 light for outdoors.  These shadetables
-    // are extremely time consuming to generate, so we will attempt to load them.  If we do, then
-    // we skip the generation process altogether.
-    if (LoadShadeTable(pObj, uiTileIndex)) {
-      fLoaded = true;
+    // create the basic shade table
+    if (!gfForceBuildShadeTables && !fForce) {
+      // The overwhelming majority of maps use the neutral 0,0,0 light for outdoors.  These shadetables
+      // are extremely time consuming to generate, so we will attempt to load them.  If we do, then
+      // we skip the generation process altogether.
+      if (LoadShadeTable(pObj, uiTileIndex)) {
+        fLoaded = true;
+      }
     }
+    if (!fLoaded) {
+      // This is expensive as hell to call!
+      for (uiCount = 0; uiCount < 256; uiCount++) {
+        // combine the rgb of the light color with the object's palette
+        LightPal[uiCount].peRed = Math.min(
+          pObj.pPaletteEntry[uiCount].peRed + gpLightColors[0].peRed,
+          255,
+        );
+        LightPal[uiCount].peGreen = Math.min(
+          pObj.pPaletteEntry[uiCount].peGreen + gpLightColors[0].peGreen,
+          255,
+        );
+        LightPal[uiCount].peBlue = Math.min(
+          pObj.pPaletteEntry[uiCount].peBlue + gpLightColors[0].peBlue,
+          255,
+        );
+      }
+      // build the shade tables
+      CreateObjectPalette(pObj, 0, LightPal);
+
+      // We paid to generate the shade table, so now save it, so we don't have to regenerate it ever
+      // again!
+      if (
+        !gfForceBuildShadeTables &&
+        !gpLightColors[0].peRed &&
+        !gpLightColors[0].peGreen &&
+        !gpLightColors[0].peBlue
+      ) {
+        SaveShadeTable(pObj, uiTileIndex);
+      }
+    }
+
+    // if two lights are active
+    if (gubNumLightColors == 2) {
+      // build the second light's palette and table
+      for (uiCount = 0; uiCount < 256; uiCount++) {
+        LightPal[uiCount].peRed = Math.min(
+          pObj.pPaletteEntry[uiCount].peRed + gpLightColors[1].peRed,
+          255,
+        );
+        LightPal[uiCount].peGreen = Math.min(
+          pObj.pPaletteEntry[uiCount].peGreen + gpLightColors[1].peGreen,
+          255,
+        );
+        LightPal[uiCount].peBlue = Math.min(
+          pObj.pPaletteEntry[uiCount].peBlue + gpLightColors[1].peBlue,
+          255,
+        );
+      }
+      CreateObjectPalette(pObj, 16, LightPal);
+
+      // build a table that is a mix of the first two
+      for (uiCount = 0; uiCount < 256; uiCount++) {
+        LightPal[uiCount].peRed = Math.min(
+          pObj.pPaletteEntry[uiCount].peRed + gpLightColors[2].peRed,
+          255,
+        );
+        LightPal[uiCount].peGreen = Math.min(
+          pObj.pPaletteEntry[uiCount].peGreen + gpLightColors[2].peGreen,
+          255,
+        );
+        LightPal[uiCount].peBlue = Math.min(
+          pObj.pPaletteEntry[uiCount].peBlue + gpLightColors[2].peBlue,
+          255,
+        );
+      }
+      CreateObjectPalette(pObj, 32, LightPal);
+    }
+
+    // build neutral palette as well!
+    // Set current shade table to neutral color
+    pObj.pShadeCurrent = pObj.pShades[4];
+    pObj.pGlow = pObj.pShades[0];
+
+    return true;
   }
-  if (!fLoaded) {
-    // This is expensive as hell to call!
+
+  export function CreateSoldierPaletteTables(
+    pSoldier: SOLDIERTYPE,
+    uiType: UINT32,
+  ): boolean {
+    let LightPal: SGPPaletteEntry[] /* [256] */ = createArrayFrom(
+      256,
+      createSGPPaletteEntry,
+    );
+    let uiCount: UINT32;
+
+    // create the basic shade table
     for (uiCount = 0; uiCount < 256; uiCount++) {
       // combine the rgb of the light color with the object's palette
-      LightPal[uiCount].peRed = (Math.min(pObj.pPaletteEntry[uiCount].peRed + gpLightColors[0].peRed, 255));
-      LightPal[uiCount].peGreen = (Math.min(pObj.pPaletteEntry[uiCount].peGreen + gpLightColors[0].peGreen, 255));
-      LightPal[uiCount].peBlue = (Math.min(pObj.pPaletteEntry[uiCount].peBlue + gpLightColors[0].peBlue, 255));
+      LightPal[uiCount].peRed = Math.min(
+        pSoldier.p8BPPPalette[uiCount].peRed + gpLightColors[0].peRed,
+        255,
+      );
+      LightPal[uiCount].peGreen = Math.min(
+        pSoldier.p8BPPPalette[uiCount].peGreen + gpLightColors[0].peGreen,
+        255,
+      );
+      LightPal[uiCount].peBlue = Math.min(
+        pSoldier.p8BPPPalette[uiCount].peBlue + gpLightColors[0].peBlue,
+        255,
+      );
     }
     // build the shade tables
-    CreateObjectPalette(pObj, 0, LightPal);
+    CreateSoldierShadedPalette(pSoldier, 0, LightPal);
 
-    // We paid to generate the shade table, so now save it, so we don't have to regenerate it ever
-    // again!
-    if (!gfForceBuildShadeTables && !gpLightColors[0].peRed && !gpLightColors[0].peGreen && !gpLightColors[0].peBlue) {
-      SaveShadeTable(pObj, uiTileIndex);
+    // if two lights are active
+    if (gubNumLightColors == 2) {
+      // build the second light's palette and table
+      for (uiCount = 0; uiCount < 256; uiCount++) {
+        LightPal[uiCount].peRed = Math.min(
+          pSoldier.p8BPPPalette[uiCount].peRed + gpLightColors[1].peRed,
+          255,
+        );
+        LightPal[uiCount].peGreen = Math.min(
+          pSoldier.p8BPPPalette[uiCount].peGreen + gpLightColors[1].peGreen,
+          255,
+        );
+        LightPal[uiCount].peBlue = Math.min(
+          pSoldier.p8BPPPalette[uiCount].peBlue + gpLightColors[1].peBlue,
+          255,
+        );
+      }
+      CreateSoldierShadedPalette(pSoldier, 16, LightPal);
+
+      // build a table that is a mix of the first two
+      for (uiCount = 0; uiCount < 256; uiCount++) {
+        LightPal[uiCount].peRed = Math.min(
+          pSoldier.p8BPPPalette[uiCount].peRed + gpLightColors[2].peRed,
+          255,
+        );
+        LightPal[uiCount].peGreen = Math.min(
+          pSoldier.p8BPPPalette[uiCount].peGreen + gpLightColors[2].peGreen,
+          255,
+        );
+        LightPal[uiCount].peBlue = Math.min(
+          pSoldier.p8BPPPalette[uiCount].peBlue + gpLightColors[2].peBlue,
+          255,
+        );
+      }
+      CreateSoldierShadedPalette(pSoldier, 32, LightPal);
     }
+
+    // build neutral palette as well!
+    // Set current shade table to neutral color
+    pSoldier.pCurrentShade = pSoldier.pShades[4];
+    // pSoldier->pGlow=pSoldier->pShades[0];
+
+    return true;
   }
-
-  // if two lights are active
-  if (gubNumLightColors == 2) {
-    // build the second light's palette and table
-    for (uiCount = 0; uiCount < 256; uiCount++) {
-      LightPal[uiCount].peRed = (Math.min(pObj.pPaletteEntry[uiCount].peRed + gpLightColors[1].peRed, 255));
-      LightPal[uiCount].peGreen = (Math.min(pObj.pPaletteEntry[uiCount].peGreen + gpLightColors[1].peGreen, 255));
-      LightPal[uiCount].peBlue = (Math.min(pObj.pPaletteEntry[uiCount].peBlue + gpLightColors[1].peBlue, 255));
-    }
-    CreateObjectPalette(pObj, 16, LightPal);
-
-    // build a table that is a mix of the first two
-    for (uiCount = 0; uiCount < 256; uiCount++) {
-      LightPal[uiCount].peRed = (Math.min(pObj.pPaletteEntry[uiCount].peRed + gpLightColors[2].peRed, 255));
-      LightPal[uiCount].peGreen = (Math.min(pObj.pPaletteEntry[uiCount].peGreen + gpLightColors[2].peGreen, 255));
-      LightPal[uiCount].peBlue = (Math.min(pObj.pPaletteEntry[uiCount].peBlue + gpLightColors[2].peBlue, 255));
-    }
-    CreateObjectPalette(pObj, 32, LightPal);
-  }
-
-  // build neutral palette as well!
-  // Set current shade table to neutral color
-  pObj.pShadeCurrent = pObj.pShades[4];
-  pObj.pGlow = pObj.pShades[0];
-
-  return true;
-}
-
-export function CreateSoldierPaletteTables(pSoldier: SOLDIERTYPE, uiType: UINT32): boolean {
-  let LightPal: SGPPaletteEntry[] /* [256] */ = createArrayFrom(256, createSGPPaletteEntry);
-  let uiCount: UINT32;
-
-  // create the basic shade table
-  for (uiCount = 0; uiCount < 256; uiCount++) {
-    // combine the rgb of the light color with the object's palette
-    LightPal[uiCount].peRed = (Math.min(pSoldier.p8BPPPalette[uiCount].peRed + gpLightColors[0].peRed, 255));
-    LightPal[uiCount].peGreen = (Math.min(pSoldier.p8BPPPalette[uiCount].peGreen + gpLightColors[0].peGreen, 255));
-    LightPal[uiCount].peBlue = (Math.min(pSoldier.p8BPPPalette[uiCount].peBlue + gpLightColors[0].peBlue, 255));
-  }
-  // build the shade tables
-  CreateSoldierShadedPalette(pSoldier, 0, LightPal);
-
-  // if two lights are active
-  if (gubNumLightColors == 2) {
-    // build the second light's palette and table
-    for (uiCount = 0; uiCount < 256; uiCount++) {
-      LightPal[uiCount].peRed = (Math.min(pSoldier.p8BPPPalette[uiCount].peRed + gpLightColors[1].peRed, 255));
-      LightPal[uiCount].peGreen = (Math.min(pSoldier.p8BPPPalette[uiCount].peGreen + gpLightColors[1].peGreen, 255));
-      LightPal[uiCount].peBlue = (Math.min(pSoldier.p8BPPPalette[uiCount].peBlue + gpLightColors[1].peBlue, 255));
-    }
-    CreateSoldierShadedPalette(pSoldier, 16, LightPal);
-
-    // build a table that is a mix of the first two
-    for (uiCount = 0; uiCount < 256; uiCount++) {
-      LightPal[uiCount].peRed = (Math.min(pSoldier.p8BPPPalette[uiCount].peRed + gpLightColors[2].peRed, 255));
-      LightPal[uiCount].peGreen = (Math.min(pSoldier.p8BPPPalette[uiCount].peGreen + gpLightColors[2].peGreen, 255));
-      LightPal[uiCount].peBlue = (Math.min(pSoldier.p8BPPPalette[uiCount].peBlue + gpLightColors[2].peBlue, 255));
-    }
-    CreateSoldierShadedPalette(pSoldier, 32, LightPal);
-  }
-
-  // build neutral palette as well!
-  // Set current shade table to neutral color
-  pSoldier.pCurrentShade = pSoldier.pShades[4];
-  // pSoldier->pGlow=pSoldier->pShades[0];
-
-  return true;
-}
-
 }

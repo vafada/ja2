@@ -1,108 +1,104 @@
 namespace ja2 {
+  // Prototype Declarations
 
-// Prototype Declarations
+  export let ghInstance: HTMLElement;
 
-export let ghInstance: HTMLElement;
+  // Global Variable Declarations
 
-// Global Variable Declarations
+  export let gfProgramIsRunning: boolean;
+  export let gfDontUseDDBlits: boolean = false;
 
-export let gfProgramIsRunning: boolean;
-export let gfDontUseDDBlits: boolean = false;
+  export let gzCommandLine: string /* CHAR8[100] */; // Command line given
 
-export let gzCommandLine: string /* CHAR8[100] */; // Command line given
+  function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
+    let pFontTable: FontTranslationTable;
 
-function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
-  let pFontTable: FontTranslationTable;
+    // Initialize the Memory Manager
+    InitializeMemoryManager();
 
-  // Initialize the Memory Manager
-  InitializeMemoryManager();
+    // Initialize the Input Manager
+    InitializeInputManager();
 
+    if (InitializeVideoManager(hInstance) == false) {
+      return false;
+    }
 
-  // Initialize the Input Manager
-  InitializeInputManager();
+    // Initialize Video Object Manager
+    InitializeVideoObjectManager();
 
-  if (InitializeVideoManager(hInstance) == false) {
-    return false;
+    // Initialize Video Surface Manager
+    if (!InitializeVideoSurfaceManager()) {
+      FastDebugMsg("FAILED : Initializing Video Surface Manager");
+      return false;
+    }
+
+    InitJA2SplashScreen();
+
+    // Make sure we start up our local clock (in milliseconds)
+    // We don't need to check for a return value here since so far its always TRUE
+    InitializeClockManager(); // must initialize after VideoManager, 'cause it uses ghWindow
+
+    // Create font translation table (store in temp structure)
+    pFontTable = CreateEnglishTransTable();
+
+    // Initialize Font Manager
+    // Init the manager and copy the TransTable stuff into it.
+    if (!InitializeFontManager(8, pFontTable)) {
+      return false;
+    }
+
+    // Initialize the Sound Manager (DirectSound)
+    if (InitializeSoundManager() == false) {
+      return false;
+    }
+
+    // Initialize random number generator
+    InitializeRandom(); // no Shutdown
+
+    // Initialize the Game
+    if (InitializeGame() == false) {
+      return false;
+    }
+
+    return true;
   }
 
-  // Initialize Video Object Manager
-  InitializeVideoObjectManager();
+  export function WinMain(hInstance: HTMLElement): number {
+    ghInstance = hInstance;
 
-  // Initialize Video Surface Manager
-  if (!InitializeVideoSurfaceManager()) {
-    FastDebugMsg("FAILED : Initializing Video Surface Manager");
-    return false;
-  }
+    ShowCursor(false);
 
-  InitJA2SplashScreen();
+    // Inititialize the SGP
+    if (InitializeStandardGamingPlatform(hInstance) == false) {
+      // We failed to initialize the SGP
+      return 0;
+    }
 
-  // Make sure we start up our local clock (in milliseconds)
-  // We don't need to check for a return value here since so far its always TRUE
-  InitializeClockManager(); // must initialize after VideoManager, 'cause it uses ghWindow
+    SetIntroType(Enum21.INTRO_SPLASH);
 
-  // Create font translation table (store in temp structure)
-  pFontTable = CreateEnglishTransTable();
+    gfProgramIsRunning = true;
 
-  // Initialize Font Manager
-  // Init the manager and copy the TransTable stuff into it.
-  if (!InitializeFontManager(8, pFontTable)) {
-    return false;
-  }
+    FastDebugMsg("Running Game");
 
-  // Initialize the Sound Manager (DirectSound)
-  if (InitializeSoundManager() == false) {
-    return false;
-  }
+    // At this point the SGP is set up, which means all I/O, Memory, tools, etc... are available. All we need to do is
+    // attend to the gaming mechanics themselves
+    requestAnimationFrame(render);
 
-  // Initialize random number generator
-  InitializeRandom(); // no Shutdown
+    function render() {
+      GameLoop();
 
-  // Initialize the Game
-  if (InitializeGame() == false) {
-    return false;
-  }
+      gfSGPInputReceived = false;
 
-  return true;
-}
+      requestAnimationFrame(render);
+    }
 
-export function WinMain(hInstance: HTMLElement): number {
-  ghInstance = hInstance;
+    // This is the normal exit point
+    FastDebugMsg("Exiting Game");
 
-  ShowCursor(false);
+    // SGPExit() will be called next through the atexit() mechanism...  This way we correctly process both normal exits and
+    // emergency aborts (such as those caused by a failed assertion).
 
-  // Inititialize the SGP
-  if (InitializeStandardGamingPlatform(hInstance) == false) {
-    // We failed to initialize the SGP
+    // return wParam of the last message received
     return 0;
   }
-
-  SetIntroType(Enum21.INTRO_SPLASH);
-
-
-  gfProgramIsRunning = true;
-
-  FastDebugMsg("Running Game");
-
-  // At this point the SGP is set up, which means all I/O, Memory, tools, etc... are available. All we need to do is
-  // attend to the gaming mechanics themselves
-  requestAnimationFrame(render);
-
-  function render() {
-    GameLoop();
-
-    gfSGPInputReceived = false;
-
-    requestAnimationFrame(render);
-  }
-
-  // This is the normal exit point
-  FastDebugMsg("Exiting Game");
-
-  // SGPExit() will be called next through the atexit() mechanism...  This way we correctly process both normal exits and
-  // emergency aborts (such as those caused by a failed assertion).
-
-  // return wParam of the last message received
-  return 0;
-}
-
 }

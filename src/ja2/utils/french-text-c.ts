@@ -94,9 +94,9 @@ FAST HELP TEXT -- Explains how the syntax of fast help text works.
 
 */
 
-export let ItemNames: string[] /* UINT16[MAXITEMS][80] */ = [ "" ];
+export let ItemNames: string[] /* UINT16[MAXITEMS][80] */ = [""];
 
-export let ShortItemNames: string[] /* UINT16[MAXITEMS][80] */ = [ "" ];
+export let ShortItemNames: string[] /* UINT16[MAXITEMS][80] */ = [""];
 
 // Different weapon calibres
 // CAWS is Close Assault Weapon System and should probably be left as it is
@@ -793,7 +793,7 @@ export let pLandTypeStrings: string[] /* STR16[] */ = [
   "Repaire de créatures", // Any mine sector with creatures in it
   "Sous-sols d'Orta", // The basement of Orta (K4)
   "Tunnel", // The tunnel access from the maze garden in Meduna
-             // leading to the secret shelter underneath the palace
+  // leading to the secret shelter underneath the palace
   "Abri", // The shelter underneath the queen's palace
   "", // Unused
 ];
@@ -1505,13 +1505,9 @@ export let pMapScreenBottomText: string[] /* STR16[] */ = [
   "Solde actuel", // current balance in player bank account
 ];
 
-export let pMercDeadString: string[] /* STR16[] */ = [
-  "%s est mort.",
-];
+export let pMercDeadString: string[] /* STR16[] */ = ["%s est mort."];
 
-export let pDayStrings: string[] /* STR16[] */ = [
-  "Jour",
-];
+export let pDayStrings: string[] /* STR16[] */ = ["Jour"];
 
 // the list of email sender names
 
@@ -1572,10 +1568,7 @@ export let pSenderNameList: string[] /* STR16[] */ = [
 
 // next/prev strings
 
-export let pTraverseStrings: string[] /* STR16[] */ = [
-  "Précédent",
-  "Suivant",
-];
+export let pTraverseStrings: string[] /* STR16[] */ = ["Précédent", "Suivant"];
 
 // new mail notify string
 
@@ -1600,9 +1593,7 @@ export let pEmailHeaders: string[] /* STR16[] */ = [
 
 // email titlebar text
 
-export let pEmailTitleText: string[] /* STR16[] */ = [
-  "Boîte aux lettres",
-];
+export let pEmailTitleText: string[] /* STR16[] */ = ["Boîte aux lettres"];
 
 // the financial screen strings
 export let pFinanceTitle: string[] /* STR16[] */ = [
@@ -1894,9 +1885,7 @@ export let pExtraIMPStrings: string[] /* STR16[] */ = [
   "Pour que l'analyse soit complète, choisissez une voix.",
 ];
 
-export let pFilesTitle: string[] /* STR16[] */ = [
-  "Fichiers",
-];
+export let pFilesTitle: string[] /* STR16[] */ = ["Fichiers"];
 
 export let pFilesSenderList: string[] /* STR16[] */ = [
   "Rapport Arulco", // the recon report sent to the player. Recon is an abbreviation for reconissance
@@ -1910,9 +1899,7 @@ export let pFilesSenderList: string[] /* STR16[] */ = [
 
 // Text having to do with the History Log
 
-export let pHistoryTitle: string[] /* STR16[] */ = [
-  "Historique",
-];
+export let pHistoryTitle: string[] /* STR16[] */ = ["Historique"];
 
 export let pHistoryHeaders: string[] /* STR16[] */ = [
   "Jour", // the day the history event occurred
@@ -2251,25 +2238,15 @@ export let pMapHortIndex: string[] /* STR16[] */ = [
   "16",
 ];
 
-export let pMapDepthIndex: string[] /* STR16[] */ = [
-  "",
-  "-1",
-  "-2",
-  "-3",
-];
+export let pMapDepthIndex: string[] /* STR16[] */ = ["", "-1", "-2", "-3"];
 
 // text that appears on the contract button
 
-export let pContractButtonString: string[] /* STR16[] */ = [
-  "Contrat",
-];
+export let pContractButtonString: string[] /* STR16[] */ = ["Contrat"];
 
 // text that appears on the update panel buttons
 
-export let pUpdatePanelButtons: string[] /* STR16[] */ = [
-  "Continuer",
-  "Stop",
-];
+export let pUpdatePanelButtons: string[] /* STR16[] */ = ["Continuer", "Stop"];
 
 // Text which appears when everyone on your team is incapacitated and incapable of battle
 
@@ -2293,10 +2270,7 @@ export let InsContractText: string[] /* STR16[] */ = [
 // Insurance Info
 // Text on the buttons on the bottom of the screen
 
-export let InsInfoText: string[] /* STR16[] */ = [
-  "Précédent",
-  "Suivant",
-];
+export let InsInfoText: string[] /* STR16[] */ = ["Précédent", "Suivant"];
 
 // For use at the M.E.R.C. web site. Text relating to the player's account with MERC
 
@@ -2367,7 +2341,7 @@ export let MercHomePageText: string[] /* STR16[] */ = [
 
 export let sFuneralString: string[] /* STR16[] */ = [
   "Morgue McGillicutty : A votre écoute depuis 1983.",
-  "Murray \"Pops\" McGillicutty, notre directeur bien aimé, est un ancien mercenaire de l'AIM. Sa spécialité : la mort des autres.",
+  'Murray "Pops" McGillicutty, notre directeur bien aimé, est un ancien mercenaire de l\'AIM. Sa spécialité : la mort des autres.',
   "Pops l'a côtoyée pendant si longtemps qu'il est un expert de la mort, à tous points de vue.",
   "La morgue McGillicutty vous offre un large éventail de services funéraires, depuis une écoute compréhensive jusqu'à la reconstitution des corps... dispersés.",
   "Laissez donc la morgue McGillicutty vous aider, pour que votre compagnon repose enfin en paix.",
@@ -2393,7 +2367,7 @@ export let sFloristText: string[] /* STR16[] */ = [
 
   // Address of United Florist
 
-  "\"Nous livrons partout dans le monde\"",
+  '"Nous livrons partout dans le monde"',
   "0-800-SENTMOI",
   "333 NoseGay Dr, Seedy City, CA USA 90210",
   "http://www.sentmoi.com",
@@ -2454,7 +2428,7 @@ export let sFloristGalleryText: string[] /* STR16[] */ = [
   "Suiv.", // abbreviation for next
 
   "Cliquez sur le bouquet que vous désirez commander.",
-  "Note : les bouquets \"pot pourri\" et \"nature morte\" vous seront facturés 10$ supplémentaires.",
+  'Note : les bouquets "pot pourri" et "nature morte" vous seront facturés 10$ supplémentaires.',
 
   // text on the button
 
@@ -2703,7 +2677,7 @@ export let VideoConfercingText: string[] /* STR16[] */ = [
   "Conférence vidéo avec",
   "Connexion. . .",
 
-  "dépôt compris" // Displays if you are hiring the merc with the medical deposit
+  "dépôt compris", // Displays if you are hiring the merc with the medical deposit
 ];
 
 // Aim Member.c
@@ -2796,7 +2770,7 @@ export let AimAlumniText: string[] /* STR16[] */ = [
 
   "Anciens", // Title of the page
 
-  "OK" // Stops displaying information on selected merc
+  "OK", // Stops displaying information on selected merc
 ];
 
 // AIM Home Page
@@ -2811,7 +2785,7 @@ export let AimScreenText: string[] /* STR16[] */ = [
   // Text for an advertisement that gets displayed on the AIM page
 
   "Service des Fleuristes Associés",
-  "\"Nous livrons partout dans le monde\"", // 10
+  '"Nous livrons partout dans le monde"', // 10
   "Faites-le dans les règles de l'art",
   "... la première fois",
   "Si nous ne l'avons pas, c'est que vous n'en avez pas besoin.",
@@ -2929,14 +2903,14 @@ export let zSaveLoadText: string[] /* STR16[] */ = [
   "La version de la sauvegarde est différente de celle du jeu. Désirez-vous continuer ?",
   "Les fichiers de sauvegarde sont peut-être altérés. Voulez-vous les effacer ?",
 
-// Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
-// is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
-// used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
+  // Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
+  // is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
+  // used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
   "Tentative de chargement d'une sauvegarde de version précédente. Voulez-vous effectuer une mise à jour ?",
 
-// Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
-// is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
-// used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
+  // Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
+  // is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
+  // used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
   "Tentative de chargement d'une sauvegarde de version précédente. Voulez-vous effectuer une mise à jour ?",
 
   "Etes-vous sûr de vouloir écraser la sauvegarde #%d ?",
@@ -3153,18 +3127,14 @@ export let pIMPBeginScreenStrings: string[] /* STR16[] */ = [
   "( 8 Caractères Max )",
 ];
 
-export let pIMPFinishButtonText: string[] /* STR16[1] */ = [
-  "Analyse",
-];
+export let pIMPFinishButtonText: string[] /* STR16[1] */ = ["Analyse"];
 
 export let pIMPFinishStrings: string[] /* STR16[] */ = [
   "Nous vous remercions, %s", //%s is the name of the merc
 ];
 
 // the strings for imp voices screen
-export let pIMPVoicesStrings: string[] /* STR16[] */ = [
-  "Voix",
-];
+export let pIMPVoicesStrings: string[] /* STR16[] */ = ["Voix"];
 
 export let pDepartedMercPortraitStrings: string[] /* STR16[] */ = [
   "Mort",
@@ -3173,9 +3143,7 @@ export let pDepartedMercPortraitStrings: string[] /* STR16[] */ = [
 ];
 
 // title for program
-export let pPersTitleText: string[] /* STR16[] */ = [
-  "Personnel",
-];
+export let pPersTitleText: string[] /* STR16[] */ = ["Personnel"];
 
 // paused game strings
 export let pPausedGameText: string[] /* STR16[] */ = [
@@ -3216,7 +3184,7 @@ export let pMessageStrings: string[] /* STR16[] */ = [
   "n/a", // Lowercase acronym for not applicable.
   "Entre-temps", // Meanwhile
   "%s est arrivé dans le secteur %s%s", // Name/Squad has arrived in sector A9.  Order must not change without notifying
-                                         // SirTech
+  // SirTech
   "Version",
   "Emplacement de sauvegarde rapide vide",
   "Cet emplacement est réservé aux sauvegardes rapides effectuées depuis l'écran tactique (ALT+S).",
@@ -3244,7 +3212,7 @@ export let pMessageStrings: string[] /* STR16[] */ = [
   "Donner",
 
   "%s donné à %s.", //"Item" passed to "merc".  Please try to keep the item %s before the merc %s, otherwise,
-                     // must notify SirTech.
+  // must notify SirTech.
   "Impossible de donner %s à %s.", // pass "item" to "merc".  Same instructions as above.
 
   // A list of attachments appear after the items.  Ex:  Kevlar vest ( Ceramic Plate 'Attached )'
@@ -3415,16 +3383,16 @@ export let gzCreditNames: string[] /* STR16[] */ = [
   "Kris Märnes",
   "Ian Currie",
   "Linda Currie",
-  "Eric \"WTF\" Cheng",
+  'Eric "WTF" Cheng',
   "Lynn Holowka",
-  "Norman \"NRG\" Olsen",
+  'Norman "NRG" Olsen',
   "George Brooks",
   "Andrew Stacey",
   "Scot Loving",
-  "Andrew \"Big Cheese\" Emmons",
-  "Dave \"The Feral\" French",
+  'Andrew "Big Cheese" Emmons',
+  'Dave "The Feral" French',
   "Alex Meduna",
-  "Joey \"Joeker\" Whelan",
+  'Joey "Joeker" Whelan',
 ];
 
 export let gzCreditNameTitle: string[] /* STR16[] */ = [
@@ -3448,7 +3416,7 @@ export let gzCreditNameTitle: string[] /* STR16[] */ = [
 export let gzCreditNameFunny: string[] /* STR16[] */ = [
   "", // Chris Camfield
   "(ah, la ponctuation...)", // Shaun Lyng
-  "(\"C'est bon, trois fois rien\")", // Kris \"The Cow Rape Man\" Marnes
+  '("C\'est bon, trois fois rien")', // Kris \"The Cow Rape Man\" Marnes
   "(j'ai passé l'âge)", // Ian Currie
   "(et en plus je bosse sur Wizardry 8)", // Linda Currie
   "(on m'a forcé !)", // Eric \"WTF\" Cheng

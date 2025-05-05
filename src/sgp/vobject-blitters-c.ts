@@ -1,17 +1,16 @@
 namespace ja2 {
+  export let ClippingRect: SGPRect = createSGPRectFrom(0, 0, 640, 480);
+  // 555      565
+  export let guiTranslucentMask: UINT32 = 0x3def; // 0x7bef;		// mask for halving 5,6,5
 
-export let ClippingRect: SGPRect = createSGPRectFrom(0, 0, 640, 480);
-// 555      565
-export let guiTranslucentMask: UINT32 = 0x3def; // 0x7bef;		// mask for halving 5,6,5
+  // GLOBALS for pre-calculating skip values
+  let gLeftSkip: INT32;
+  let gRightSkip: INT32;
+  let gTopSkip: INT32;
+  let gBottomSkip: INT32;
+  let gfUsePreCalcSkips: boolean = false;
 
-// GLOBALS for pre-calculating skip values
-let gLeftSkip: INT32;
-let gRightSkip: INT32;
-let gTopSkip: INT32;
-let gBottomSkip: INT32;
-let gfUsePreCalcSkips: boolean = false;
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZNBClipTranslucent
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -23,84 +22,95 @@ let gfUsePreCalcSkips: boolean = false;
         Blits every second pixel ("Translucents").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZNBClipTranslucent(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let uiLineFlag: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZNBClipTranslucent(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let uiLineFlag: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  uiLineFlag = (iTempY & 1);
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    uiLineFlag = iTempY & 1;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -272,10 +282,10 @@ export function Blt8BPPDataTo16BPPBufferTransZNBClipTranslucent(pBuffer: Uint8Cl
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZTranslucent
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -287,50 +297,59 @@ export function Blt8BPPDataTo16BPPBufferTransZNBClipTranslucent(pBuffer: Uint8Cl
         Blits every second pixel ("Translucents").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZTranslucent(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let uiOffset: UINT32;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let uiLineFlag: UINT32;
-  let pTrav: ETRLEObject;
+  export function Blt8BPPDataTo16BPPBufferTransZTranslucent(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let uiOffset: UINT32;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let uiLineFlag: UINT32;
+    let pTrav: ETRLEObject;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     xor eax, eax
@@ -401,10 +420,10 @@ export function Blt8BPPDataTo16BPPBufferTransZTranslucent(pBuffer: Uint8ClampedA
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZNBTranslucent
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -416,50 +435,59 @@ export function Blt8BPPDataTo16BPPBufferTransZTranslucent(pBuffer: Uint8ClampedA
         Blits every second pixel ("Translucents").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZNBTranslucent(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let uiOffset: UINT32;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let uiLineFlag: UINT32;
-  let pTrav: ETRLEObject;
+  export function Blt8BPPDataTo16BPPBufferTransZNBTranslucent(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let uiOffset: UINT32;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let uiLineFlag: UINT32;
+    let pTrav: ETRLEObject;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     xor eax, eax
@@ -527,40 +555,43 @@ export function Blt8BPPDataTo16BPPBufferTransZNBTranslucent(pBuffer: Uint8Clampe
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  InitZBuffer
 
         Allocates and initializes a Z buffer for use with the Z buffer blitters. Doesn't really do
         much except allocate a chunk of memory, and zero it.
 
 **********************************************************************************************/
-export function InitZBuffer(uiPitch: UINT32, uiHeight: UINT32): Uint8ClampedArray {
-  let pBuffer: Uint8ClampedArray;
+  export function InitZBuffer(
+    uiPitch: UINT32,
+    uiHeight: UINT32,
+  ): Uint8ClampedArray {
+    let pBuffer: Uint8ClampedArray;
 
-  pBuffer = new Uint8ClampedArray(uiPitch * uiHeight);
+    pBuffer = new Uint8ClampedArray(uiPitch * uiHeight);
 
-  return pBuffer;
-}
+    return pBuffer;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  ShutdownZBuffer
 
         Frees up the memory allocated for the Z buffer.
 
 **********************************************************************************************/
-export function ShutdownZBuffer(pBuffer: Uint8ClampedArray): boolean {
-  return true;
-}
+  export function ShutdownZBuffer(pBuffer: Uint8ClampedArray): boolean {
+    return true;
+  }
 
-//*****************************************************************************
-//** 16 Bit Blitters
-//**
-//*****************************************************************************
+  //*****************************************************************************
+  //** 16 Bit Blitters
+  //**
+  //*****************************************************************************
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferMonoShadowClip
 
         Uses a bitmap an 8BPP template for blitting. Anywhere a 1 appears in the bitmap, a shadow
@@ -569,116 +600,133 @@ export function ShutdownZBuffer(pBuffer: Uint8ClampedArray): boolean {
         transparency is used for the background.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferMonoShadowClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null, usForeground: UINT16, usBackground: UINT16, usShadow: UINT16): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferMonoShadowClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+    usForeground: UINT16,
+    usBackground: UINT16,
+    usShadow: UINT16,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-  let foregroundColor = GetRGBColor(usForeground);
-  let shadowColor = GetRGBColor(usShadow);
-  let backgroundColor = usBackground ? GetRGBColor(usBackground) : 0x00;
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        if (byte === 0 && backgroundColor === 0) {
-          DestPtr += 4;
-        } else {
-          rgb = (byte === 1 ? shadowColor : (byte ? foregroundColor : backgroundColor));
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+    let foregroundColor = GetRGBColor(usForeground);
+    let shadowColor = GetRGBColor(usShadow);
+    let backgroundColor = usBackground ? GetRGBColor(usBackground) : 0x00;
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          if (byte === 0 && backgroundColor === 0) {
+            DestPtr += 4;
+          } else {
+            rgb =
+              byte === 1
+                ? shadowColor
+                : byte
+                  ? foregroundColor
+                  : backgroundColor;
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+          }
         }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
         Blt16BPPTo16BPP
 
         Copies a rect of 16 bit data from a video buffer to a buffer position of the brush
@@ -686,35 +734,46 @@ export function Blt8BPPDataTo16BPPBufferMonoShadowClip(pBuffer: Uint8ClampedArra
         etc. to their unblit buffer, for later reblitting. Does NOT clip.
 
 **********************************************************************************************/
-export function Blt16BPPTo16BPP(pDest: Uint8ClampedArray, uiDestPitch: UINT32, pSrc: Uint8ClampedArray, uiSrcPitch: UINT32, iDestXPos: INT32, iDestYPos: INT32, iSrcXPos: INT32, iSrcYPos: INT32, uiWidth: UINT32, uiHeight: UINT32): boolean {
-  let pSrcPtr: number;
-  let pDestPtr: number;
-  let uiLineSkipDest: UINT32;
-  let uiLineSkipSrc: UINT32;
+  export function Blt16BPPTo16BPP(
+    pDest: Uint8ClampedArray,
+    uiDestPitch: UINT32,
+    pSrc: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iDestXPos: INT32,
+    iDestYPos: INT32,
+    iSrcXPos: INT32,
+    iSrcYPos: INT32,
+    uiWidth: UINT32,
+    uiHeight: UINT32,
+  ): boolean {
+    let pSrcPtr: number;
+    let pDestPtr: number;
+    let uiLineSkipDest: UINT32;
+    let uiLineSkipSrc: UINT32;
 
-  Assert(pDest != null);
-  Assert(pSrc != null);
+    Assert(pDest != null);
+    Assert(pSrc != null);
 
-  pSrcPtr = ((iSrcYPos * uiSrcPitch) + (iSrcXPos * 4));
-  pDestPtr = ((iDestYPos * uiDestPitch) + (iDestXPos * 4));
-  uiLineSkipDest = uiDestPitch - (uiWidth * 4);
-  uiLineSkipSrc = uiSrcPitch - (uiWidth * 4);
+    pSrcPtr = iSrcYPos * uiSrcPitch + iSrcXPos * 4;
+    pDestPtr = iDestYPos * uiDestPitch + iDestXPos * 4;
+    uiLineSkipDest = uiDestPitch - uiWidth * 4;
+    uiLineSkipSrc = uiSrcPitch - uiWidth * 4;
 
-  let x: number;
-  let y: number;
-  for (y = 0; y < uiHeight; y++) {
-    pDest.set(pSrc.subarray(pSrcPtr, pSrcPtr + uiWidth * 4), pDestPtr);
-    pDestPtr += uiWidth * 4;
-    pSrcPtr += uiWidth * 4;
+    let x: number;
+    let y: number;
+    for (y = 0; y < uiHeight; y++) {
+      pDest.set(pSrc.subarray(pSrcPtr, pSrcPtr + uiWidth * 4), pDestPtr);
+      pDestPtr += uiWidth * 4;
+      pSrcPtr += uiWidth * 4;
 
-    pDestPtr += uiLineSkipDest;
-    pSrcPtr += uiLineSkipSrc;
+      pDestPtr += uiLineSkipDest;
+      pSrcPtr += uiLineSkipSrc;
+    }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
         Blt16BPPTo16BPPTrans
 
         Copies a rect of 16 bit data from a video buffer to a buffer position of the brush
@@ -723,48 +782,63 @@ export function Blt16BPPTo16BPP(pDest: Uint8ClampedArray, uiDestPitch: UINT32, p
         not copied.
 
 **********************************************************************************************/
-export function Blt16BPPTo16BPPTrans(pDest: Uint8ClampedArray, uiDestPitch: UINT32, pSrc: Uint8ClampedArray, uiSrcPitch: UINT32, iDestXPos: INT32, iDestYPos: INT32, iSrcXPos: INT32, iSrcYPos: INT32, uiWidth: UINT32, uiHeight: UINT32, usTrans: UINT16): boolean {
-  let pSrcPtr: number;
-  let pDestPtr: number;
-  let uiLineSkipDest: UINT32;
-  let uiLineSkipSrc: UINT32;
+  export function Blt16BPPTo16BPPTrans(
+    pDest: Uint8ClampedArray,
+    uiDestPitch: UINT32,
+    pSrc: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iDestXPos: INT32,
+    iDestYPos: INT32,
+    iSrcXPos: INT32,
+    iSrcYPos: INT32,
+    uiWidth: UINT32,
+    uiHeight: UINT32,
+    usTrans: UINT16,
+  ): boolean {
+    let pSrcPtr: number;
+    let pDestPtr: number;
+    let uiLineSkipDest: UINT32;
+    let uiLineSkipSrc: UINT32;
 
-  Assert(pDest != null);
-  Assert(pSrc != null);
+    Assert(pDest != null);
+    Assert(pSrc != null);
 
-  pSrcPtr = ((iSrcYPos * uiSrcPitch) + (iSrcXPos * 4));
-  pDestPtr = ((iDestYPos * uiDestPitch) + (iDestXPos * 4));
-  uiLineSkipDest = uiDestPitch - (uiWidth * 4);
-  uiLineSkipSrc = uiSrcPitch - (uiWidth * 4);
+    pSrcPtr = iSrcYPos * uiSrcPitch + iSrcXPos * 4;
+    pDestPtr = iDestYPos * uiDestPitch + iDestXPos * 4;
+    uiLineSkipDest = uiDestPitch - uiWidth * 4;
+    uiLineSkipSrc = uiSrcPitch - uiWidth * 4;
 
-
-  let x: number;
-  let y: number;
-  let rgb = GetRGBColor(usTrans);
-  let r = SGPGetRValue(rgb);
-  let g = SGPGetGValue(rgb);
-  let b = SGPGetBValue(rgb);
-  for (y = 0; y < uiHeight; y++) {
-    for (x = 0; x < uiWidth; x++) {
-      if (pSrc[pSrcPtr] === r && pSrc[pSrcPtr + 1] === g && pSrc[pSrcPtr + 2] === b) {
-        pSrcPtr += 4;
-        pDestPtr += 4;
-      } else {
-        pDest[pDestPtr++] = pSrc[pSrcPtr++];
-        pDest[pDestPtr++] = pSrc[pSrcPtr++];
-        pDest[pDestPtr++] = pSrc[pSrcPtr++];
-        pDest[pDestPtr++] = pSrc[pSrcPtr++];
+    let x: number;
+    let y: number;
+    let rgb = GetRGBColor(usTrans);
+    let r = SGPGetRValue(rgb);
+    let g = SGPGetGValue(rgb);
+    let b = SGPGetBValue(rgb);
+    for (y = 0; y < uiHeight; y++) {
+      for (x = 0; x < uiWidth; x++) {
+        if (
+          pSrc[pSrcPtr] === r &&
+          pSrc[pSrcPtr + 1] === g &&
+          pSrc[pSrcPtr + 2] === b
+        ) {
+          pSrcPtr += 4;
+          pDestPtr += 4;
+        } else {
+          pDest[pDestPtr++] = pSrc[pSrcPtr++];
+          pDest[pDestPtr++] = pSrc[pSrcPtr++];
+          pDest[pDestPtr++] = pSrc[pSrcPtr++];
+          pDest[pDestPtr++] = pSrc[pSrcPtr++];
+        }
       }
+
+      pDestPtr += uiLineSkipDest;
+      pSrcPtr += uiLineSkipSrc;
     }
 
-    pDestPtr += uiLineSkipDest;
-    pSrcPtr += uiLineSkipSrc;
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
         Blt16BPPTo16BPPMirror
 
         Copies a rect of 16 bit data from a video buffer to a buffer position of the brush
@@ -772,68 +846,80 @@ export function Blt16BPPTo16BPPTrans(pDest: Uint8ClampedArray, uiDestPitch: UINT
         etc. to their unblit buffer, for later reblitting. Does NOT clip.
 
 **********************************************************************************************/
-export function Blt16BPPTo16BPPMirror(pDest: Uint8ClampedArray, uiDestPitch: UINT32, pSrc: Uint8ClampedArray, uiSrcPitch: UINT32, iDestXPos: INT32, iDestYPos: INT32, iSrcXPos: INT32, iSrcYPos: INT32, uiWidth: UINT32, uiHeight: UINT32): boolean {
-  let pSrcPtr: number;
-  let pDestPtr: number;
-  let uiLineSkipDest: UINT32;
-  let uiLineSkipSrc: UINT32;
-  let RightSkip: INT32;
-  let LeftSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
-  let clipregion: SGPRect | null = null;
+  export function Blt16BPPTo16BPPMirror(
+    pDest: Uint8ClampedArray,
+    uiDestPitch: UINT32,
+    pSrc: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iDestXPos: INT32,
+    iDestYPos: INT32,
+    iSrcXPos: INT32,
+    iSrcYPos: INT32,
+    uiWidth: UINT32,
+    uiHeight: UINT32,
+  ): boolean {
+    let pSrcPtr: number;
+    let pDestPtr: number;
+    let uiLineSkipDest: UINT32;
+    let uiLineSkipSrc: UINT32;
+    let RightSkip: INT32;
+    let LeftSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
+    let clipregion: SGPRect | null = null;
 
-  Assert(pDest != null);
-  Assert(pSrc != null);
+    Assert(pDest != null);
+    Assert(pSrc != null);
 
-  // Add to start position of dest buffer
-  iTempX = iDestXPos;
-  iTempY = iDestYPos;
+    // Add to start position of dest buffer
+    iTempX = iDestXPos;
+    iTempY = iDestYPos;
 
-  if (clipregion == null) {
-    ClipX1 = 0; // ClippingRect.iLeft;
-    ClipY1 = 0; // ClippingRect.iTop;
-    ClipX2 = 640; // ClippingRect.iRight;
-    ClipY2 = 480; // ClippingRect.iBottom;
-  } else {
-    throw new Error('Should be unreachable');
-  }
+    if (clipregion == null) {
+      ClipX1 = 0; // ClippingRect.iLeft;
+      ClipY1 = 0; // ClippingRect.iTop;
+      ClipX2 = 640; // ClippingRect.iRight;
+      ClipY2 = 480; // ClippingRect.iBottom;
+    } else {
+      throw new Error("Should be unreachable");
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), uiWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + uiWidth)) - ClipX2, uiWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), uiHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + uiHeight)) - ClipY2, uiHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), uiWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + uiWidth) - ClipX2, uiWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), uiHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + uiHeight) - ClipY2,
+      uiHeight,
+    );
 
-  iTempX = Math.max(ClipX1, iDestXPos);
-  iTempY = Math.max(ClipY1, iDestYPos);
+    iTempX = Math.max(ClipX1, iDestXPos);
+    iTempY = Math.max(ClipY1, iDestYPos);
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (uiWidth - LeftSkip - RightSkip);
-  BlitHeight = (uiHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = uiWidth - LeftSkip - RightSkip;
+    BlitHeight = uiHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= uiWidth) || (RightSkip >= uiWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= uiWidth || RightSkip >= uiWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= uiHeight) || (BottomSkip >= uiHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= uiHeight || BottomSkip >= uiHeight) return true;
 
-  pSrcPtr = ((TopSkip * uiSrcPitch) + (RightSkip * 4));
-  pDestPtr = ((iTempY * uiDestPitch) + (iTempX * 4) + ((BlitLength - 1) * 4));
-  uiLineSkipDest = uiDestPitch; //+((BlitLength-1)*2);
-  uiLineSkipSrc = uiSrcPitch - (BlitLength * 4);
+    pSrcPtr = TopSkip * uiSrcPitch + RightSkip * 4;
+    pDestPtr = iTempY * uiDestPitch + iTempX * 4 + (BlitLength - 1) * 4;
+    uiLineSkipDest = uiDestPitch; //+((BlitLength-1)*2);
+    uiLineSkipSrc = uiSrcPitch - BlitLength * 4;
 
-  asm(`
+    asm(`
     mov esi, pSrcPtr
     mov edi, pDestPtr
     mov ebx, BlitHeight
@@ -863,10 +949,10 @@ export function Blt16BPPTo16BPPMirror(pDest: Uint8ClampedArray, uiDestPitch: UIN
     jnz BlitNewLine
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/***********************************************************************************************
+  /***********************************************************************************************
         Blt8BPPTo8BPP
 
         Copies a rect of an 8 bit data from a video buffer to a buffer position of the brush
@@ -874,21 +960,32 @@ export function Blt16BPPTo16BPPMirror(pDest: Uint8ClampedArray, uiDestPitch: UIN
         etc. to their unblit buffer, for later reblitting. Does NOT clip.
 
 **********************************************************************************************/
-export function Blt8BPPTo8BPP(pDest: Uint8ClampedArray, uiDestPitch: UINT32, pSrc: Uint8ClampedArray, uiSrcPitch: UINT32, iDestXPos: INT32, iDestYPos: INT32, iSrcXPos: INT32, iSrcYPos: INT32, uiWidth: UINT32, uiHeight: UINT32): boolean {
-  let pSrcPtr: number;
-  let pDestPtr: number;
-  let uiLineSkipDest: UINT32;
-  let uiLineSkipSrc: UINT32;
+  export function Blt8BPPTo8BPP(
+    pDest: Uint8ClampedArray,
+    uiDestPitch: UINT32,
+    pSrc: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iDestXPos: INT32,
+    iDestYPos: INT32,
+    iSrcXPos: INT32,
+    iSrcYPos: INT32,
+    uiWidth: UINT32,
+    uiHeight: UINT32,
+  ): boolean {
+    let pSrcPtr: number;
+    let pDestPtr: number;
+    let uiLineSkipDest: UINT32;
+    let uiLineSkipSrc: UINT32;
 
-  Assert(pDest != null);
-  Assert(pSrc != null);
+    Assert(pDest != null);
+    Assert(pSrc != null);
 
-  pSrcPtr = (iSrcYPos * uiSrcPitch) + (iSrcXPos);
-  pDestPtr = (iDestYPos * uiDestPitch) + (iDestXPos);
-  uiLineSkipDest = uiDestPitch - (uiWidth);
-  uiLineSkipSrc = uiSrcPitch - (uiWidth);
+    pSrcPtr = iSrcYPos * uiSrcPitch + iSrcXPos;
+    pDestPtr = iDestYPos * uiDestPitch + iDestXPos;
+    uiLineSkipDest = uiDestPitch - uiWidth;
+    uiLineSkipSrc = uiSrcPitch - uiWidth;
 
-  asm(`
+    asm(`
     mov esi, pSrcPtr
     mov edi, pDestPtr
     mov ebx, uiHeight
@@ -923,10 +1020,10 @@ export function Blt8BPPTo8BPP(pDest: Uint8ClampedArray, uiDestPitch: UINT32, pSr
     jnz BlitNewLine
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZPixelate
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -938,50 +1035,59 @@ export function Blt8BPPTo8BPP(pDest: Uint8ClampedArray, uiDestPitch: UINT32, pSr
         Blits every second pixel ("pixelates").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZPixelate(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let uiOffset: UINT32;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let uiLineFlag: UINT32;
-  let pTrav: ETRLEObject;
+  export function Blt8BPPDataTo16BPPBufferTransZPixelate(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let uiOffset: UINT32;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let uiLineFlag: UINT32;
+    let pTrav: ETRLEObject;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     xor eax, eax
@@ -1055,10 +1161,10 @@ export function Blt8BPPDataTo16BPPBufferTransZPixelate(pBuffer: Uint8ClampedArra
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZPixelateObscured
 
         // OK LIKE NORMAL PIXELATE BUT ONLY PIXELATES STUFF BELOW Z level
@@ -1072,115 +1178,124 @@ export function Blt8BPPDataTo16BPPBufferTransZPixelate(pBuffer: Uint8ClampedArra
         Blits every second pixel ("pixelates").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZPixelateObscured(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let uiOffset: UINT32;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let uiLineFlag: UINT32;
-  let pTrav: ETRLEObject;
+  export function Blt8BPPDataTo16BPPBufferTransZPixelateObscured(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let uiOffset: UINT32;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let uiLineFlag: UINT32;
+    let pTrav: ETRLEObject;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      uiLineFlag ^= 1;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        uiLineFlag ^= 1;
+        continue;
+      }
 
-        if (getZValue(pZBuffer, ZPtr) < usZValue) {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
+      runLength = byte & 0x7f;
 
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          if (uiLineFlag & 1) {
-            if (DestPtr & 4) {
-              rgb = GetRGBColor(p16BPPPalette[byte]);
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) < usZValue) {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+
+            setZValue(pZBuffer, ZPtr, usZValue);
           } else {
-            if (DestPtr & 4) {
-              DestPtr += 4;
+            if (uiLineFlag & 1) {
+              if (DestPtr & 4) {
+                rgb = GetRGBColor(p16BPPPalette[byte]);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
             } else {
-              rgb = GetRGBColor(p16BPPPalette[byte]);
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
+              if (DestPtr & 4) {
+                DestPtr += 4;
+              } else {
+                rgb = GetRGBColor(p16BPPPalette[byte]);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
 
-              setZValue(pZBuffer, ZPtr, usZValue);
+                setZValue(pZBuffer, ZPtr, usZValue);
+              }
             }
           }
-        }
 
-        ZPtr += 4;
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZNBPixelate
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -1192,50 +1307,59 @@ export function Blt8BPPDataTo16BPPBufferTransZPixelateObscured(pBuffer: Uint8Cla
         Blits every second pixel ("pixelates").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZNBPixelate(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let uiOffset: UINT32;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let uiLineFlag: UINT32;
-  let pTrav: ETRLEObject;
+  export function Blt8BPPDataTo16BPPBufferTransZNBPixelate(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let uiOffset: UINT32;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let uiLineFlag: UINT32;
+    let pTrav: ETRLEObject;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     xor eax, eax
@@ -1310,10 +1434,10 @@ export function Blt8BPPDataTo16BPPBufferTransZNBPixelate(pBuffer: Uint8ClampedAr
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZNBClipPixelate
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -1325,84 +1449,95 @@ export function Blt8BPPDataTo16BPPBufferTransZNBPixelate(pBuffer: Uint8ClampedAr
         Blits every second pixel ("pixelates").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZNBClipPixelate(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let uiLineFlag: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZNBClipPixelate(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let uiLineFlag: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  uiLineFlag = (iTempY & 1);
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    uiLineFlag = iTempY & 1;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -1581,10 +1716,10 @@ export function Blt8BPPDataTo16BPPBufferTransZNBClipPixelate(pBuffer: Uint8Clamp
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZ
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -1594,90 +1729,99 @@ export function Blt8BPPDataTo16BPPBufferTransZNBClipPixelate(pBuffer: Uint8Clamp
         must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZ(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZ(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        continue;
+      }
 
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
+      runLength = byte & 0x7f;
 
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          DestPtr += 4;
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
         }
-
-        ZPtr += 4;
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZNB
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -1687,88 +1831,97 @@ export function Blt8BPPDataTo16BPPBufferTransZ(pBuffer: Uint8ClampedArray, uiDes
         (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZNB(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZNB(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        continue;
+      }
 
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-        } else {
-          DestPtr += 4;
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
         }
-
-        ZPtr += 4;
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadow
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -1779,44 +1932,52 @@ export function Blt8BPPDataTo16BPPBufferTransZNB(pBuffer: Uint8ClampedArray, uiD
         The Z-buffer is 16 bit, and	must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadow(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadow(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -1875,10 +2036,10 @@ export function Blt8BPPDataTo16BPPBufferTransShadow(pBuffer: Uint8ClampedArray, 
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadowZ
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -1889,46 +2050,56 @@ export function Blt8BPPDataTo16BPPBufferTransShadow(pBuffer: Uint8ClampedArray, 
         The Z-buffer is 16 bit, and	must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowZ(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadowZ(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -1998,10 +2169,10 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZ(pBuffer: Uint8ClampedArray,
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadowZNB
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -2012,103 +2183,119 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZ(pBuffer: Uint8ClampedArray,
         dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowZNB(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadowZNB(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let color: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let color: number;
+    let rgb: number;
 
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (getZValue(pZBuffer, ZPtr) < usZValue) {
-              color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-              rgb = GetRGBColor(ShadeTable[color]);
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (getZValue(pZBuffer, ZPtr) < usZValue) {
+                color = Get16BPPColor(
+                  FROMRGB(
+                    pBuffer[DestPtr],
+                    pBuffer[DestPtr + 1],
+                    pBuffer[DestPtr + 2],
+                  ),
+                );
+                rgb = GetRGBColor(ShadeTable[color]);
+
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
 
               pBuffer[DestPtr++] = SGPGetRValue(rgb);
               pBuffer[DestPtr++] = SGPGetGValue(rgb);
               pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
+              pBuffer[DestPtr++] = 0xff;
             }
           } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
+            DestPtr += 4;
           }
-        } else {
-          DestPtr += 4;
-        }
 
-        ZPtr += 4;
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadowZNBObscured
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -2119,132 +2306,148 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZNB(pBuffer: Uint8ClampedArra
         dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowZNBObscured(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let uiLineFlag: UINT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadowZNBObscured(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let uiLineFlag: UINT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let color: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      uiLineFlag ^= 1;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let color: number;
+    let rgb: number;
 
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (getZValue(pZBuffer, ZPtr) < usZValue) {
-              color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-              rgb = GetRGBColor(ShadeTable[color]);
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        uiLineFlag ^= 1;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (getZValue(pZBuffer, ZPtr) < usZValue) {
+                color = Get16BPPColor(
+                  FROMRGB(
+                    pBuffer[DestPtr],
+                    pBuffer[DestPtr + 1],
+                    pBuffer[DestPtr + 2],
+                  ),
+                );
+                rgb = GetRGBColor(ShadeTable[color]);
+
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
 
               pBuffer[DestPtr++] = SGPGetRValue(rgb);
               pBuffer[DestPtr++] = SGPGetGValue(rgb);
               pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
+              pBuffer[DestPtr++] = 0xff;
+            }
+          } else {
+            if (byte === 254) {
               DestPtr += 4;
-            }
-          } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-          }
-        } else {
-          if (byte === 254) {
-            DestPtr += 4;
-          } else {
-            if (uiLineFlag & 1) {
-              if (DestPtr & 4) {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
-
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
-              } else {
-                DestPtr += 4;
-              }
             } else {
-              if (DestPtr & 4) {
-                DestPtr += 4;
-              } else {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
+              if (uiLineFlag & 1) {
+                if (DestPtr & 4) {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
 
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                } else {
+                  DestPtr += 4;
+                }
+              } else {
+                if (DestPtr & 4) {
+                  DestPtr += 4;
+                } else {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                }
               }
             }
           }
-        }
 
-        ZPtr += 4;
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadowZClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -2255,80 +2458,92 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZNBObscured(pBuffer: Uint8Cla
         254 are shaded instead of blitted.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowZClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadowZClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -2503,10 +2718,10 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZClip(pBuffer: Uint8ClampedAr
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadowClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -2517,78 +2732,88 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZClip(pBuffer: Uint8ClampedAr
         254 are shaded instead of blitted.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadowClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -2751,10 +2976,10 @@ export function Blt8BPPDataTo16BPPBufferTransShadowClip(pBuffer: Uint8ClampedArr
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransShadowZNBClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -2765,384 +2990,420 @@ export function Blt8BPPDataTo16BPPBufferTransShadowClip(pBuffer: Uint8ClampedArr
         NOT updated.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowZNBClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransShadowZNBClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let color: number;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let color: number;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
+
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
+        }
+
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
       }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
 
-    remainingBlitLength -= runLength;
+      remainingBlitLength -= runLength;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
 
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (getZValue(pZBuffer, ZPtr) < usZValue) {
-              color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-              rgb = GetRGBColor(ShadeTable[color]);
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (getZValue(pZBuffer, ZPtr) < usZValue) {
+                color = Get16BPPColor(
+                  FROMRGB(
+                    pBuffer[DestPtr],
+                    pBuffer[DestPtr + 1],
+                    pBuffer[DestPtr + 2],
+                  ),
+                );
+                rgb = GetRGBColor(ShadeTable[color]);
+
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
 
               pBuffer[DestPtr++] = SGPGetRValue(rgb);
               pBuffer[DestPtr++] = SGPGetGValue(rgb);
               pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
+              pBuffer[DestPtr++] = 0xff;
             }
           } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-          }
-        } else {
-          DestPtr += 4;
-        }
-
-        ZPtr += 4;
-      }
-    }
-  }
-
-  return true;
-}
-
-/**********************************************************************************************
- Blt8BPPDataTo16BPPBufferTransShadowZNBClip
-
-        Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
-        buffer as a destination. As it is blitting, it checks the Z value of the ZBuffer, and if the
-        pixel's Z level is below that of the current pixel, it is written on.
-        The Z-buffer is 16 bit, and	must be the same dimensions (including Pitch) as the
-        destination. Pixels with a value of	254 are shaded instead of blitted. The Z buffer is
-        NOT updated.
-
-**********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransShadowZNBObscuredClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null, p16BPPPalette: Uint16Array): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let uiLineFlag: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
-
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
-
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
-
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  uiLineFlag = (iTempY & 1);
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let color: number;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-      uiLineFlag ^= 1;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      uiLineFlag ^= 1;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
-    }
-
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
-
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
-        continue;
-      }
-
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
-      }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
-
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
-
-    remainingBlitLength -= runLength;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (getZValue(pZBuffer, ZPtr) < usZValue) {
-              color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-              rgb = GetRGBColor(ShadeTable[color]);
-
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-          }
-        } else {
-          if (byte === 254) {
             DestPtr += 4;
-          } else {
-            if (uiLineFlag & 1) {
-              if (DestPtr & 4) {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
+          }
+
+          ZPtr += 4;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  /**********************************************************************************************
+ Blt8BPPDataTo16BPPBufferTransShadowZNBClip
+
+        Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
+        buffer as a destination. As it is blitting, it checks the Z value of the ZBuffer, and if the
+        pixel's Z level is below that of the current pixel, it is written on.
+        The Z-buffer is 16 bit, and	must be the same dimensions (including Pitch) as the
+        destination. Pixels with a value of	254 are shaded instead of blitted. The Z buffer is
+        NOT updated.
+
+**********************************************************************************************/
+  export function Blt8BPPDataTo16BPPBufferTransShadowZNBObscuredClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+    p16BPPPalette: Uint16Array,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let uiLineFlag: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
+
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
+
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
+
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
+
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
+
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
+
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    uiLineFlag = iTempY & 1;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let color: number;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+        uiLineFlag ^= 1;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        uiLineFlag ^= 1;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
+
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
+        }
+
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
+      }
+
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
+
+      remainingBlitLength -= runLength;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (getZValue(pZBuffer, ZPtr) < usZValue) {
+                color = Get16BPPColor(
+                  FROMRGB(
+                    pBuffer[DestPtr],
+                    pBuffer[DestPtr + 1],
+                    pBuffer[DestPtr + 2],
+                  ),
+                );
+                rgb = GetRGBColor(ShadeTable[color]);
 
                 pBuffer[DestPtr++] = SGPGetRValue(rgb);
                 pBuffer[DestPtr++] = SGPGetGValue(rgb);
                 pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
+                pBuffer[DestPtr++] = 0xff;
               } else {
                 DestPtr += 4;
               }
             } else {
-              if (DestPtr & 4) {
-                DestPtr += 4;
-              } else {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
+              rgb = GetRGBColor(p16BPPPalette[byte]);
 
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
+              pBuffer[DestPtr++] = SGPGetRValue(rgb);
+              pBuffer[DestPtr++] = SGPGetGValue(rgb);
+              pBuffer[DestPtr++] = SGPGetBValue(rgb);
+              pBuffer[DestPtr++] = 0xff;
+            }
+          } else {
+            if (byte === 254) {
+              DestPtr += 4;
+            } else {
+              if (uiLineFlag & 1) {
+                if (DestPtr & 4) {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                } else {
+                  DestPtr += 4;
+                }
+              } else {
+                if (DestPtr & 4) {
+                  DestPtr += 4;
+                } else {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                }
               }
             }
           }
-        }
 
-        ZPtr += 4;
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferShadowZ
 
         Creates a shadow using a brush, but modifies the destination buffer only if the current
@@ -3150,94 +3411,109 @@ export function Blt8BPPDataTo16BPPBufferTransShadowZNBObscuredClip(pBuffer: Uint
         updates the Z buffer with the new Z level.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferShadowZ(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferShadowZ(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let color: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let color: number;
+    let rgb: number;
 
-        if (getZValue(pZBuffer, ZPtr) < usZValue) {
-          color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-          rgb = GetRGBColor(ShadeTable[color]);
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        continue;
+      }
 
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
+      runLength = byte & 0x7f;
 
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          DestPtr += 4;
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) < usZValue) {
+            color = Get16BPPColor(
+              FROMRGB(
+                pBuffer[DestPtr],
+                pBuffer[DestPtr + 1],
+                pBuffer[DestPtr + 2],
+              ),
+            );
+            rgb = GetRGBColor(ShadeTable[color]);
+
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
         }
-
-        ZPtr += 4;
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferShadowZClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -3247,166 +3523,183 @@ export function Blt8BPPDataTo16BPPBufferShadowZ(pBuffer: Uint8ClampedArray, uiDe
         must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferShadowZClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferShadowZClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let color: number;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let color: number;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
-      }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
-
-    remainingBlitLength -= runLength;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) < usZValue) {
-          color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-          rgb = GetRGBColor(ShadeTable[color]);
-
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          DestPtr += 4;
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
         }
 
-        ZPtr += 4;
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
+      }
+
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
+
+      remainingBlitLength -= runLength;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) < usZValue) {
+            color = Get16BPPColor(
+              FROMRGB(
+                pBuffer[DestPtr],
+                pBuffer[DestPtr + 1],
+                pBuffer[DestPtr + 2],
+              ),
+            );
+            rgb = GetRGBColor(ShadeTable[color]);
+
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferShadowZNB
 
         Creates a shadow using a brush, but modifies the destination buffer only if the current
@@ -3414,48 +3707,57 @@ export function Blt8BPPDataTo16BPPBufferShadowZClip(pBuffer: Uint8ClampedArray, 
         NOT update the Z buffer with the new Z value.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferShadowZNB(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferShadowZNB(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET ShadeTable
@@ -3513,10 +3815,10 @@ export function Blt8BPPDataTo16BPPBufferShadowZNB(pBuffer: Uint8ClampedArray, ui
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferShadowZNBClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -3526,82 +3828,93 @@ export function Blt8BPPDataTo16BPPBufferShadowZNB(pBuffer: Uint8ClampedArray, ui
         same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferShadowZNBClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferShadowZNBClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET ShadeTable
@@ -3764,10 +4077,10 @@ export function Blt8BPPDataTo16BPPBufferShadowZNBClip(pBuffer: Uint8ClampedArray
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -3777,163 +4090,174 @@ export function Blt8BPPDataTo16BPPBufferShadowZNBClip(pBuffer: Uint8ClampedArray
         must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
-      }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
-
-    remainingBlitLength -= runLength;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          DestPtr += 4;
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
         }
 
-        ZPtr += 4;
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
+      }
+
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
+
+      remainingBlitLength -= runLength;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZNBClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -3942,282 +4266,309 @@ export function Blt8BPPDataTo16BPPBufferTransZClip(pBuffer: Uint8ClampedArray, u
         updated in this version. The Z-buffer is 16 bit, and must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZNBClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZNBClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
-      }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
-
-    remainingBlitLength -= runLength;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-        } else {
-          DestPtr += 4;
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
         }
 
-        ZPtr += 4;
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
+      }
+
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
+
+      remainingBlitLength -= runLength;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataSubTo16BPPBuffer
 
         Blits a subrect from a flat 8 bit surface to a 16-bit buffer.
 
 **********************************************************************************************/
-export function Blt8BPPDataSubTo16BPPBuffer(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVSurface: SGPVSurface, pSrcBuffer: Uint8ClampedArray, uiSrcPitch: UINT32, iX: INT32, iY: INT32, pRect: SGPRect): boolean {
-  let p16BPPPalette: Uint16Array;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let LeftSkip: UINT32;
-  let RightSkip: UINT32;
-  let TopSkip: UINT32;
-  let BlitLength: UINT32;
-  let SrcSkip: UINT32;
-  let BlitHeight: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataSubTo16BPPBuffer(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVSurface: SGPVSurface,
+    pSrcBuffer: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iX: INT32,
+    iY: INT32,
+    pRect: SGPRect,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let LeftSkip: UINT32;
+    let RightSkip: UINT32;
+    let TopSkip: UINT32;
+    let BlitLength: UINT32;
+    let SrcSkip: UINT32;
+    let BlitHeight: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVSurface != null);
-  Assert(pSrcBuffer != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVSurface != null);
+    Assert(pSrcBuffer != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  usHeight = hSrcVSurface.usHeight;
-  usWidth = hSrcVSurface.usWidth;
+    // Get Offsets from Index into structure
+    usHeight = hSrcVSurface.usHeight;
+    usWidth = hSrcVSurface.usWidth;
 
-  // Add to start position of dest buffer
-  iTempX = iX;
-  iTempY = iY;
+    // Add to start position of dest buffer
+    iTempX = iX;
+    iTempY = iY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  LeftSkip = pRect.iLeft;
-  RightSkip = usWidth - pRect.iRight;
-  TopSkip = pRect.iTop * uiSrcPitch;
-  BlitLength = pRect.iRight - pRect.iLeft;
-  BlitHeight = pRect.iBottom - pRect.iTop;
-  SrcSkip = uiSrcPitch - BlitLength;
-
-  SrcPtr = (TopSkip + LeftSkip);
-  DestPtr = ((uiDestPitchBYTES * iTempY) + (iTempX * 4));
-  p16BPPPalette = hSrcVSurface.p16BPPPalette;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let byte: number;
-  let color: number;
-  let x: number;
-  let y: number;
-
-  for (y = 0; y < BlitHeight; y++) {
-    for (x = 0; x < BlitLength; x++) {
-      byte = pSrcBuffer[SrcPtr++];
-      color = GetRGBColor(p16BPPPalette[byte]);
-      pBuffer[DestPtr++] = SGPGetRValue(color);
-      pBuffer[DestPtr++] = SGPGetGValue(color);
-      pBuffer[DestPtr++] = SGPGetBValue(color);
-      pBuffer[DestPtr++] = 0xFF;
+    // Validations
+    if (iTempX < 0) {
+      return false;
     }
-    SrcPtr += SrcSkip;
-    DestPtr += LineSkip;
+    if (iTempY < 0) {
+      return false;
+    }
+
+    LeftSkip = pRect.iLeft;
+    RightSkip = usWidth - pRect.iRight;
+    TopSkip = pRect.iTop * uiSrcPitch;
+    BlitLength = pRect.iRight - pRect.iLeft;
+    BlitHeight = pRect.iBottom - pRect.iTop;
+    SrcSkip = uiSrcPitch - BlitLength;
+
+    SrcPtr = TopSkip + LeftSkip;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVSurface.p16BPPPalette;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let byte: number;
+    let color: number;
+    let x: number;
+    let y: number;
+
+    for (y = 0; y < BlitHeight; y++) {
+      for (x = 0; x < BlitLength; x++) {
+        byte = pSrcBuffer[SrcPtr++];
+        color = GetRGBColor(p16BPPPalette[byte]);
+        pBuffer[DestPtr++] = SGPGetRValue(color);
+        pBuffer[DestPtr++] = SGPGetGValue(color);
+        pBuffer[DestPtr++] = SGPGetBValue(color);
+        pBuffer[DestPtr++] = 0xff;
+      }
+      SrcPtr += SrcSkip;
+      DestPtr += LineSkip;
+    }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBuffer
 
         Blits from a flat surface to a 16-bit buffer.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBuffer(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVSurface: SGPVSurface, pSrcBuffer: Uint8ClampedArray, iX: INT32, iY: INT32): boolean {
-  let p16BPPPalette: Uint16Array;
-  //	UINT32 uiOffset;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  //	ETRLEObject *pTrav;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let rows: UINT32;
+  export function Blt8BPPDataTo16BPPBuffer(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVSurface: SGPVSurface,
+    pSrcBuffer: Uint8ClampedArray,
+    iX: INT32,
+    iY: INT32,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    //	UINT32 uiOffset;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    //	ETRLEObject *pTrav;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let rows: UINT32;
 
-  // Assertions
-  Assert(hSrcVSurface != null);
-  Assert(pSrcBuffer != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVSurface != null);
+    Assert(pSrcBuffer != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  usHeight = hSrcVSurface.usHeight;
-  usWidth = hSrcVSurface.usWidth;
+    // Get Offsets from Index into structure
+    usHeight = hSrcVSurface.usHeight;
+    usWidth = hSrcVSurface.usWidth;
 
-  // Add to start position of dest buffer
-  iTempX = iX;
-  iTempY = iY;
+    // Add to start position of dest buffer
+    iTempX = iX;
+    iTempY = iY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = 0;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVSurface.p16BPPPalette;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = 0;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVSurface.p16BPPPalette;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr // pointer to current line start address in source
     mov edi, DestPtr // pointer to current line start address in destination
     mov ecx, usHeight // line counter (goes top to bottom)
@@ -4308,82 +4659,90 @@ export function Blt8BPPDataTo16BPPBuffer(pBuffer: Uint8ClampedArray, uiDestPitch
     DoneBlit: // finished blit
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferHalf
 
         Blits from a flat surface to a 16-bit buffer, dividing the source image into
 exactly half the size.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferHalf(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVSurface: SGPVSurface, pSrcBuffer: Uint8ClampedArray, uiSrcPitch: UINT32, iX: INT32, iY: INT32): boolean {
-  let p16BPPPalette: Uint16Array;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let uiSrcSkip: UINT32;
+  export function Blt8BPPDataTo16BPPBufferHalf(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVSurface: SGPVSurface,
+    pSrcBuffer: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iX: INT32,
+    iY: INT32,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let uiSrcSkip: UINT32;
 
-  // Assertions
-  Assert(hSrcVSurface != null);
-  Assert(pSrcBuffer != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVSurface != null);
+    Assert(pSrcBuffer != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  usHeight = hSrcVSurface.usHeight;
-  usWidth = hSrcVSurface.usWidth;
+    // Get Offsets from Index into structure
+    usHeight = hSrcVSurface.usHeight;
+    usWidth = hSrcVSurface.usWidth;
 
-  // Add to start position of dest buffer
-  iTempX = iX;
-  iTempY = iY;
+    // Add to start position of dest buffer
+    iTempX = iX;
+    iTempY = iY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = 0;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVSurface.p16BPPPalette;
-  LineSkip = (uiDestPitchBYTES - (usWidth & 0xfffffffe) * 2);
-  uiSrcSkip = (uiSrcPitch * 2) - (usWidth & 0xfffffffe);
-
-  usHeight >>>= 1;
-  usWidth >>>= 1;
-
-  let x: number;
-  let y: number;
-  let byte: number;
-  let rgb: number;
-
-  for (y = 0; y < usHeight; y++) {
-    for (x = 0; x < usWidth; x++) {
-      byte = pSrcBuffer[SrcPtr++];
-      SrcPtr++;
-
-      rgb = GetRGBColor(p16BPPPalette[byte]);
-      pBuffer[DestPtr++] = SGPGetRValue(rgb);
-      pBuffer[DestPtr++] = SGPGetGValue(rgb);
-      pBuffer[DestPtr++] = SGPGetBValue(rgb);
-      pBuffer[DestPtr++] = 0xFF;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    SrcPtr += uiSrcSkip;
-    DestPtr += LineSkip;
+    SrcPtr = 0;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVSurface.p16BPPPalette;
+    LineSkip = uiDestPitchBYTES - (usWidth & 0xfffffffe) * 2;
+    uiSrcSkip = uiSrcPitch * 2 - (usWidth & 0xfffffffe);
+
+    usHeight >>>= 1;
+    usWidth >>>= 1;
+
+    let x: number;
+    let y: number;
+    let byte: number;
+    let rgb: number;
+
+    for (y = 0; y < usHeight; y++) {
+      for (x = 0; x < usWidth; x++) {
+        byte = pSrcBuffer[SrcPtr++];
+        SrcPtr++;
+
+        rgb = GetRGBColor(p16BPPPalette[byte]);
+        pBuffer[DestPtr++] = SGPGetRValue(rgb);
+        pBuffer[DestPtr++] = SGPGetGValue(rgb);
+        pBuffer[DestPtr++] = SGPGetBValue(rgb);
+        pBuffer[DestPtr++] = 0xff;
+      }
+
+      SrcPtr += uiSrcSkip;
+      DestPtr += LineSkip;
+    }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferHalfRect
 
         Blits from a flat surface to a 16-bit buffer, dividing the source image into
@@ -4395,99 +4754,108 @@ exactly half the size, from a sub-region.
                 number of pixels blitted to the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferHalfRect(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVSurface: SGPVSurface, pSrcBuffer: Uint8ClampedArray, uiSrcPitch: UINT32, iX: INT32, iY: INT32, pRect: SGPRect): boolean {
-  let p16BPPPalette: Uint16Array;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let uiSrcSkip: UINT32;
+  export function Blt8BPPDataTo16BPPBufferHalfRect(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVSurface: SGPVSurface,
+    pSrcBuffer: Uint8ClampedArray,
+    uiSrcPitch: UINT32,
+    iX: INT32,
+    iY: INT32,
+    pRect: SGPRect,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let uiSrcSkip: UINT32;
 
-  // Assertions
-  Assert(hSrcVSurface != null);
-  Assert(pSrcBuffer != null);
-  Assert(pBuffer != null);
-  Assert(pRect != null);
+    // Assertions
+    Assert(hSrcVSurface != null);
+    Assert(pSrcBuffer != null);
+    Assert(pBuffer != null);
+    Assert(pRect != null);
 
-  // Get Offsets from Index into structure
-  usWidth = (pRect.iRight - pRect.iLeft);
-  usHeight = (pRect.iBottom - pRect.iTop);
+    // Get Offsets from Index into structure
+    usWidth = pRect.iRight - pRect.iLeft;
+    usHeight = pRect.iBottom - pRect.iTop;
 
-  // Add to start position of dest buffer
-  iTempX = iX;
-  iTempY = iY;
+    // Add to start position of dest buffer
+    iTempX = iX;
+    iTempY = iY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-  if (usWidth <= 0) {
-    return false;
-  }
-  if (usHeight <= 0) {
-    return false;
-  }
-  if (usHeight > hSrcVSurface.usHeight) {
-    return false;
-  }
-  if (usWidth > hSrcVSurface.usWidth) {
-    return false;
-  }
-
-  SrcPtr = (uiSrcPitch * pRect.iTop) + (pRect.iLeft);
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVSurface.p16BPPPalette;
-  LineSkip = (uiDestPitchBYTES - (usWidth & 0xfffffffe) * 2);
-  uiSrcSkip = (uiSrcPitch * 2) - (usWidth & 0xfffffffe);
-
-  usHeight >>>= 1;
-  usWidth >>>= 1;
-
-  let x: number;
-  let y: number;
-  let byte: number;
-  let rgb: number;
-
-  for (y = 0; y < usHeight; y++) {
-    for (x = 0; x < usWidth; x++) {
-      byte = pSrcBuffer[SrcPtr++];
-      SrcPtr++;
-
-      rgb = GetRGBColor(p16BPPPalette[byte]);
-      pBuffer[DestPtr++] = SGPGetRValue(rgb);
-      pBuffer[DestPtr++] = SGPGetGValue(rgb);
-      pBuffer[DestPtr++] = SGPGetBValue(rgb);
-      pBuffer[DestPtr++] = 0xFF;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
+    if (usWidth <= 0) {
+      return false;
+    }
+    if (usHeight <= 0) {
+      return false;
+    }
+    if (usHeight > hSrcVSurface.usHeight) {
+      return false;
+    }
+    if (usWidth > hSrcVSurface.usWidth) {
+      return false;
     }
 
-    SrcPtr += uiSrcSkip;
-    DestPtr += LineSkip;
+    SrcPtr = uiSrcPitch * pRect.iTop + pRect.iLeft;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVSurface.p16BPPPalette;
+    LineSkip = uiDestPitchBYTES - (usWidth & 0xfffffffe) * 2;
+    uiSrcSkip = uiSrcPitch * 2 - (usWidth & 0xfffffffe);
+
+    usHeight >>>= 1;
+    usWidth >>>= 1;
+
+    let x: number;
+    let y: number;
+    let byte: number;
+    let rgb: number;
+
+    for (y = 0; y < usHeight; y++) {
+      for (x = 0; x < usWidth; x++) {
+        byte = pSrcBuffer[SrcPtr++];
+        SrcPtr++;
+
+        rgb = GetRGBColor(p16BPPPalette[byte]);
+        pBuffer[DestPtr++] = SGPGetRValue(rgb);
+        pBuffer[DestPtr++] = SGPGetGValue(rgb);
+        pBuffer[DestPtr++] = SGPGetBValue(rgb);
+        pBuffer[DestPtr++] = 0xff;
+      }
+
+      SrcPtr += uiSrcSkip;
+      DestPtr += LineSkip;
+    }
+
+    return true;
   }
 
-  return true;
-}
+  export function SetClippingRect(clip: SGPRect): void {
+    Assert(clip != null);
+    Assert(clip.iLeft < clip.iRight);
+    Assert(clip.iTop < clip.iBottom);
 
-export function SetClippingRect(clip: SGPRect): void {
-  Assert(clip != null);
-  Assert(clip.iLeft < clip.iRight);
-  Assert(clip.iTop < clip.iBottom);
+    copySGPRect(ClippingRect, clip);
+  }
 
-  copySGPRect(ClippingRect, clip);
-}
+  export function GetClippingRect(clip: SGPRect): void {
+    Assert(clip != null);
 
-export function GetClippingRect(clip: SGPRect): void {
-  Assert(clip != null);
+    copySGPRect(clip, ClippingRect);
+  }
 
-  copySGPRect(clip, ClippingRect);
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
         Blt16BPPBufferPixelateRectWithColor
 
                 Given an 8x8 pattern and a color, pixelates an area by repeatedly "applying the color" to pixels whereever there
@@ -4507,194 +4875,245 @@ export function GetClippingRect(clip: SGPRect): void {
           This was the only internal modification I made other than adding the usColor argument.
 
 *********************************************************************************************/
-function Blt16BPPBufferPixelateRectWithColor(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, area: SGPRect, Pattern: UINT8[][] /* [8][8] */, usColor: UINT16): boolean {
-  let width: INT32;
-  let height: INT32;
-  let LineSkip: UINT32;
-  let DestPtr: number;
-  let iLeft: INT32;
-  let iTop: INT32;
-  let iRight: INT32;
-  let iBottom: INT32;
+  function Blt16BPPBufferPixelateRectWithColor(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    area: SGPRect,
+    Pattern: UINT8[][] /* [8][8] */,
+    usColor: UINT16,
+  ): boolean {
+    let width: INT32;
+    let height: INT32;
+    let LineSkip: UINT32;
+    let DestPtr: number;
+    let iLeft: INT32;
+    let iTop: INT32;
+    let iRight: INT32;
+    let iBottom: INT32;
 
-  // Assertions
-  Assert(pBuffer != null);
-  Assert(Pattern != null);
+    // Assertions
+    Assert(pBuffer != null);
+    Assert(Pattern != null);
 
-  iLeft = Math.max(ClippingRect.iLeft, area.iLeft);
-  iTop = Math.max(ClippingRect.iTop, area.iTop);
-  iRight = Math.min(ClippingRect.iRight - 1, area.iRight);
-  iBottom = Math.min(ClippingRect.iBottom - 1, area.iBottom);
+    iLeft = Math.max(ClippingRect.iLeft, area.iLeft);
+    iTop = Math.max(ClippingRect.iTop, area.iTop);
+    iRight = Math.min(ClippingRect.iRight - 1, area.iRight);
+    iBottom = Math.min(ClippingRect.iBottom - 1, area.iBottom);
 
-  DestPtr = ((iTop * (uiDestPitchBYTES)) + iLeft * 4);
-  width = iRight - iLeft + 1;
-  height = iBottom - iTop + 1;
-  LineSkip = (uiDestPitchBYTES - (width * 4));
+    DestPtr = iTop * uiDestPitchBYTES + iLeft * 4;
+    width = iRight - iLeft + 1;
+    height = iBottom - iTop + 1;
+    LineSkip = uiDestPitchBYTES - width * 4;
 
-  if (width < 1) {
-    return false;
-  }
-  if (height < 1) {
-    return false;
-  }
-
-  const rgb = GetRGBColor(usColor);
-  const r = SGPGetRValue(rgb);
-  const g = SGPGetGValue(rgb);
-  const b = SGPGetBValue(rgb);
-
-  let x: number;
-  let y: number;
-  let color: number;
-  let patternColumn: number;
-  let patternRow: number;
-
-  patternColumn = 0;
-  patternRow = 0;
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      if (Pattern[patternRow % 8][patternColumn % 8] === 0x00) {
-        DestPtr += 4;
-      } else {
-        pBuffer[DestPtr++] = r;
-        pBuffer[DestPtr++] = g;
-        pBuffer[DestPtr++] = b;
-        pBuffer[DestPtr++] = 0xFF;
-      }
-
-      patternColumn++;
+    if (width < 1) {
+      return false;
+    }
+    if (height < 1) {
+      return false;
     }
 
-    DestPtr += LineSkip;
+    const rgb = GetRGBColor(usColor);
+    const r = SGPGetRValue(rgb);
+    const g = SGPGetGValue(rgb);
+    const b = SGPGetBValue(rgb);
+
+    let x: number;
+    let y: number;
+    let color: number;
+    let patternColumn: number;
+    let patternRow: number;
+
     patternColumn = 0;
-    patternRow++;
+    patternRow = 0;
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        if (Pattern[patternRow % 8][patternColumn % 8] === 0x00) {
+          DestPtr += 4;
+        } else {
+          pBuffer[DestPtr++] = r;
+          pBuffer[DestPtr++] = g;
+          pBuffer[DestPtr++] = b;
+          pBuffer[DestPtr++] = 0xff;
+        }
+
+        patternColumn++;
+      }
+
+      DestPtr += LineSkip;
+      patternColumn = 0;
+      patternRow++;
+    }
+
+    return true;
   }
 
-  return true;
-}
+  // KM:  Modified Nov. 23, 1998
+  // Original prototype (this function) didn't have a color field.  I've added the color field to
+  // Blt16BPPBufferPixelateRectWithColor(), moved the previous implementation of this function there, and added
+  // the modification to allow a specific color.
+  export function Blt16BPPBufferPixelateRect(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    area: SGPRect,
+    Pattern: UINT8[][] /* [8][8] */,
+  ): boolean {
+    return Blt16BPPBufferPixelateRectWithColor(
+      pBuffer,
+      uiDestPitchBYTES,
+      area,
+      Pattern,
+      0,
+    );
+  }
 
-// KM:  Modified Nov. 23, 1998
-// Original prototype (this function) didn't have a color field.  I've added the color field to
-// Blt16BPPBufferPixelateRectWithColor(), moved the previous implementation of this function there, and added
-// the modification to allow a specific color.
-export function Blt16BPPBufferPixelateRect(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, area: SGPRect, Pattern: UINT8[][] /* [8][8] */): boolean {
-  return Blt16BPPBufferPixelateRectWithColor(pBuffer, uiDestPitchBYTES, area, Pattern, 0);
-}
+  // Uses black hatch color
+  export function Blt16BPPBufferHatchRect(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    area: SGPRect,
+  ): boolean {
+    let Pattern: UINT8[][] /* [8][8] */ = [
+      [1, 0, 1, 0, 1, 0, 1, 0],
+      [0, 1, 0, 1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0],
+      [0, 1, 0, 1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0],
+      [0, 1, 0, 1, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1, 0, 1, 0],
+      [0, 1, 0, 1, 0, 1, 0, 1],
+    ];
+    return Blt16BPPBufferPixelateRectWithColor(
+      pBuffer,
+      uiDestPitchBYTES,
+      area,
+      Pattern,
+      0,
+    );
+  }
 
-// Uses black hatch color
-export function Blt16BPPBufferHatchRect(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, area: SGPRect): boolean {
-  let Pattern: UINT8[][] /* [8][8] */ = [
-    [ 1, 0, 1, 0, 1, 0, 1, 0 ],
-    [ 0, 1, 0, 1, 0, 1, 0, 1 ],
-    [ 1, 0, 1, 0, 1, 0, 1, 0 ],
-    [ 0, 1, 0, 1, 0, 1, 0, 1 ],
-    [ 1, 0, 1, 0, 1, 0, 1, 0 ],
-    [ 0, 1, 0, 1, 0, 1, 0, 1 ],
-    [ 1, 0, 1, 0, 1, 0, 1, 0 ],
-    [ 0, 1, 0, 1, 0, 1, 0, 1 ],
-  ];
-  return Blt16BPPBufferPixelateRectWithColor(pBuffer, uiDestPitchBYTES, area, Pattern, 0);
-}
+  export function Blt16BPPBufferLooseHatchRectWithColor(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    area: SGPRect,
+    usColor: UINT16,
+  ): boolean {
+    let Pattern: UINT8[][] /* [8][8] */ = [
+      [1, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 0, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 0, 0, 0, 1, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    return Blt16BPPBufferPixelateRectWithColor(
+      pBuffer,
+      uiDestPitchBYTES,
+      area,
+      Pattern,
+      usColor,
+    );
+  }
 
-export function Blt16BPPBufferLooseHatchRectWithColor(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, area: SGPRect, usColor: UINT16): boolean {
-  let Pattern: UINT8[][] /* [8][8] */ = [
-    [ 1, 0, 0, 0, 1, 0, 0, 0 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 0 ],
-    [ 0, 0, 1, 0, 0, 0, 1, 0 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 0 ],
-    [ 1, 0, 0, 0, 1, 0, 0, 0 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 0 ],
-    [ 0, 0, 1, 0, 0, 0, 1, 0 ],
-    [ 0, 0, 0, 0, 0, 0, 0, 0 ],
-  ];
-  return Blt16BPPBufferPixelateRectWithColor(pBuffer, uiDestPitchBYTES, area, Pattern, usColor);
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferShadow
 
         Modifies the destination buffer. Darkens the destination pixels by 25%, using the source
         image as a mask. Any Non-zero index pixels are used to darken destination pixels.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferShadow(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferShadow(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let color: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        if (byte !== 0x00) {
-          color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-          rgb = GetRGBColor(ShadeTable[color]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-        } else {
-          DestPtr += 4;
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let color: number;
+    let rgb: number;
+
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          if (byte !== 0x00) {
+            color = Get16BPPColor(
+              FROMRGB(
+                pBuffer[DestPtr],
+                pBuffer[DestPtr + 1],
+                pBuffer[DestPtr + 2],
+              ),
+            );
+            rgb = GetRGBColor(ShadeTable[color]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+          } else {
+            DestPtr += 4;
+          }
         }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransparent
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -4702,283 +5121,303 @@ export function Blt8BPPDataTo16BPPBufferShadow(pBuffer: Uint8ClampedArray, uiDes
 
 **********************************************************************************************/
 
-export function Blt8BPPDataTo16BPPBufferTransparent(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransparent(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      continue;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        rgb = GetRGBColor(p16BPPPalette[byte]);
-        pBuffer[DestPtr++] = SGPGetRValue(rgb);
-        pBuffer[DestPtr++] = SGPGetGValue(rgb);
-        pBuffer[DestPtr++] = SGPGetBValue(rgb);
-        pBuffer[DestPtr++] = 0xFF;
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          rgb = GetRGBColor(p16BPPPalette[byte]);
+          pBuffer[DestPtr++] = SGPGetRValue(rgb);
+          pBuffer[DestPtr++] = SGPGetGValue(rgb);
+          pBuffer[DestPtr++] = SGPGetBValue(rgb);
+          pBuffer[DestPtr++] = 0xff;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransparentClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
         buffer as a destination. Clips the brush.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransparentClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransparentClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
+
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
+        }
+
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
       }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
 
-    remainingBlitLength -= runLength;
+      remainingBlitLength -= runLength;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        rgb = GetRGBColor(p16BPPPalette[byte]);
-        pBuffer[DestPtr++] = SGPGetRValue(rgb);
-        pBuffer[DestPtr++] = SGPGetGValue(rgb);
-        pBuffer[DestPtr++] = SGPGetBValue(rgb);
-        pBuffer[DestPtr++] = 0xFF;
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          rgb = GetRGBColor(p16BPPPalette[byte]);
+          pBuffer[DestPtr++] = SGPGetRValue(rgb);
+          pBuffer[DestPtr++] = SGPGetGValue(rgb);
+          pBuffer[DestPtr++] = SGPGetBValue(rgb);
+          pBuffer[DestPtr++] = 0xff;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  BltIsClipped
 
         Determines whether a given blit will need clipping or not. Returns TRUE/FALSE.
 
 **********************************************************************************************/
-export function BltIsClipped(hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function BltIsClipped(
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
+    // Assertions
+    Assert(hSrcVObject != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
+
+    // Calculate rows hanging off each side of the screen
+    if (Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth)) return true;
+
+    if (Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth))
+      return true;
+
+    if (Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight)) return true;
+
+    if (Math.min(Math.max(ClipY2, iTempY + usHeight) - ClipY2, usHeight))
+      return true;
+
+    return false;
   }
 
-  // Calculate rows hanging off each side of the screen
-  if (Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth))
-    return true;
-
-  if (Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth))
-    return true;
-
-  if (Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight))
-    return true;
-
-  if (Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight))
-    return true;
-
-  return false;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferShadowClip
 
         Modifies the destination buffer. Darkens the destination pixels by 25%, using the source
@@ -4986,155 +5425,170 @@ export function BltIsClipped(hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIn
         clips brush if it doesn't fit on the viewport.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferShadowClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferShadowClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let color: number;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let color: number;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
+
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
+        }
+
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
       }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
 
-    remainingBlitLength -= runLength;
+      remainingBlitLength -= runLength;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        if (byte !== 0x00) {
-          color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-          rgb = GetRGBColor(ShadeTable[color]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-        } else {
-          DestPtr += 4;
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          if (byte !== 0x00) {
+            color = Get16BPPColor(
+              FROMRGB(
+                pBuffer[DestPtr],
+                pBuffer[DestPtr + 1],
+                pBuffer[DestPtr + 2],
+              ),
+            );
+            rgb = GetRGBColor(ShadeTable[color]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+          } else {
+            DestPtr += 4;
+          }
         }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
         Blt16BPPBufferShadowRect
 
                 Darkens a rectangular area by 25%. This blitter is used by ShadowVideoObjectRect.
@@ -5144,63 +5598,67 @@ export function Blt8BPPDataTo16BPPBufferShadowClip(pBuffer: Uint8ClampedArray, u
         area							An SGPRect, the area to darken
 
 *********************************************************************************************/
-export function Blt16BPPBufferShadowRect(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, area: SGPRect): boolean {
-  let width: INT32;
-  let height: INT32;
-  let LineSkip: UINT32;
-  let DestPtr: number;
+  export function Blt16BPPBufferShadowRect(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    area: SGPRect,
+  ): boolean {
+    let width: INT32;
+    let height: INT32;
+    let LineSkip: UINT32;
+    let DestPtr: number;
 
-  // Assertions
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(pBuffer != null);
 
-  // Clipping
-  if (area.iLeft < ClippingRect.iLeft)
-    area.iLeft = ClippingRect.iLeft;
-  if (area.iTop < ClippingRect.iTop)
-    area.iTop = ClippingRect.iTop;
-  if (area.iRight >= ClippingRect.iRight)
-    area.iRight = ClippingRect.iRight - 1;
-  if (area.iBottom >= ClippingRect.iBottom)
-    area.iBottom = ClippingRect.iBottom - 1;
-  // CHECKF(area->iLeft >= ClippingRect.iLeft );
-  // CHECKF(area->iTop >= ClippingRect.iTop );
-  // CHECKF(area->iRight <= ClippingRect.iRight );
-  // CHECKF(area->iBottom <= ClippingRect.iBottom );
+    // Clipping
+    if (area.iLeft < ClippingRect.iLeft) area.iLeft = ClippingRect.iLeft;
+    if (area.iTop < ClippingRect.iTop) area.iTop = ClippingRect.iTop;
+    if (area.iRight >= ClippingRect.iRight)
+      area.iRight = ClippingRect.iRight - 1;
+    if (area.iBottom >= ClippingRect.iBottom)
+      area.iBottom = ClippingRect.iBottom - 1;
+    // CHECKF(area->iLeft >= ClippingRect.iLeft );
+    // CHECKF(area->iTop >= ClippingRect.iTop );
+    // CHECKF(area->iRight <= ClippingRect.iRight );
+    // CHECKF(area->iBottom <= ClippingRect.iBottom );
 
-  DestPtr = (area.iTop * uiDestPitchBYTES) + area.iLeft * 4;
-  width = area.iRight - area.iLeft + 1;
-  height = area.iBottom - area.iTop + 1;
-  LineSkip = (uiDestPitchBYTES - (width * 4));
+    DestPtr = area.iTop * uiDestPitchBYTES + area.iLeft * 4;
+    width = area.iRight - area.iLeft + 1;
+    height = area.iBottom - area.iTop + 1;
+    LineSkip = uiDestPitchBYTES - width * 4;
 
-  if (width < 1) {
-    return false;
-  }
-  if (height < 1) {
-    return false;
-  }
-
-  let colors = ShadeTable;
-  let x: number;
-  let y: number;
-  let color: number;
-  let rgb: number;
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-      rgb = GetRGBColor(colors[color]);
-      pBuffer[DestPtr++] = SGPGetRValue(rgb);
-      pBuffer[DestPtr++] = SGPGetGValue(rgb);
-      pBuffer[DestPtr++] = SGPGetBValue(rgb);
-      pBuffer[DestPtr++] = 0xFF;
+    if (width < 1) {
+      return false;
+    }
+    if (height < 1) {
+      return false;
     }
 
-    DestPtr += LineSkip;
+    let colors = ShadeTable;
+    let x: number;
+    let y: number;
+    let color: number;
+    let rgb: number;
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        color = Get16BPPColor(
+          FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]),
+        );
+        rgb = GetRGBColor(colors[color]);
+        pBuffer[DestPtr++] = SGPGetRValue(rgb);
+        pBuffer[DestPtr++] = SGPGetGValue(rgb);
+        pBuffer[DestPtr++] = SGPGetBValue(rgb);
+        pBuffer[DestPtr++] = 0xff;
+      }
+
+      DestPtr += LineSkip;
+    }
+
+    return true;
   }
 
-  return true;
-}
-
-/**********************************************************************************************
+  /**********************************************************************************************
         Blt16BPPBufferShadowRect
 
                 Darkens a rectangular area by 25%. This blitter is used by ShadowVideoObjectRect.
@@ -5210,63 +5668,67 @@ export function Blt16BPPBufferShadowRect(pBuffer: Uint8ClampedArray, uiDestPitch
         area							An SGPRect, the area to darken
 
 *********************************************************************************************/
-export function Blt16BPPBufferShadowRectAlternateTable(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, area: SGPRect): boolean {
-  let width: INT32;
-  let height: INT32;
-  let LineSkip: UINT32;
-  let DestPtr: number;
+  export function Blt16BPPBufferShadowRectAlternateTable(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    area: SGPRect,
+  ): boolean {
+    let width: INT32;
+    let height: INT32;
+    let LineSkip: UINT32;
+    let DestPtr: number;
 
-  // Assertions
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(pBuffer != null);
 
-  // Clipping
-  if (area.iLeft < ClippingRect.iLeft)
-    area.iLeft = ClippingRect.iLeft;
-  if (area.iTop < ClippingRect.iTop)
-    area.iTop = ClippingRect.iTop;
-  if (area.iRight >= ClippingRect.iRight)
-    area.iRight = ClippingRect.iRight - 1;
-  if (area.iBottom >= ClippingRect.iBottom)
-    area.iBottom = ClippingRect.iBottom - 1;
-  // CHECKF(area->iLeft >= ClippingRect.iLeft );
-  // CHECKF(area->iTop >= ClippingRect.iTop );
-  // CHECKF(area->iRight <= ClippingRect.iRight );
-  // CHECKF(area->iBottom <= ClippingRect.iBottom );
+    // Clipping
+    if (area.iLeft < ClippingRect.iLeft) area.iLeft = ClippingRect.iLeft;
+    if (area.iTop < ClippingRect.iTop) area.iTop = ClippingRect.iTop;
+    if (area.iRight >= ClippingRect.iRight)
+      area.iRight = ClippingRect.iRight - 1;
+    if (area.iBottom >= ClippingRect.iBottom)
+      area.iBottom = ClippingRect.iBottom - 1;
+    // CHECKF(area->iLeft >= ClippingRect.iLeft );
+    // CHECKF(area->iTop >= ClippingRect.iTop );
+    // CHECKF(area->iRight <= ClippingRect.iRight );
+    // CHECKF(area->iBottom <= ClippingRect.iBottom );
 
-  DestPtr = (area.iTop * uiDestPitchBYTES) + area.iLeft * 4;
-  width = area.iRight - area.iLeft + 1;
-  height = area.iBottom - area.iTop + 1;
-  LineSkip = (uiDestPitchBYTES - (width * 4));
+    DestPtr = area.iTop * uiDestPitchBYTES + area.iLeft * 4;
+    width = area.iRight - area.iLeft + 1;
+    height = area.iBottom - area.iTop + 1;
+    LineSkip = uiDestPitchBYTES - width * 4;
 
-  if (width < 1) {
-    return false;
-  }
-  if (height < 1) {
-    return false;
-  }
-
-  let colors = IntensityTable;
-  let x: number;
-  let y: number;
-  let color: number;
-  let rgb: number;
-  for (y = 0; y < height; y++) {
-    for (x = 0; x < width; x++) {
-      color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-      rgb = GetRGBColor(colors[color]);
-      pBuffer[DestPtr++] = SGPGetRValue(rgb);
-      pBuffer[DestPtr++] = SGPGetGValue(rgb);
-      pBuffer[DestPtr++] = SGPGetBValue(rgb);
-      DestPtr++;
+    if (width < 1) {
+      return false;
+    }
+    if (height < 1) {
+      return false;
     }
 
-    DestPtr += LineSkip;
+    let colors = IntensityTable;
+    let x: number;
+    let y: number;
+    let color: number;
+    let rgb: number;
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        color = Get16BPPColor(
+          FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]),
+        );
+        rgb = GetRGBColor(colors[color]);
+        pBuffer[DestPtr++] = SGPGetRValue(rgb);
+        pBuffer[DestPtr++] = SGPGetGValue(rgb);
+        pBuffer[DestPtr++] = SGPGetBValue(rgb);
+        DestPtr++;
+      }
+
+      DestPtr += LineSkip;
+    }
+
+    return true;
   }
 
-  return true;
-}
-
-/*
+  /*
 BOOLEAN Blt8BPPDataTo16BPPBufferFullTransparent( HVOBJECT hDestVObject, HVOBJECT hSrcVObject, UINT16 usX, UINT16 usY, SGPRect *srcRect )
 {
         UINT32 uiSrcStart, uiDestStart, uiNumLines, uiLineSize;
@@ -5379,8 +5841,8 @@ DoneBlit:											// finished blit
 
 }	*/
 
-// UTILITY FUNCTIONS FOR BLITTING
-/*
+  // UTILITY FUNCTIONS FOR BLITTING
+  /*
 BOOLEAN ClipReleatedSrcAndDestRectangles( HVOBJECT hDestVObject, HVOBJECT hSrcVObject, RECT *DestRect, RECT *SrcRect )
 {
 
@@ -5604,238 +6066,261 @@ BOOLEAN UpdateBackupSurface( HVOBJECT hVObject )
 
 */
 
-/**********************************************************************************************
+  /**********************************************************************************************
  BltIsClippedOrOffScreen
 
         Determines whether a given blit will need clipping or not. Returns TRUE/FALSE.
 
 **********************************************************************************************/
-export function BltIsClippedOrOffScreen(hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): UINT8 {
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function BltIsClippedOrOffScreen(
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): UINT8 {
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
+    // Assertions
+    Assert(hSrcVObject != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  gLeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  gRightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  gTopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  gBottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  gfUsePreCalcSkips = true;
-
-  // check if whole thing is clipped
-  if ((gLeftSkip >= usWidth) || (gRightSkip >= usWidth))
-    return -1;
-
-  // check if whole thing is clipped
-  if ((gTopSkip >= usHeight) || (gBottomSkip >= usHeight))
-    return -1;
-
-  if (gLeftSkip)
-    return 1;
-
-  if (gRightSkip)
-    return 1;
-
-  if (gTopSkip)
-    return 1;
-
-  if (gBottomSkip)
-    return 1;
-
-  return 0;
-}
-
-// Blt8BPPDataTo16BPPBufferOutline
-// ATE New blitter for rendering a differrent color for value 254. Can be transparent if fDoOutline is FALSE
-export function Blt8BPPDataTo16BPPBufferOutline(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
-
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
-
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
-
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
+    // Calculate rows hanging off each side of the screen
+    gLeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    gRightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    gTopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    gBottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        if (byte === 254) {
-          if (fDoOutline) {
-            rgb = GetRGBColor(s16BPPColor);
+    gfUsePreCalcSkips = true;
+
+    // check if whole thing is clipped
+    if (gLeftSkip >= usWidth || gRightSkip >= usWidth) return -1;
+
+    // check if whole thing is clipped
+    if (gTopSkip >= usHeight || gBottomSkip >= usHeight) return -1;
+
+    if (gLeftSkip) return 1;
+
+    if (gRightSkip) return 1;
+
+    if (gTopSkip) return 1;
+
+    if (gBottomSkip) return 1;
+
+    return 0;
+  }
+
+  // Blt8BPPDataTo16BPPBufferOutline
+  // ATE New blitter for rendering a differrent color for value 254. Can be transparent if fDoOutline is FALSE
+  export function Blt8BPPDataTo16BPPBufferOutline(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
+
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
+
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
+
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          if (byte === 254) {
+            if (fDoOutline) {
+              rgb = GetRGBColor(s16BPPColor);
+              pBuffer[DestPtr++] = SGPGetRValue(rgb);
+              pBuffer[DestPtr++] = SGPGetGValue(rgb);
+              pBuffer[DestPtr++] = SGPGetBValue(rgb);
+              pBuffer[DestPtr++] = 0xff;
+            } else {
+              DestPtr += 4;
+            }
+          } else {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
             pBuffer[DestPtr++] = SGPGetRValue(rgb);
             pBuffer[DestPtr++] = SGPGetGValue(rgb);
             pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-          } else {
-            DestPtr += 4;
+            pBuffer[DestPtr++] = 0xff;
           }
-        } else {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
         }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
+  // ATE New blitter for rendering a differrent color for value 254. Can be transparent if fDoOutline is FALSE
+  export function Blt8BPPDataTo16BPPBufferOutlineClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
+    let p16BPPPalette: Uint16Array;
 
-// ATE New blitter for rendering a differrent color for value 254. Can be transparent if fDoOutline is FALSE
-export function Blt8BPPDataTo16BPPBufferOutlineClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean, clipregion: SGPRect | null): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
-  let p16BPPPalette: Uint16Array;
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -6003,549 +6488,597 @@ export function Blt8BPPDataTo16BPPBufferOutlineClip(pBuffer: Uint8ClampedArray, 
     BlitDone:
   `);
 
-  return true;
-}
-
-export function Blt8BPPDataTo16BPPBufferOutlineZClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean, clipregion: SGPRect | null): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
-  let p16BPPPalette: Uint16Array;
-
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
-
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
-
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
+    return true;
   }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+  export function Blt8BPPDataTo16BPPBufferOutlineZClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
+    let p16BPPPalette: Uint16Array;
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
-  }
 
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+      }
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
-      }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
-
-    remainingBlitLength -= runLength;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (fDoOutline) {
-              rgb = GetRGBColor(s16BPPColor);
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-
-            setZValue(pZBuffer, ZPtr, usZValue);
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
           }
-        } else {
-          DestPtr += 4;
+          remainingSkip -= runLength;
+          continue;
         }
 
-        ZPtr += 4;
-      }
-    }
-  }
-
-  return true;
-}
-
-export function Blt8BPPDataTo16BPPBufferOutlineZPixelateObscuredClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean, clipregion: SGPRect | null): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
-  let p16BPPPalette: Uint16Array;
-  let uiLineFlag: UINT32;
-
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
-
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
-
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  uiLineFlag = (iTempY & 1);
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-      uiLineFlag ^= 1;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      uiLineFlag ^= 1;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
-    }
-
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
-
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
         if (!isTransparent) {
-          SrcPtr += runLength;
+          SrcPtr += remainingSkip;
         }
-        remainingSkip -= runLength;
-        continue;
+        runLength -= remainingSkip;
+        remainingSkip = 0;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
       }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
+      remainingBlitLength -= runLength;
 
-    remainingBlitLength -= runLength;
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (fDoOutline) {
-              rgb = GetRGBColor(s16BPPColor);
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (fDoOutline) {
+                rgb = GetRGBColor(s16BPPColor);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
               pBuffer[DestPtr++] = SGPGetRValue(rgb);
               pBuffer[DestPtr++] = SGPGetGValue(rgb);
               pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-          }
-
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          if (uiLineFlag & 1) {
-            if (DestPtr & 4) {
-              if (byte === 254) {
-                if (fDoOutline) {
-                  rgb = GetRGBColor(s16BPPColor);
-                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                  pBuffer[DestPtr++] = 0xFF;
-                } else {
-                  DestPtr += 4;
-                }
-              } else {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
-              }
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            if (DestPtr & 4) {
-              DestPtr += 4;
-            } else {
-              if (byte === 254) {
-                if (fDoOutline) {
-                  rgb = GetRGBColor(s16BPPColor);
-                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                  pBuffer[DestPtr++] = 0xFF;
-                } else {
-                  DestPtr += 4;
-                }
-              } else {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
-              }
+              pBuffer[DestPtr++] = 0xff;
 
               setZValue(pZBuffer, ZPtr, usZValue);
             }
+          } else {
+            DestPtr += 4;
+          }
+
+          ZPtr += 4;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  export function Blt8BPPDataTo16BPPBufferOutlineZPixelateObscuredClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
+    let p16BPPPalette: Uint16Array;
+    let uiLineFlag: UINT32;
+
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
+
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
+
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
+
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
+
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
+
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    uiLineFlag = iTempY & 1;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+        uiLineFlag ^= 1;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        uiLineFlag ^= 1;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
+
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
+          }
+          remainingSkip -= runLength;
+          continue;
+        }
+
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
+      }
+
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
+
+      remainingBlitLength -= runLength;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (fDoOutline) {
+                rgb = GetRGBColor(s16BPPColor);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
+              pBuffer[DestPtr++] = SGPGetRValue(rgb);
+              pBuffer[DestPtr++] = SGPGetGValue(rgb);
+              pBuffer[DestPtr++] = SGPGetBValue(rgb);
+              pBuffer[DestPtr++] = 0xff;
+            }
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            if (uiLineFlag & 1) {
+              if (DestPtr & 4) {
+                if (byte === 254) {
+                  if (fDoOutline) {
+                    rgb = GetRGBColor(s16BPPColor);
+                    pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                    pBuffer[DestPtr++] = 0xff;
+                  } else {
+                    DestPtr += 4;
+                  }
+                } else {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                }
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              if (DestPtr & 4) {
+                DestPtr += 4;
+              } else {
+                if (byte === 254) {
+                  if (fDoOutline) {
+                    rgb = GetRGBColor(s16BPPColor);
+                    pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                    pBuffer[DestPtr++] = 0xff;
+                  } else {
+                    DestPtr += 4;
+                  }
+                } else {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                }
+
+                setZValue(pZBuffer, ZPtr, usZValue);
+              }
+            }
+          }
+
+          ZPtr += 4;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  export function Blt8BPPDataTo16BPPBufferOutlineShadow(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let p16BPPPalette: Uint16Array;
+
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
+
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
+
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
+
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+
+    let pPixData = hSrcVObject.pPixData;
+    let x: number;
+    let y: number;
+    let byte: number;
+    let runLength: number;
+    let color: number;
+    let rgb: number;
+
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+          if (byte === 254) {
+            DestPtr += 4;
+          } else {
+            color = Get16BPPColor(
+              FROMRGB(
+                pBuffer[DestPtr],
+                pBuffer[DestPtr + 1],
+                pBuffer[DestPtr + 2],
+              ),
+            );
+            rgb = GetRGBColor(ShadeTable[color]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
           }
         }
-
-        ZPtr += 4;
       }
     }
+
+    return true;
   }
 
-  return true;
-}
+  export function Blt8BPPDataTo16BPPBufferOutlineShadowClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-export function Blt8BPPDataTo16BPPBufferOutlineShadow(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let p16BPPPalette: Uint16Array;
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-
-  let pPixData = hSrcVObject.pPixData;
-  let x: number;
-  let y: number;
-  let byte: number;
-  let runLength: number;
-  let color: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      continue;
-    }
-
-    runLength = byte & 0x7F;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
     } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-        if (byte === 254) {
-          DestPtr += 4;
-        } else {
-          color = Get16BPPColor(FROMRGB(pBuffer[DestPtr], pBuffer[DestPtr + 1], pBuffer[DestPtr + 2]));
-          rgb = GetRGBColor(ShadeTable[color]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-        }
-      }
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
-  }
 
-  return true;
-}
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-export function Blt8BPPDataTo16BPPBufferOutlineShadowClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET ShadeTable
@@ -6743,293 +7276,326 @@ export function Blt8BPPDataTo16BPPBufferOutlineShadowClip(pBuffer: Uint8ClampedA
     BlitDone:
   `);
 
-  return true;
-}
-
-export function Blt8BPPDataTo16BPPBufferOutlineZ(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
-
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
-
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
+    return true;
   }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+  export function Blt8BPPDataTo16BPPBufferOutlineZ(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      continue;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
+
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
+
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
     }
 
-    runLength = byte & 0x7F;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
 
-        if (getZValue(pZBuffer, ZPtr) <= usZValue) {
-          if (byte === 254) {
-            if (fDoOutline) {
-              rgb = GetRGBColor(s16BPPColor);
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-
-            setZValue(pZBuffer, ZPtr, usZValue);
-          }
-        } else {
-          DestPtr += 4;
-        }
-
-        ZPtr += 4;
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        continue;
       }
-    }
-  }
 
-  return true;
-}
+      runLength = byte & 0x7f;
 
-export function Blt8BPPDataTo16BPPBufferOutlineZPixelateObscured(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let uiLineFlag: UINT32;
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
-
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
-
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
-
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
-  uiLineFlag = (iTempY & 1);
-
-  let pPixData = hSrcVObject.pPixData;
-  let byte: number;
-  let runLength: number;
-  let rgb: number;
-
-  while (usHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      usHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      uiLineFlag ^= 1;
-      continue;
-    }
-
-    runLength = byte & 0x7F;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) < usZValue) {
-          if (byte === 254) {
-            if (fDoOutline) {
-              rgb = GetRGBColor(s16BPPColor);
+          if (getZValue(pZBuffer, ZPtr) <= usZValue) {
+            if (byte === 254) {
+              if (fDoOutline) {
+                rgb = GetRGBColor(s16BPPColor);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
               pBuffer[DestPtr++] = SGPGetRValue(rgb);
               pBuffer[DestPtr++] = SGPGetGValue(rgb);
               pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            rgb = GetRGBColor(p16BPPPalette[byte]);
-            pBuffer[DestPtr++] = SGPGetRValue(rgb);
-            pBuffer[DestPtr++] = SGPGetGValue(rgb);
-            pBuffer[DestPtr++] = SGPGetBValue(rgb);
-            pBuffer[DestPtr++] = 0xFF;
-          }
-
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          if (uiLineFlag & 1) {
-            if (DestPtr & 4) {
-              if (byte === 254) {
-                if (fDoOutline) {
-                  rgb = GetRGBColor(s16BPPColor);
-                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                  pBuffer[DestPtr++] = 0xFF;
-                } else {
-                  DestPtr += 4;
-                }
-              } else {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
-              }
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            if (DestPtr & 4) {
-              DestPtr += 4;
-            } else {
-              if (byte === 254) {
-                if (fDoOutline) {
-                  rgb = GetRGBColor(s16BPPColor);
-                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                  pBuffer[DestPtr++] = 0xFF;
-                } else {
-                  DestPtr += 4;
-                }
-              } else {
-                rgb = GetRGBColor(p16BPPPalette[byte]);
-                pBuffer[DestPtr++] = SGPGetRValue(rgb);
-                pBuffer[DestPtr++] = SGPGetGValue(rgb);
-                pBuffer[DestPtr++] = SGPGetBValue(rgb);
-                pBuffer[DestPtr++] = 0xFF;
-              }
+              pBuffer[DestPtr++] = 0xff;
 
               setZValue(pZBuffer, ZPtr, usZValue);
             }
+          } else {
+            DestPtr += 4;
           }
-        }
 
-        ZPtr += 4;
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
 
-  return true;
-}
+  export function Blt8BPPDataTo16BPPBufferOutlineZPixelateObscured(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let uiLineFlag: UINT32;
 
-// This is the same as above, but DONOT WRITE to Z!
-export function Blt8BPPDataTo16BPPBufferOutlineZNB(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, s16BPPColor: INT16, fDoOutline: boolean): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+    uiLineFlag = iTempY & 1;
+
+    let pPixData = hSrcVObject.pPixData;
+    let byte: number;
+    let runLength: number;
+    let rgb: number;
+
+    while (usHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        usHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        uiLineFlag ^= 1;
+        continue;
+      }
+
+      runLength = byte & 0x7f;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) < usZValue) {
+            if (byte === 254) {
+              if (fDoOutline) {
+                rgb = GetRGBColor(s16BPPColor);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              rgb = GetRGBColor(p16BPPPalette[byte]);
+              pBuffer[DestPtr++] = SGPGetRValue(rgb);
+              pBuffer[DestPtr++] = SGPGetGValue(rgb);
+              pBuffer[DestPtr++] = SGPGetBValue(rgb);
+              pBuffer[DestPtr++] = 0xff;
+            }
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            if (uiLineFlag & 1) {
+              if (DestPtr & 4) {
+                if (byte === 254) {
+                  if (fDoOutline) {
+                    rgb = GetRGBColor(s16BPPColor);
+                    pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                    pBuffer[DestPtr++] = 0xff;
+                  } else {
+                    DestPtr += 4;
+                  }
+                } else {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                }
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              if (DestPtr & 4) {
+                DestPtr += 4;
+              } else {
+                if (byte === 254) {
+                  if (fDoOutline) {
+                    rgb = GetRGBColor(s16BPPColor);
+                    pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                    pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                    pBuffer[DestPtr++] = 0xff;
+                  } else {
+                    DestPtr += 4;
+                  }
+                } else {
+                  rgb = GetRGBColor(p16BPPPalette[byte]);
+                  pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                  pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                  pBuffer[DestPtr++] = 0xff;
+                }
+
+                setZValue(pZBuffer, ZPtr, usZValue);
+              }
+            }
+          }
+
+          ZPtr += 4;
+        }
+      }
+    }
+
+    return true;
   }
-  if (iTempY < 0) {
-    return false;
-  }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+  // This is the same as above, but DONOT WRITE to Z!
+  export function Blt8BPPDataTo16BPPBufferOutlineZNB(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    s16BPPColor: INT16,
+    fDoOutline: boolean,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  asm(`
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
+
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
+
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
+
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
+
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, p16BPPPalette
@@ -7112,10 +7678,10 @@ export function Blt8BPPDataTo16BPPBufferOutlineZNB(pBuffer: Uint8ClampedArray, u
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferIntensityZ
 
         Creates a shadow using a brush, but modifies the destination buffer only if the current
@@ -7123,48 +7689,57 @@ export function Blt8BPPDataTo16BPPBufferOutlineZNB(pBuffer: Uint8ClampedArray, u
         updates the Z buffer with the new Z level.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferIntensityZ(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferIntensityZ(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET IntensityTable
@@ -7224,10 +7799,10 @@ export function Blt8BPPDataTo16BPPBufferIntensityZ(pBuffer: Uint8ClampedArray, u
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferIntensityZClip
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -7237,82 +7812,93 @@ export function Blt8BPPDataTo16BPPBufferIntensityZ(pBuffer: Uint8ClampedArray, u
         must be the same dimensions (including Pitch) as the destination.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferIntensityZClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferIntensityZClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET IntensityTable
@@ -7478,10 +8064,10 @@ export function Blt8BPPDataTo16BPPBufferIntensityZClip(pBuffer: Uint8ClampedArra
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferIntensityZNB
 
         Creates a shadow using a brush, but modifies the destination buffer only if the current
@@ -7489,48 +8075,57 @@ export function Blt8BPPDataTo16BPPBufferIntensityZClip(pBuffer: Uint8ClampedArra
         NOT update the Z buffer with the new Z value.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferIntensityZNB(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferIntensityZNB(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  ZPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    ZPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET IntensityTable
@@ -7588,10 +8183,10 @@ export function Blt8BPPDataTo16BPPBufferIntensityZNB(pBuffer: Uint8ClampedArray,
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferIntensityClip
 
         Modifies the destination buffer. Darkens the destination pixels by 25%, using the source
@@ -7599,79 +8194,88 @@ export function Blt8BPPDataTo16BPPBufferIntensityZNB(pBuffer: Uint8ClampedArray,
         clips brush if it doesn't fit on the viewport.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferIntensityClip(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferIntensityClip(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
+    }
 
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
 
-  // whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
+    // whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
 
-  // whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
+    // whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     mov edx, OFFSET IntensityTable
@@ -7863,56 +8467,63 @@ export function Blt8BPPDataTo16BPPBufferIntensityClip(pBuffer: Uint8ClampedArray
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferIntensity
 
         Modifies the destination buffer. Darkens the destination pixels by 25%, using the source
         image as a mask. Any Non-zero index pixels are used to darken destination pixels.
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferIntensity(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
+  export function Blt8BPPDataTo16BPPBufferIntensity(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  // Validations
-  if (iTempX < 0) {
-    return false;
-  }
-  if (iTempY < 0) {
-    return false;
-  }
+    // Validations
+    if (iTempX < 0) {
+      return false;
+    }
+    if (iTempY < 0) {
+      return false;
+    }
 
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * iTempY) + (iTempX * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (usWidth * 4));
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * iTempY + iTempX * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - usWidth * 4;
 
-  asm(`
+    asm(`
     mov esi, SrcPtr
     mov edi, DestPtr
     xor eax, eax
@@ -8006,10 +8617,10 @@ export function Blt8BPPDataTo16BPPBufferIntensity(pBuffer: Uint8ClampedArray, ui
     BlitDone:
   `);
 
-  return true;
-}
+    return true;
+  }
 
-/**********************************************************************************************
+  /**********************************************************************************************
  Blt8BPPDataTo16BPPBufferTransZClipPixelateObscured
 
         Blits an image into the destination buffer, using an ETRLE brush as a source, and a 16-bit
@@ -8021,184 +8632,194 @@ export function Blt8BPPDataTo16BPPBufferIntensity(pBuffer: Uint8ClampedArray, ui
         Blits every second pixel ("pixelates").
 
 **********************************************************************************************/
-export function Blt8BPPDataTo16BPPBufferTransZClipPixelateObscured(pBuffer: Uint8ClampedArray, uiDestPitchBYTES: UINT32, pZBuffer: Uint8ClampedArray, usZValue: UINT16, hSrcVObject: SGPVObject, iX: INT32, iY: INT32, usIndex: UINT16, clipregion: SGPRect | null): boolean {
-  let p16BPPPalette: Uint16Array;
-  let uiOffset: UINT32;
-  let uiLineFlag: UINT32;
-  let usHeight: UINT32;
-  let usWidth: UINT32;
-  let Unblitted: UINT32;
-  let SrcPtr: number;
-  let DestPtr: number;
-  let ZPtr: number;
-  let LineSkip: UINT32;
-  let pTrav: ETRLEObject;
-  let iTempX: INT32;
-  let iTempY: INT32;
-  let LeftSkip: INT32;
-  let RightSkip: INT32;
-  let TopSkip: INT32;
-  let BottomSkip: INT32;
-  let BlitLength: INT32;
-  let BlitHeight: INT32;
-  let LSCount: INT32;
-  let ClipX1: INT32;
-  let ClipY1: INT32;
-  let ClipX2: INT32;
-  let ClipY2: INT32;
+  export function Blt8BPPDataTo16BPPBufferTransZClipPixelateObscured(
+    pBuffer: Uint8ClampedArray,
+    uiDestPitchBYTES: UINT32,
+    pZBuffer: Uint8ClampedArray,
+    usZValue: UINT16,
+    hSrcVObject: SGPVObject,
+    iX: INT32,
+    iY: INT32,
+    usIndex: UINT16,
+    clipregion: SGPRect | null,
+  ): boolean {
+    let p16BPPPalette: Uint16Array;
+    let uiOffset: UINT32;
+    let uiLineFlag: UINT32;
+    let usHeight: UINT32;
+    let usWidth: UINT32;
+    let Unblitted: UINT32;
+    let SrcPtr: number;
+    let DestPtr: number;
+    let ZPtr: number;
+    let LineSkip: UINT32;
+    let pTrav: ETRLEObject;
+    let iTempX: INT32;
+    let iTempY: INT32;
+    let LeftSkip: INT32;
+    let RightSkip: INT32;
+    let TopSkip: INT32;
+    let BottomSkip: INT32;
+    let BlitLength: INT32;
+    let BlitHeight: INT32;
+    let LSCount: INT32;
+    let ClipX1: INT32;
+    let ClipY1: INT32;
+    let ClipX2: INT32;
+    let ClipY2: INT32;
 
-  // Assertions
-  Assert(hSrcVObject != null);
-  Assert(pBuffer != null);
+    // Assertions
+    Assert(hSrcVObject != null);
+    Assert(pBuffer != null);
 
-  // Get Offsets from Index into structure
-  pTrav = hSrcVObject.pETRLEObject[usIndex];
-  usHeight = pTrav.usHeight;
-  usWidth = pTrav.usWidth;
-  uiOffset = pTrav.uiDataOffset;
+    // Get Offsets from Index into structure
+    pTrav = hSrcVObject.pETRLEObject[usIndex];
+    usHeight = pTrav.usHeight;
+    usWidth = pTrav.usWidth;
+    uiOffset = pTrav.uiDataOffset;
 
-  // Add to start position of dest buffer
-  iTempX = iX + pTrav.sOffsetX;
-  iTempY = iY + pTrav.sOffsetY;
+    // Add to start position of dest buffer
+    iTempX = iX + pTrav.sOffsetX;
+    iTempY = iY + pTrav.sOffsetY;
 
-  if (clipregion == null) {
-    ClipX1 = ClippingRect.iLeft;
-    ClipY1 = ClippingRect.iTop;
-    ClipX2 = ClippingRect.iRight;
-    ClipY2 = ClippingRect.iBottom;
-  } else {
-    ClipX1 = clipregion.iLeft;
-    ClipY1 = clipregion.iTop;
-    ClipX2 = clipregion.iRight;
-    ClipY2 = clipregion.iBottom;
-  }
-
-  // Calculate rows hanging off each side of the screen
-  LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
-  RightSkip = Math.min(Math.max(ClipX2, (iTempX + usWidth)) - ClipX2, usWidth);
-  TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
-  BottomSkip = Math.min(Math.max(ClipY2, (iTempY + usHeight)) - ClipY2, usHeight);
-
-  // calculate the remaining rows and columns to blit
-  BlitLength = (usWidth - LeftSkip - RightSkip);
-  BlitHeight = (usHeight - TopSkip - BottomSkip);
-
-  // check if whole thing is clipped
-  if ((LeftSkip >= usWidth) || (RightSkip >= usWidth))
-    return true;
-
-  // check if whole thing is clipped
-  if ((TopSkip >= usHeight) || (BottomSkip >= usHeight))
-    return true;
-
-  SrcPtr = uiOffset;
-  DestPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  ZPtr = (uiDestPitchBYTES * (iTempY + TopSkip)) + ((iTempX + LeftSkip) * 4);
-  p16BPPPalette = hSrcVObject.pShadeCurrent;
-  LineSkip = (uiDestPitchBYTES - (BlitLength * 4));
-  uiLineFlag = (iTempY & 1);
-
-  let pPixData = hSrcVObject.pPixData;
-  let remainingSkip: number;
-  let remainingBlitLength: number;
-  let byte: number;
-  let runLength: number;
-  let isTransparent: boolean;
-  let rgb: number;
-
-  while (TopSkip) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      TopSkip--;
-      uiLineFlag ^= 1;
-    }
-  }
-
-  remainingSkip = LeftSkip;
-  remainingBlitLength = BlitLength;
-
-  while (BlitHeight) {
-    byte = pPixData[SrcPtr++];
-    if (byte === 0x00) {
-      BlitHeight--;
-      DestPtr += LineSkip;
-      ZPtr += LineSkip;
-      uiLineFlag ^= 1;
-      remainingSkip = LeftSkip;
-      remainingBlitLength = BlitLength;
-      continue;
+    if (clipregion == null) {
+      ClipX1 = ClippingRect.iLeft;
+      ClipY1 = ClippingRect.iTop;
+      ClipX2 = ClippingRect.iRight;
+      ClipY2 = ClippingRect.iBottom;
+    } else {
+      ClipX1 = clipregion.iLeft;
+      ClipY1 = clipregion.iTop;
+      ClipX2 = clipregion.iRight;
+      ClipY2 = clipregion.iBottom;
     }
 
-    runLength = byte & 0x7F;
-    isTransparent = Boolean(byte & 0x80);
+    // Calculate rows hanging off each side of the screen
+    LeftSkip = Math.min(ClipX1 - Math.min(ClipX1, iTempX), usWidth);
+    RightSkip = Math.min(Math.max(ClipX2, iTempX + usWidth) - ClipX2, usWidth);
+    TopSkip = Math.min(ClipY1 - Math.min(ClipY1, iTempY), usHeight);
+    BottomSkip = Math.min(
+      Math.max(ClipY2, iTempY + usHeight) - ClipY2,
+      usHeight,
+    );
 
-    if (remainingSkip) {
-      if (remainingSkip > runLength) {
-        if (!isTransparent) {
-          SrcPtr += runLength;
-        }
-        remainingSkip -= runLength;
+    // calculate the remaining rows and columns to blit
+    BlitLength = usWidth - LeftSkip - RightSkip;
+    BlitHeight = usHeight - TopSkip - BottomSkip;
+
+    // check if whole thing is clipped
+    if (LeftSkip >= usWidth || RightSkip >= usWidth) return true;
+
+    // check if whole thing is clipped
+    if (TopSkip >= usHeight || BottomSkip >= usHeight) return true;
+
+    SrcPtr = uiOffset;
+    DestPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    ZPtr = uiDestPitchBYTES * (iTempY + TopSkip) + (iTempX + LeftSkip) * 4;
+    p16BPPPalette = hSrcVObject.pShadeCurrent;
+    LineSkip = uiDestPitchBYTES - BlitLength * 4;
+    uiLineFlag = iTempY & 1;
+
+    let pPixData = hSrcVObject.pPixData;
+    let remainingSkip: number;
+    let remainingBlitLength: number;
+    let byte: number;
+    let runLength: number;
+    let isTransparent: boolean;
+    let rgb: number;
+
+    while (TopSkip) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        TopSkip--;
+        uiLineFlag ^= 1;
+      }
+    }
+
+    remainingSkip = LeftSkip;
+    remainingBlitLength = BlitLength;
+
+    while (BlitHeight) {
+      byte = pPixData[SrcPtr++];
+      if (byte === 0x00) {
+        BlitHeight--;
+        DestPtr += LineSkip;
+        ZPtr += LineSkip;
+        uiLineFlag ^= 1;
+        remainingSkip = LeftSkip;
+        remainingBlitLength = BlitLength;
         continue;
       }
 
-      if (!isTransparent) {
-        SrcPtr += remainingSkip;
-      }
-      runLength -= remainingSkip;
-      remainingSkip = 0;
-    }
+      runLength = byte & 0x7f;
+      isTransparent = Boolean(byte & 0x80);
 
-    if (runLength > remainingBlitLength) {
-      runLength = remainingBlitLength;
-    }
-
-    remainingBlitLength -= runLength;
-
-    if (byte & 0x80) {
-      DestPtr += runLength * 4;
-      ZPtr += runLength * 4;
-    } else {
-      while (runLength--) {
-        byte = pPixData[SrcPtr++];
-
-        if (getZValue(pZBuffer, ZPtr) < usZValue) {
-          rgb = GetRGBColor(p16BPPPalette[byte]);
-          pBuffer[DestPtr++] = SGPGetRValue(rgb);
-          pBuffer[DestPtr++] = SGPGetGValue(rgb);
-          pBuffer[DestPtr++] = SGPGetBValue(rgb);
-          pBuffer[DestPtr++] = 0xFF;
-
-          setZValue(pZBuffer, ZPtr, usZValue);
-        } else {
-          if (uiLineFlag & 1) {
-            if (DestPtr & 4) {
-              rgb = GetRGBColor(p16BPPPalette[byte]);
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            } else {
-              DestPtr += 4;
-            }
-          } else {
-            if (DestPtr & 4) {
-              DestPtr += 4;
-            } else {
-              rgb = GetRGBColor(p16BPPPalette[byte]);
-              pBuffer[DestPtr++] = SGPGetRValue(rgb);
-              pBuffer[DestPtr++] = SGPGetGValue(rgb);
-              pBuffer[DestPtr++] = SGPGetBValue(rgb);
-              pBuffer[DestPtr++] = 0xFF;
-            }
+      if (remainingSkip) {
+        if (remainingSkip > runLength) {
+          if (!isTransparent) {
+            SrcPtr += runLength;
           }
+          remainingSkip -= runLength;
+          continue;
         }
 
-        ZPtr += 4;
+        if (!isTransparent) {
+          SrcPtr += remainingSkip;
+        }
+        runLength -= remainingSkip;
+        remainingSkip = 0;
+      }
+
+      if (runLength > remainingBlitLength) {
+        runLength = remainingBlitLength;
+      }
+
+      remainingBlitLength -= runLength;
+
+      if (byte & 0x80) {
+        DestPtr += runLength * 4;
+        ZPtr += runLength * 4;
+      } else {
+        while (runLength--) {
+          byte = pPixData[SrcPtr++];
+
+          if (getZValue(pZBuffer, ZPtr) < usZValue) {
+            rgb = GetRGBColor(p16BPPPalette[byte]);
+            pBuffer[DestPtr++] = SGPGetRValue(rgb);
+            pBuffer[DestPtr++] = SGPGetGValue(rgb);
+            pBuffer[DestPtr++] = SGPGetBValue(rgb);
+            pBuffer[DestPtr++] = 0xff;
+
+            setZValue(pZBuffer, ZPtr, usZValue);
+          } else {
+            if (uiLineFlag & 1) {
+              if (DestPtr & 4) {
+                rgb = GetRGBColor(p16BPPPalette[byte]);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              } else {
+                DestPtr += 4;
+              }
+            } else {
+              if (DestPtr & 4) {
+                DestPtr += 4;
+              } else {
+                rgb = GetRGBColor(p16BPPPalette[byte]);
+                pBuffer[DestPtr++] = SGPGetRValue(rgb);
+                pBuffer[DestPtr++] = SGPGetGValue(rgb);
+                pBuffer[DestPtr++] = SGPGetBValue(rgb);
+                pBuffer[DestPtr++] = 0xff;
+              }
+            }
+          }
+
+          ZPtr += 4;
+        }
       }
     }
+
+    return true;
   }
-
-  return true;
-}
-
 }

@@ -1,33 +1,31 @@
 namespace ja2 {
+  export function MarkMapIndexDirty(iMapIndex: INT32): void {
+    gpWorldLevelData[iMapIndex].uiFlags |= MAPELEMENT_REDRAW;
+    SetRenderFlags(RENDER_FLAG_MARKED);
+  }
 
-export function MarkMapIndexDirty(iMapIndex: INT32): void {
-  gpWorldLevelData[iMapIndex].uiFlags |= MAPELEMENT_REDRAW;
-  SetRenderFlags(RENDER_FLAG_MARKED);
-}
+  export function CenterScreenAtMapIndex(iMapIndex: INT32): void {
+    let sWorldX: INT16;
+    let sWorldY: INT16;
+    let sCellX: INT16;
+    let sCellY: INT16;
 
-export function CenterScreenAtMapIndex(iMapIndex: INT32): void {
-  let sWorldX: INT16;
-  let sWorldY: INT16;
-  let sCellX: INT16;
-  let sCellY: INT16;
+    // Get X, Y world GRID Coordinates
+    sWorldY = Math.trunc(iMapIndex / WORLD_COLS);
+    sWorldX = iMapIndex - sWorldY * WORLD_COLS;
 
-  // Get X, Y world GRID Coordinates
-  sWorldY = Math.trunc(iMapIndex / WORLD_COLS);
-  sWorldX = iMapIndex - (sWorldY * WORLD_COLS);
+    // Convert into cell coords
+    sCellY = sWorldY * CELL_Y_SIZE;
+    sCellX = sWorldX * CELL_X_SIZE;
 
-  // Convert into cell coords
-  sCellY = sWorldY * CELL_Y_SIZE;
-  sCellX = sWorldX * CELL_X_SIZE;
+    // Set the render values, so that the screen will render here next frame.
+    gsRenderCenterX = sCellX;
+    gsRenderCenterY = sCellY;
 
-  // Set the render values, so that the screen will render here next frame.
-  gsRenderCenterX = sCellX;
-  gsRenderCenterY = sCellY;
+    SetRenderFlags(RENDER_FLAG_FULL);
+  }
 
-  SetRenderFlags(RENDER_FLAG_FULL);
-}
-
-export function MarkWorldDirty(): void {
-  SetRenderFlags(RENDER_FLAG_FULL);
-}
-
+  export function MarkWorldDirty(): void {
+    SetRenderFlags(RENDER_FLAG_FULL);
+  }
 }

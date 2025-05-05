@@ -94,9 +94,9 @@ FAST HELP TEXT -- Explains how the syntax of fast help text works.
 
 */
 
-export let ItemNames: string[] /* UINT16[MAXITEMS][80] */ = [ "" ];
+export let ItemNames: string[] /* UINT16[MAXITEMS][80] */ = [""];
 
-export let ShortItemNames: string[] /* UINT16[MAXITEMS][80] */ = [ "" ];
+export let ShortItemNames: string[] /* UINT16[MAXITEMS][80] */ = [""];
 
 // Different weapon calibres
 // CAWS is Close Assault Weapon System and should probably be left as it is
@@ -807,7 +807,7 @@ export let pLandTypeStrings: string[] /* STR16[] */ = [
   "Hol Beest", // Any mine sector with creatures in it
   "Orta Basis", // The basement of Orta (K4)
   "Tunnel", // The tunnel access from the maze garden in Meduna
-             // leading to the secret shelter underneath the palace
+  // leading to the secret shelter underneath the palace
   "Schuilplaats", // The shelter underneath the queen's palace
   "", // Unused
 ];
@@ -1519,13 +1519,9 @@ export let pMapScreenBottomText: string[] /* STR16[] */ = [
   "Huidig Saldo", // current balance in player bank account
 ];
 
-export let pMercDeadString: string[] /* STR16[] */ = [
-  "%s is dood.",
-];
+export let pMercDeadString: string[] /* STR16[] */ = ["%s is dood."];
 
-export let pDayStrings: string[] /* STR16[] */ = [
-  "Dag",
-];
+export let pDayStrings: string[] /* STR16[] */ = ["Dag"];
 
 // the list of email sender names
 
@@ -1586,10 +1582,7 @@ export let pSenderNameList: string[] /* STR16[] */ = [
 
 // next/prev strings
 
-export let pTraverseStrings: string[] /* STR16[] */ = [
-  "Vorige",
-  "Volgende",
-];
+export let pTraverseStrings: string[] /* STR16[] */ = ["Vorige", "Volgende"];
 
 // new mail notify string
 
@@ -1606,17 +1599,11 @@ export let pDeleteMailStrings: string[] /* STR16[] */ = [
 
 // the sort header strings
 
-export let pEmailHeaders: string[] /* STR16[] */ = [
-  "Van:",
-  "Subject:",
-  "Dag:",
-];
+export let pEmailHeaders: string[] /* STR16[] */ = ["Van:", "Subject:", "Dag:"];
 
 // email titlebar text
 
-export let pEmailTitleText: string[] /* STR16[] */ = [
-  "Postvak",
-];
+export let pEmailTitleText: string[] /* STR16[] */ = ["Postvak"];
 
 // the financial screen strings
 export let pFinanceTitle: string[] /* STR16[] */ = [
@@ -1924,9 +1911,7 @@ export let pFilesSenderList: string[] /* STR16[] */ = [
 
 // Text having to do with the History Log
 
-export let pHistoryTitle: string[] /* STR16[] */ = [
-  "Geschiedenis",
-];
+export let pHistoryTitle: string[] /* STR16[] */ = ["Geschiedenis"];
 
 export let pHistoryHeaders: string[] /* STR16[] */ = [
   "Dag", // the day the history event occurred
@@ -2076,10 +2061,7 @@ export let pBookmarkTitle: string[] /* STR16[] */ = [
 
 // When loading or download a web page
 
-export let pDownloadString: string[] /* STR16[] */ = [
-  "Laden",
-  "Herladen",
-];
+export let pDownloadString: string[] /* STR16[] */ = ["Laden", "Herladen"];
 
 // This is the text used on the bank machines, here called ATMs for Automatic Teller Machine
 
@@ -2265,25 +2247,15 @@ export let pMapHortIndex: string[] /* STR16[] */ = [
   "16",
 ];
 
-export let pMapDepthIndex: string[] /* STR16[] */ = [
-  "",
-  "-1",
-  "-2",
-  "-3",
-];
+export let pMapDepthIndex: string[] /* STR16[] */ = ["", "-1", "-2", "-3"];
 
 // text that appears on the contract button
 
-export let pContractButtonString: string[] /* STR16[] */ = [
-  "Contract",
-];
+export let pContractButtonString: string[] /* STR16[] */ = ["Contract"];
 
 // text that appears on the update panel buttons
 
-export let pUpdatePanelButtons: string[] /* STR16[] */ = [
-  "Doorgaan",
-  "Stop",
-];
+export let pUpdatePanelButtons: string[] /* STR16[] */ = ["Doorgaan", "Stop"];
 
 // Text which appears when everyone on your team is incapacitated and incapable of battle
 
@@ -2307,10 +2279,7 @@ export let InsContractText: string[] /* STR16[] */ = [
 // Insurance Info
 // Text on the buttons on the bottom of the screen
 
-export let InsInfoText: string[] /* STR16[] */ = [
-  "Vorige",
-  "Volgende",
-];
+export let InsInfoText: string[] /* STR16[] */ = ["Vorige", "Volgende"];
 
 // For use at the M.E.R.C. web site. Text relating to the player's account with MERC
 
@@ -2381,7 +2350,7 @@ export let MercHomePageText: string[] /* STR16[] */ = [
 
 export let sFuneralString: string[] /* STR16[] */ = [
   "McGillicutty's Mortuarium: Helpt families rouwen sinds 1983.",
-  "Begrafenisondernemer en voormalig A.I.M. huurling Murray \"Pops\" McGillicutty is een kundig en ervaren begrafenisondernemer.",
+  'Begrafenisondernemer en voormalig A.I.M. huurling Murray "Pops" McGillicutty is een kundig en ervaren begrafenisondernemer.',
   "Pops weet hoe moeilijk de dood kan zijn, in heel zijn leven heeft hij te maken gehad met de dood en sterfgevallen.",
   "McGillicutty's Mortuarium biedt een breed scala aan stervensbegeleiding, van een schouder om uit te huilen tot recontructie van misvormde overblijfselen.",
   "Laat McGillicutty's Mortuarium u helpen en laat uw dierbaren zacht rusten.",
@@ -2407,7 +2376,7 @@ export let sFloristText: string[] /* STR16[] */ = [
 
   // Address of United Florist
 
-  "\"We brengen overal langs\"",
+  '"We brengen overal langs"',
   "1-555-SCENT-ME",
   "333 NoseGay Dr, Seedy City, CA USA 90210",
   "http://www.scent-me.com",
@@ -2825,7 +2794,7 @@ export let AimScreenText: string[] /* STR16[] */ = [
   // Text for an advertisement that gets displayed on the AIM page
 
   "United Floral Service",
-  "\"We droppen overal\"", // 10
+  '"We droppen overal"', // 10
   "Doe het goed",
   "... de eerste keer",
   "Wapens en zo, als we het niet hebben, dan heb je het ook niet nodig.",
@@ -2943,14 +2912,14 @@ export let zSaveLoadText: string[] /* STR16[] */ = [
   "De spelversie van het bewaarde spel verschilt van de huidige versie. Waarschijnlijk is het veilig om door te gaan. Doorgaan?",
   "De bewaarde spelen zijn waarschijnlijk ongeldig. Deze verwijderen?",
 
-// Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
-// is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
-// used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
+  // Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
+  // is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
+  // used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
   "Attempting to load an older version save.  Automatically update and load the save?",
 
-// Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
-// is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
-// used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
+  // Translators, the next two strings are for the same thing.  The first one is for beta version releases and the second one
+  // is used for the final version.  Please don't modify the "#ifdef JA2BETAVERSION" or the "#else" or the "#endif" as they are
+  // used by the compiler and will cause program errors if modified/removed.  It's okay to translate the strings though.
   "Attempting to load an older version save.  Automatically update and load the save?",
 
   "Weet je zeker dat je het spel in slot #%d wil overschrijven?",
@@ -3085,13 +3054,13 @@ export let zOptionsScreenHelpText: string[] /* STR16[] */ = [
   "Schakel deze optie IN om bewegingspaden te tonen in real-time (schakel het uit en gebruik dan de SHIFT-toets om paden te tonen).",
 
   // show misses
-  "Schakel IN om het spel de plaats van inslag van je kogels te tonen wanneer je \"mist\".",
+  'Schakel IN om het spel de plaats van inslag van je kogels te tonen wanneer je "mist".',
 
   // Real Time Confirmation
-  "Als INGESCHAKELD, een extra \"veiligheids\"-klik is nodig om in real-time te bewegen.",
+  'Als INGESCHAKELD, een extra "veiligheids"-klik is nodig om in real-time te bewegen.',
 
   // Sleep/Wake notification
-  "INGESCHAKELD zorgt voor berichten of huurlingen op een \"missie\" slapen of werken.",
+  'INGESCHAKELD zorgt voor berichten of huurlingen op een "missie" slapen of werken.',
 
   // Use the metric system
   "Wanneer INGESCHAKELD wordt het metrieke stelsel gebruikt, anders het Imperiale stelsel.",
@@ -3167,18 +3136,14 @@ export let pIMPBeginScreenStrings: string[] /* STR16[] */ = [
   "( 8 Karakters Max )",
 ];
 
-export let pIMPFinishButtonText: string[] /* STR16[1] */ = [
-  "Analiseren",
-];
+export let pIMPFinishButtonText: string[] /* STR16[1] */ = ["Analiseren"];
 
 export let pIMPFinishStrings: string[] /* STR16[] */ = [
   "Bedankt, %s", //%s is the name of the merc
 ];
 
 // the strings for imp voices screen
-export let pIMPVoicesStrings: string[] /* STR16[] */ = [
-  "Stem",
-];
+export let pIMPVoicesStrings: string[] /* STR16[] */ = ["Stem"];
 
 export let pDepartedMercPortraitStrings: string[] /* STR16[] */ = [
   "Gedood tijdens gevecht",
@@ -3187,9 +3152,7 @@ export let pDepartedMercPortraitStrings: string[] /* STR16[] */ = [
 ];
 
 // title for program
-export let pPersTitleText: string[] /* STR16[] */ = [
-  "Personeelsmanager",
-];
+export let pPersTitleText: string[] /* STR16[] */ = ["Personeelsmanager"];
 
 // paused game strings
 export let pPausedGameText: string[] /* STR16[] */ = [
@@ -3230,7 +3193,7 @@ export let pMessageStrings: string[] /* STR16[] */ = [
   "nvt", // Lowercase acronym for not applicable.
   "Intussen", // Meanwhile
   "%s is gearriveerd in sector %s%s", // Name/Squad has arrived in sector A9.  Order must not change without notifying
-                                       // SirTech
+  // SirTech
   "Versie",
   "Leeg SnelBewaarSlot",
   "Dit slot is gereserveerd voor SnelBewaren tijdens tactische en kaartoverzichten m.b.v. ALT+S.",
@@ -3258,7 +3221,7 @@ export let pMessageStrings: string[] /* STR16[] */ = [
   "Geef",
 
   "%s gegeven aan %s.", //"Item" passed to "merc".  Please try to keep the item %s before the merc %s, otherwise,
-                         // must notify SirTech.
+  // must notify SirTech.
   "Geen plaats om %s aan %s te geven.", // pass "item" to "merc".  Same instructions as above.
 
   // A list of attachments appear after the items.  Ex:  Kevlar vest ( Ceramic Plate 'Attached )'
@@ -3355,9 +3318,7 @@ export let gzLaptopHelpText: string[] /* STR16[] */ = [
   "Verzekeringsagenten voor A.I.M. contracten",
 ];
 
-export let gzHelpScreenText: string[] /* STR16[] */ = [
-  "Verlaat help-scherm",
-];
+export let gzHelpScreenText: string[] /* STR16[] */ = ["Verlaat help-scherm"];
 
 export let gzNonPersistantPBIText: string[] /* STR16[] */ = [
   "Er is een gevecht gaande. Je kan alleen terugtrekken m.b.v. het tactische scherm.",
@@ -3429,16 +3390,16 @@ export let gzCreditNames: string[] /* STR16[] */ = [
   "Kris Märnes",
   "Ian Currie",
   "Linda Currie",
-  "Eric \"WTF\" Cheng",
+  'Eric "WTF" Cheng',
   "Lynn Holowka",
-  "Norman \"NRG\" Olsen",
+  'Norman "NRG" Olsen',
   "George Brooks",
   "Andrew Stacey",
   "Scot Loving",
-  "Andrew \"Big Cheese\" Emmons",
-  "Dave \"The Feral\" French",
+  'Andrew "Big Cheese" Emmons',
+  'Dave "The Feral" French',
   "Alex Meduna",
-  "Joey \"Joeker\" Whelan",
+  'Joey "Joeker" Whelan',
 ];
 
 export let gzCreditNameTitle: string[] /* STR16[] */ = [
@@ -3462,7 +3423,7 @@ export let gzCreditNameTitle: string[] /* STR16[] */ = [
 export let gzCreditNameFunny: string[] /* STR16[] */ = [
   "", // Chris Camfield
   "(leert nog steeds interpunctie)", // Shaun Lyng
-  "(\"Het is klaar. Ben er mee bezig\")", // Kris \"The Cow Rape Man\" Marnes
+  '("Het is klaar. Ben er mee bezig")', // Kris \"The Cow Rape Man\" Marnes
   "(wordt veel te oud voor dit)", // Ian Currie
   "(en werkt aan Wizardry 8)", // Linda Currie
   "(moets onder bedreiging ook QA doen)", // Eric \"WTF\" Cheng

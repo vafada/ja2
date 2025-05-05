@@ -1,46 +1,45 @@
 namespace ja2 {
+  export let gfTacticalTraversal: boolean = false;
+  export let gpTacticalTraversalGroup: GROUP | null = null;
+  export let gpTacticalTraversalChosenSoldier: SOLDIERTYPE | null = null;
 
-export let gfTacticalTraversal: boolean = false;
-export let gpTacticalTraversalGroup: GROUP | null = null;
-export let gpTacticalTraversalChosenSoldier: SOLDIERTYPE | null = null;
+  export let gfAutomaticallyStartAutoResolve: boolean = false;
+  export let gfAutoAmbush: boolean = false;
+  export let gfHighPotentialForAmbush: boolean = false;
+  export let gfGotoSectorTransition: boolean = false;
+  let gfEnterAutoResolveMode: boolean = false;
+  export let gfEnteringMapScreenToEnterPreBattleInterface: boolean = false;
+  let gfIgnoreAllInput: boolean = true;
 
-export let gfAutomaticallyStartAutoResolve: boolean = false;
-export let gfAutoAmbush: boolean = false;
-export let gfHighPotentialForAmbush: boolean = false;
-export let gfGotoSectorTransition: boolean = false;
-let gfEnterAutoResolveMode: boolean = false;
-export let gfEnteringMapScreenToEnterPreBattleInterface: boolean = false;
-let gfIgnoreAllInput: boolean = true;
+  // GraphicIDs for the panel
+  const enum Enum162 {
+    MAINPANEL,
+    TITLE_BAR_PIECE,
+    TOP_COLUMN,
+    BOTTOM_COLUMN,
+    UNINVOLVED_HEADER,
+  }
 
-// GraphicIDs for the panel
-const enum Enum162 {
-  MAINPANEL,
-  TITLE_BAR_PIECE,
-  TOP_COLUMN,
-  BOTTOM_COLUMN,
-  UNINVOLVED_HEADER,
-}
+  // The start of the black space
+  const TOP_Y = 113;
+  // The end of the black space
+  const BOTTOM_Y = 349;
+  // The internal height of the uninvolved panel
+  const INTERNAL_HEIGHT = 27;
+  // The actual height of the uninvolved panel
+  const ACTUAL_HEIGHT = 34;
+  // The height of each row
+  const ROW_HEIGHT = 10;
 
-// The start of the black space
-const TOP_Y = 113;
-// The end of the black space
-const BOTTOM_Y = 349;
-// The internal height of the uninvolved panel
-const INTERNAL_HEIGHT = 27;
-// The actual height of the uninvolved panel
-const ACTUAL_HEIGHT = 34;
-// The height of each row
-const ROW_HEIGHT = 10;
+  export let gfDisplayPotentialRetreatPaths: boolean = false;
+  let gusRetreatButtonLeft: UINT16;
+  let gusRetreatButtonTop: UINT16;
+  let gusRetreatButtonRight: UINT16;
+  let gusRetreatButtonBottom: UINT16;
 
-export let gfDisplayPotentialRetreatPaths: boolean = false;
-let gusRetreatButtonLeft: UINT16;
-let gusRetreatButtonTop: UINT16;
-let gusRetreatButtonRight: UINT16;
-let gusRetreatButtonBottom: UINT16;
+  export let gpBattleGroup: GROUP | null = null;
 
-export let gpBattleGroup: GROUP | null = null;
-
-/*
+  /*
 void InvolvedMoveCallback( MOUSE_REGION *reg, INT32 reason );
 void InvolvedClickCallback( MOUSE_REGION *reg, INT32 reason );
 void UninvolvedMoveCallback( MOUSE_REGION *reg, INT32 reason );
@@ -50,861 +49,1068 @@ SOLDIERTYPE* InvolvedSoldier( INT32 index );
 SOLDIERTYPE* UninvolvedSoldier( INT32 index );
 */
 
-let PBInterfaceBlanket: MOUSE_REGION = createMouseRegion();
-export let gfPreBattleInterfaceActive: boolean = false;
-let iPBButton: UINT32[] /* [3] */ = createArray(3, 0);
-let iPBButtonImage: UINT32[] /* [3] */ = createArray(3, 0);
-let uiInterfaceImages: UINT32;
-export let gfRenderPBInterface: boolean;
-let gfPBButtonsHidden: boolean;
-export let fDisableMapInterfaceDueToBattle: boolean = false;
+  let PBInterfaceBlanket: MOUSE_REGION = createMouseRegion();
+  export let gfPreBattleInterfaceActive: boolean = false;
+  let iPBButton: UINT32[] /* [3] */ = createArray(3, 0);
+  let iPBButtonImage: UINT32[] /* [3] */ = createArray(3, 0);
+  let uiInterfaceImages: UINT32;
+  export let gfRenderPBInterface: boolean;
+  let gfPBButtonsHidden: boolean;
+  export let fDisableMapInterfaceDueToBattle: boolean = false;
 
-let gfBlinkHeader: boolean;
+  let gfBlinkHeader: boolean;
 
-let guiNumInvolved: UINT32;
-let guiNumUninvolved: UINT32;
+  let guiNumInvolved: UINT32;
+  let guiNumUninvolved: UINT32;
 
-// SAVE START
+  // SAVE START
 
-// Using the ESC key in the PBI will get rid of the PBI and go back to mapscreen, but
-// only if the PBI isn't persistant (!gfPersistantPBI).
-export let gfPersistantPBI: boolean = false;
+  // Using the ESC key in the PBI will get rid of the PBI and go back to mapscreen, but
+  // only if the PBI isn't persistant (!gfPersistantPBI).
+  export let gfPersistantPBI: boolean = false;
 
-// Contains general information about the type of encounter the player is faced with.  This
-// determines whether or not you can autoresolve the battle or even retreat.  This code
-// dictates the header that is used at the top of the PBI.
-export let gubEnemyEncounterCode: UINT8 = Enum164.NO_ENCOUNTER_CODE;
+  // Contains general information about the type of encounter the player is faced with.  This
+  // determines whether or not you can autoresolve the battle or even retreat.  This code
+  // dictates the header that is used at the top of the PBI.
+  export let gubEnemyEncounterCode: UINT8 = Enum164.NO_ENCOUNTER_CODE;
 
-// The autoresolve during tactical battle option needs more detailed information than the
-// gubEnemyEncounterCode can provide.  The explicit version contains possibly unique codes
-// for reasons not normally used in the PBI.  For example, if we were fighting the enemy
-// in a normal situation, then shot at a civilian, the civilians associated with the victim
-// would turn hostile, which would disable the ability to autoresolve the battle.
-export let gubExplicitEnemyEncounterCode: UINT8 = Enum164.NO_ENCOUNTER_CODE;
+  // The autoresolve during tactical battle option needs more detailed information than the
+  // gubEnemyEncounterCode can provide.  The explicit version contains possibly unique codes
+  // for reasons not normally used in the PBI.  For example, if we were fighting the enemy
+  // in a normal situation, then shot at a civilian, the civilians associated with the victim
+  // would turn hostile, which would disable the ability to autoresolve the battle.
+  export let gubExplicitEnemyEncounterCode: UINT8 = Enum164.NO_ENCOUNTER_CODE;
 
-// Location of the current battle (determines where the animated icon is blitted) and if the
-// icon is to be blitted.
-export let gfBlitBattleSectorLocator: boolean = false;
+  // Location of the current battle (determines where the animated icon is blitted) and if the
+  // icon is to be blitted.
+  export let gfBlitBattleSectorLocator: boolean = false;
 
-export let gubPBSectorX: UINT8 = 0;
-export let gubPBSectorY: UINT8 = 0;
-export let gubPBSectorZ: UINT8 = 0;
+  export let gubPBSectorX: UINT8 = 0;
+  export let gubPBSectorY: UINT8 = 0;
+  export let gubPBSectorZ: UINT8 = 0;
 
-export let gfCantRetreatInPBI: boolean = false;
-// SAVE END
+  export let gfCantRetreatInPBI: boolean = false;
+  // SAVE END
 
-export let gfUsePersistantPBI: boolean;
+  export let gfUsePersistantPBI: boolean;
 
-let giHilitedInvolved: INT32;
-let giHilitedUninvolved: INT32;
+  let giHilitedInvolved: INT32;
+  let giHilitedUninvolved: INT32;
 
-export function InitPreBattleInterface(pBattleGroup: GROUP | null, fPersistantPBI: boolean): void {
-  let VObjectDesc: VOBJECT_DESC = createVObjectDesc();
-  let i: INT32;
-  let ubGroupID: UINT8 = 0;
-  let ubNumStationaryEnemies: UINT8 = 0;
-  let ubNumMobileEnemies: UINT8 = 0;
-  let ubNumMercs: UINT8;
-  let fUsePluralVersion: boolean = false;
-  let bBestExpLevel: INT8 = 0;
-  let fRetreatAnOption: boolean = true;
-  let pSector: SECTORINFO;
+  export function InitPreBattleInterface(
+    pBattleGroup: GROUP | null,
+    fPersistantPBI: boolean,
+  ): void {
+    let VObjectDesc: VOBJECT_DESC = createVObjectDesc();
+    let i: INT32;
+    let ubGroupID: UINT8 = 0;
+    let ubNumStationaryEnemies: UINT8 = 0;
+    let ubNumMobileEnemies: UINT8 = 0;
+    let ubNumMercs: UINT8;
+    let fUsePluralVersion: boolean = false;
+    let bBestExpLevel: INT8 = 0;
+    let fRetreatAnOption: boolean = true;
+    let pSector: SECTORINFO;
 
-  // ARM: Feb01/98 - Cancel out of mapscreen movement plotting if PBI subscreen is coming up
-  if ((bSelectedDestChar != -1) || (fPlotForHelicopter == true)) {
-    AbortMovementPlottingMode();
-  }
-
-  if (gfPreBattleInterfaceActive)
-    return;
-
-  gfPersistantPBI = fPersistantPBI;
-
-  if (gfPersistantPBI) {
-    gfBlitBattleSectorLocator = true;
-    gfBlinkHeader = false;
-
-    //	InitializeTacticalStatusAtBattleStart();
-    // CJC, Oct 5 98: this is all we should need from InitializeTacticalStatusAtBattleStart()
-    if (gubEnemyEncounterCode != Enum164.BLOODCAT_AMBUSH_CODE && gubEnemyEncounterCode != Enum164.ENTERING_BLOODCAT_LAIR_CODE) {
-      if (CheckFact(Enum170.FACT_FIRST_BATTLE_FOUGHT, 0) == false) {
-        SetFactTrue(Enum170.FACT_FIRST_BATTLE_BEING_FOUGHT);
-      }
+    // ARM: Feb01/98 - Cancel out of mapscreen movement plotting if PBI subscreen is coming up
+    if (bSelectedDestChar != -1 || fPlotForHelicopter == true) {
+      AbortMovementPlottingMode();
     }
 
-    // ATE: Added check for fPersistantPBI = TRUE if pBattleGroup == NULL
-    // Searched code and saw that this condition only happens for creatures
-    // fixing a bug
-    // if( guiCurrentScreen == GAME_SCREEN && pBattleGroup )
-    if (guiCurrentScreen == Enum26.GAME_SCREEN && (pBattleGroup || fPersistantPBI)) {
-      gpBattleGroup = pBattleGroup;
-      gfEnteringMapScreen = 1;
-      gfEnteringMapScreenToEnterPreBattleInterface = true;
-      gfUsePersistantPBI = true;
-      return;
-    }
+    if (gfPreBattleInterfaceActive) return;
 
-    if (gfTacticalTraversal && (pBattleGroup == gpTacticalTraversalGroup || gbWorldSectorZ > 0)) {
-      return;
-    }
+    gfPersistantPBI = fPersistantPBI;
 
-    // reset the help text for mouse regions
-    SetRegionFastHelpText(gCharInfoHandRegion, "");
-    SetRegionFastHelpText(gMapStatusBarsRegion, "");
+    if (gfPersistantPBI) {
+      gfBlitBattleSectorLocator = true;
+      gfBlinkHeader = false;
 
-    gfDisplayPotentialRetreatPaths = false;
-
-    gpBattleGroup = pBattleGroup;
-
-    // calc sector values
-    if (gpBattleGroup) {
-      gubPBSectorX = gpBattleGroup.ubSectorX;
-      gubPBSectorY = gpBattleGroup.ubSectorY;
-      gubPBSectorZ = gpBattleGroup.ubSectorZ;
-
-      // get number of enemies thought to be here
-      SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)].bLastKnownEnemies = NumEnemiesInSector(gubPBSectorX, gubPBSectorY);
-      fMapPanelDirty = true;
-    } else {
-      gubPBSectorX = SECTORX(gubSectorIDOfCreatureAttack);
-      gubPBSectorY = SECTORY(gubSectorIDOfCreatureAttack);
-      gubPBSectorZ = 0;
-    }
-  } else {
-    // calculate the non-persistant situation
-    gfBlinkHeader = true;
-
-    if (HostileCiviliansPresent()) {
-      // There are hostile civilians, so no autoresolve allowed.
-      gubExplicitEnemyEncounterCode = Enum164.HOSTILE_CIVILIANS_CODE;
-    } else if (HostileBloodcatsPresent()) {
-      // There are bloodcats in the sector, so no autoresolve allowed
-      gubExplicitEnemyEncounterCode = Enum164.HOSTILE_BLOODCATS_CODE;
-    } else if (gbWorldSectorZ) {
-      // We are underground, so no autoresolve allowed
-      pSector = SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)];
-      if (pSector.ubCreaturesInBattle) {
-        gubExplicitEnemyEncounterCode = Enum164.FIGHTING_CREATURES_CODE;
-      } else if (pSector.ubAdminsInBattle || pSector.ubTroopsInBattle || pSector.ubElitesInBattle) {
-        gubExplicitEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
-      }
-    } else if (gubEnemyEncounterCode == Enum164.ENTERING_ENEMY_SECTOR_CODE || gubEnemyEncounterCode == Enum164.ENEMY_ENCOUNTER_CODE || gubEnemyEncounterCode == Enum164.ENEMY_AMBUSH_CODE || gubEnemyEncounterCode == Enum164.ENEMY_INVASION_CODE || gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE || gubEnemyEncounterCode == Enum164.ENTERING_BLOODCAT_LAIR_CODE || gubEnemyEncounterCode == Enum164.CREATURE_ATTACK_CODE) {
-      // use same code
-      gubExplicitEnemyEncounterCode = gubEnemyEncounterCode;
-    } else {
-      gfBlitBattleSectorLocator = false;
-      return;
-    }
-  }
-
-  fMapScreenBottomDirty = true;
-  ChangeSelectedMapSector(gubPBSectorX, gubPBSectorY, gubPBSectorZ);
-  RenderMapScreenInterfaceBottom();
-
-  // If we are currently in tactical, then set the flag to automatically bring up the mapscreen.
-  if (guiCurrentScreen == Enum26.GAME_SCREEN) {
-    gfEnteringMapScreen = 1;
-  }
-
-  if (!fShowTeamFlag) {
-    ToggleShowTeamsMode();
-  }
-
-  // Define the blanket region to cover all of the other regions used underneath the panel.
-  MSYS_DefineRegion(PBInterfaceBlanket, 0, 0, 261, 359, MSYS_PRIORITY_HIGHEST - 5, 0, null, null);
-
-  // Create the panel
-  VObjectDesc.fCreateFlags = VOBJECT_CREATE_FROMFILE;
-  VObjectDesc.ImageFile = GetMLGFilename(Enum326.MLG_PREBATTLEPANEL);
-  if (!(uiInterfaceImages = AddVideoObject(VObjectDesc)))
-    AssertMsg(0, "Failed to load interface\\PreBattlePanel.sti");
-
-  // Create the 3 buttons
-  iPBButtonImage[0] = LoadButtonImage("INTERFACE\\PreBattleButton.sti", -1, 0, -1, 1, -1);
-  if (iPBButtonImage[0] == -1)
-    AssertMsg(0, "Failed to load interface\\PreBattleButton.sti");
-  iPBButtonImage[1] = UseLoadedButtonImage(iPBButtonImage[0], -1, 0, -1, 1, -1);
-  iPBButtonImage[2] = UseLoadedButtonImage(iPBButtonImage[0], -1, 0, -1, 1, -1);
-  iPBButton[0] = QuickCreateButton(iPBButtonImage[0], 27, 54, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGHEST - 2, DEFAULT_MOVE_CALLBACK(), AutoResolveBattleCallback);
-  iPBButton[1] = QuickCreateButton(iPBButtonImage[1], 98, 54, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGHEST - 2, DEFAULT_MOVE_CALLBACK(), GoToSectorCallback);
-  iPBButton[2] = QuickCreateButton(iPBButtonImage[2], 169, 54, BUTTON_NO_TOGGLE, MSYS_PRIORITY_HIGHEST - 2, DEFAULT_MOVE_CALLBACK(), RetreatMercsCallback);
-
-  SpecifyGeneralButtonTextAttributes(iPBButton[0], gpStrategicString[Enum365.STR_PB_AUTORESOLVE_BTN], BLOCKFONT(), FONT_BEIGE, 141);
-  SpecifyGeneralButtonTextAttributes(iPBButton[1], gpStrategicString[Enum365.STR_PB_GOTOSECTOR_BTN], BLOCKFONT(), FONT_BEIGE, 141);
-  SpecifyGeneralButtonTextAttributes(iPBButton[2], gpStrategicString[Enum365.STR_PB_RETREATMERCS_BTN], BLOCKFONT(), FONT_BEIGE, 141);
-  SpecifyButtonHilitedTextColors(iPBButton[0], FONT_WHITE, FONT_NEARBLACK);
-  SpecifyButtonHilitedTextColors(iPBButton[1], FONT_WHITE, FONT_NEARBLACK);
-  SpecifyButtonHilitedTextColors(iPBButton[2], FONT_WHITE, FONT_NEARBLACK);
-  SpecifyButtonTextOffsets(iPBButton[0], 8, 7, true);
-  SpecifyButtonTextOffsets(iPBButton[1], 8, 7, true);
-  SpecifyButtonTextOffsets(iPBButton[2], 8, 7, true);
-  SpecifyButtonTextWrappedWidth(iPBButton[0], 51);
-  SpecifyButtonTextWrappedWidth(iPBButton[1], 51);
-  SpecifyButtonTextWrappedWidth(iPBButton[2], 51);
-  SpecifyButtonTextJustification(iPBButton[0], BUTTON_TEXT_CENTER);
-  SpecifyButtonTextJustification(iPBButton[1], BUTTON_TEXT_CENTER);
-  SpecifyButtonTextJustification(iPBButton[2], BUTTON_TEXT_CENTER);
-  AllowDisabledButtonFastHelp(iPBButton[0], true);
-  AllowDisabledButtonFastHelp(iPBButton[1], true);
-  AllowDisabledButtonFastHelp(iPBButton[2], true);
-
-  gusRetreatButtonLeft = ButtonList[iPBButton[2]].Area.RegionTopLeftX;
-  gusRetreatButtonTop = ButtonList[iPBButton[2]].Area.RegionTopLeftY;
-  gusRetreatButtonRight = ButtonList[iPBButton[2]].Area.RegionBottomRightX;
-  gusRetreatButtonBottom = ButtonList[iPBButton[2]].Area.RegionBottomRightY;
-
-  SetButtonCursor(iPBButtonImage[0], MSYS_NO_CURSOR);
-  SetButtonCursor(iPBButtonImage[1], MSYS_NO_CURSOR);
-  SetButtonCursor(iPBButtonImage[2], MSYS_NO_CURSOR);
-
-  HideButton(iPBButton[0]);
-  HideButton(iPBButton[1]);
-  HideButton(iPBButton[2]);
-  gfPBButtonsHidden = true;
-
-  // ARM: this must now be set before any calls utilizing the GetCurrentBattleSectorXYZ() function
-  gfPreBattleInterfaceActive = true;
-
-  CheckForRobotAndIfItsControlled();
-
-  // wake everyone up
-  WakeUpAllMercsInSectorUnderAttack();
-
-  // Count the number of players involved or not involved in this battle
-  guiNumUninvolved = 0;
-  guiNumInvolved = 0;
-  for (i = gTacticalStatus.Team[OUR_TEAM].bFirstID; i <= gTacticalStatus.Team[OUR_TEAM].bLastID; i++) {
-    if (MercPtrs[i].bActive && MercPtrs[i].bLife && !(MercPtrs[i].uiStatusFlags & SOLDIER_VEHICLE)) {
-      if (PlayerMercInvolvedInThisCombat(MercPtrs[i])) {
-        // involved
-        if (!ubGroupID) {
-          // Record the first groupID.  If there are more than one group in this battle, we
-          // can detect it by comparing the first value with future values.  If we do, then
-          // we set a flag which determines whether to use the singular help text or plural version
-          // for the retreat button.
-          ubGroupID = MercPtrs[i].ubGroupID;
-          if (!gpBattleGroup)
-            gpBattleGroup = GetGroup(ubGroupID);
-          if (bBestExpLevel > MercPtrs[i].bExpLevel)
-            bBestExpLevel = MercPtrs[i].bExpLevel;
-          if (MercPtrs[i].ubPrevSectorID == 255) {
-            // Not able to retreat (calculate it for group)
-            let pTempGroup: GROUP;
-            pTempGroup = GetGroup(ubGroupID);
-            Assert(pTempGroup);
-            CalculateGroupRetreatSector(pTempGroup);
-          }
-        } else if (ubGroupID != MercPtrs[i].ubGroupID) {
-          fUsePluralVersion = true;
+      //	InitializeTacticalStatusAtBattleStart();
+      // CJC, Oct 5 98: this is all we should need from InitializeTacticalStatusAtBattleStart()
+      if (
+        gubEnemyEncounterCode != Enum164.BLOODCAT_AMBUSH_CODE &&
+        gubEnemyEncounterCode != Enum164.ENTERING_BLOODCAT_LAIR_CODE
+      ) {
+        if (CheckFact(Enum170.FACT_FIRST_BATTLE_FOUGHT, 0) == false) {
+          SetFactTrue(Enum170.FACT_FIRST_BATTLE_BEING_FOUGHT);
         }
-        guiNumInvolved++;
-      } else
-        guiNumUninvolved++;
+      }
+
+      // ATE: Added check for fPersistantPBI = TRUE if pBattleGroup == NULL
+      // Searched code and saw that this condition only happens for creatures
+      // fixing a bug
+      // if( guiCurrentScreen == GAME_SCREEN && pBattleGroup )
+      if (
+        guiCurrentScreen == Enum26.GAME_SCREEN &&
+        (pBattleGroup || fPersistantPBI)
+      ) {
+        gpBattleGroup = pBattleGroup;
+        gfEnteringMapScreen = 1;
+        gfEnteringMapScreenToEnterPreBattleInterface = true;
+        gfUsePersistantPBI = true;
+        return;
+      }
+
+      if (
+        gfTacticalTraversal &&
+        (pBattleGroup == gpTacticalTraversalGroup || gbWorldSectorZ > 0)
+      ) {
+        return;
+      }
+
+      // reset the help text for mouse regions
+      SetRegionFastHelpText(gCharInfoHandRegion, "");
+      SetRegionFastHelpText(gMapStatusBarsRegion, "");
+
+      gfDisplayPotentialRetreatPaths = false;
+
+      gpBattleGroup = pBattleGroup;
+
+      // calc sector values
+      if (gpBattleGroup) {
+        gubPBSectorX = gpBattleGroup.ubSectorX;
+        gubPBSectorY = gpBattleGroup.ubSectorY;
+        gubPBSectorZ = gpBattleGroup.ubSectorZ;
+
+        // get number of enemies thought to be here
+        SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)].bLastKnownEnemies =
+          NumEnemiesInSector(gubPBSectorX, gubPBSectorY);
+        fMapPanelDirty = true;
+      } else {
+        gubPBSectorX = SECTORX(gubSectorIDOfCreatureAttack);
+        gubPBSectorY = SECTORY(gubSectorIDOfCreatureAttack);
+        gubPBSectorZ = 0;
+      }
+    } else {
+      // calculate the non-persistant situation
+      gfBlinkHeader = true;
+
+      if (HostileCiviliansPresent()) {
+        // There are hostile civilians, so no autoresolve allowed.
+        gubExplicitEnemyEncounterCode = Enum164.HOSTILE_CIVILIANS_CODE;
+      } else if (HostileBloodcatsPresent()) {
+        // There are bloodcats in the sector, so no autoresolve allowed
+        gubExplicitEnemyEncounterCode = Enum164.HOSTILE_BLOODCATS_CODE;
+      } else if (gbWorldSectorZ) {
+        // We are underground, so no autoresolve allowed
+        pSector = SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)];
+        if (pSector.ubCreaturesInBattle) {
+          gubExplicitEnemyEncounterCode = Enum164.FIGHTING_CREATURES_CODE;
+        } else if (
+          pSector.ubAdminsInBattle ||
+          pSector.ubTroopsInBattle ||
+          pSector.ubElitesInBattle
+        ) {
+          gubExplicitEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
+        }
+      } else if (
+        gubEnemyEncounterCode == Enum164.ENTERING_ENEMY_SECTOR_CODE ||
+        gubEnemyEncounterCode == Enum164.ENEMY_ENCOUNTER_CODE ||
+        gubEnemyEncounterCode == Enum164.ENEMY_AMBUSH_CODE ||
+        gubEnemyEncounterCode == Enum164.ENEMY_INVASION_CODE ||
+        gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE ||
+        gubEnemyEncounterCode == Enum164.ENTERING_BLOODCAT_LAIR_CODE ||
+        gubEnemyEncounterCode == Enum164.CREATURE_ATTACK_CODE
+      ) {
+        // use same code
+        gubExplicitEnemyEncounterCode = gubEnemyEncounterCode;
+      } else {
+        gfBlitBattleSectorLocator = false;
+        return;
+      }
     }
-  }
 
-  ubNumStationaryEnemies = NumStationaryEnemiesInSector(gubPBSectorX, gubPBSectorY);
-  ubNumMobileEnemies = NumMobileEnemiesInSector(gubPBSectorX, gubPBSectorY);
-  ubNumMercs = PlayerMercsInSector(gubPBSectorX, gubPBSectorY, gubPBSectorZ);
+    fMapScreenBottomDirty = true;
+    ChangeSelectedMapSector(gubPBSectorX, gubPBSectorY, gubPBSectorZ);
+    RenderMapScreenInterfaceBottom();
 
-  if (gfPersistantPBI) {
-    if (!pBattleGroup) {
-      // creature's attacking!
-      gubEnemyEncounterCode = Enum164.CREATURE_ATTACK_CODE;
-    } else if ((<GROUP>gpBattleGroup).fPlayer) {
-      if (gubEnemyEncounterCode != Enum164.BLOODCAT_AMBUSH_CODE && gubEnemyEncounterCode != Enum164.ENTERING_BLOODCAT_LAIR_CODE) {
-        if (ubNumStationaryEnemies) {
-          gubEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
-        } else {
-          gubEnemyEncounterCode = Enum164.ENEMY_ENCOUNTER_CODE;
+    // If we are currently in tactical, then set the flag to automatically bring up the mapscreen.
+    if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      gfEnteringMapScreen = 1;
+    }
 
-          // Don't consider ambushes until the player has reached 25% (normal) progress
-          if (gfHighPotentialForAmbush) {
-            if (Chance(90)) {
-              gubEnemyEncounterCode = Enum164.ENEMY_AMBUSH_CODE;
+    if (!fShowTeamFlag) {
+      ToggleShowTeamsMode();
+    }
+
+    // Define the blanket region to cover all of the other regions used underneath the panel.
+    MSYS_DefineRegion(
+      PBInterfaceBlanket,
+      0,
+      0,
+      261,
+      359,
+      MSYS_PRIORITY_HIGHEST - 5,
+      0,
+      null,
+      null,
+    );
+
+    // Create the panel
+    VObjectDesc.fCreateFlags = VOBJECT_CREATE_FROMFILE;
+    VObjectDesc.ImageFile = GetMLGFilename(Enum326.MLG_PREBATTLEPANEL);
+    if (!(uiInterfaceImages = AddVideoObject(VObjectDesc)))
+      AssertMsg(0, "Failed to load interface\\PreBattlePanel.sti");
+
+    // Create the 3 buttons
+    iPBButtonImage[0] = LoadButtonImage(
+      "INTERFACE\\PreBattleButton.sti",
+      -1,
+      0,
+      -1,
+      1,
+      -1,
+    );
+    if (iPBButtonImage[0] == -1)
+      AssertMsg(0, "Failed to load interface\\PreBattleButton.sti");
+    iPBButtonImage[1] = UseLoadedButtonImage(
+      iPBButtonImage[0],
+      -1,
+      0,
+      -1,
+      1,
+      -1,
+    );
+    iPBButtonImage[2] = UseLoadedButtonImage(
+      iPBButtonImage[0],
+      -1,
+      0,
+      -1,
+      1,
+      -1,
+    );
+    iPBButton[0] = QuickCreateButton(
+      iPBButtonImage[0],
+      27,
+      54,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGHEST - 2,
+      DEFAULT_MOVE_CALLBACK(),
+      AutoResolveBattleCallback,
+    );
+    iPBButton[1] = QuickCreateButton(
+      iPBButtonImage[1],
+      98,
+      54,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGHEST - 2,
+      DEFAULT_MOVE_CALLBACK(),
+      GoToSectorCallback,
+    );
+    iPBButton[2] = QuickCreateButton(
+      iPBButtonImage[2],
+      169,
+      54,
+      BUTTON_NO_TOGGLE,
+      MSYS_PRIORITY_HIGHEST - 2,
+      DEFAULT_MOVE_CALLBACK(),
+      RetreatMercsCallback,
+    );
+
+    SpecifyGeneralButtonTextAttributes(
+      iPBButton[0],
+      gpStrategicString[Enum365.STR_PB_AUTORESOLVE_BTN],
+      BLOCKFONT(),
+      FONT_BEIGE,
+      141,
+    );
+    SpecifyGeneralButtonTextAttributes(
+      iPBButton[1],
+      gpStrategicString[Enum365.STR_PB_GOTOSECTOR_BTN],
+      BLOCKFONT(),
+      FONT_BEIGE,
+      141,
+    );
+    SpecifyGeneralButtonTextAttributes(
+      iPBButton[2],
+      gpStrategicString[Enum365.STR_PB_RETREATMERCS_BTN],
+      BLOCKFONT(),
+      FONT_BEIGE,
+      141,
+    );
+    SpecifyButtonHilitedTextColors(iPBButton[0], FONT_WHITE, FONT_NEARBLACK);
+    SpecifyButtonHilitedTextColors(iPBButton[1], FONT_WHITE, FONT_NEARBLACK);
+    SpecifyButtonHilitedTextColors(iPBButton[2], FONT_WHITE, FONT_NEARBLACK);
+    SpecifyButtonTextOffsets(iPBButton[0], 8, 7, true);
+    SpecifyButtonTextOffsets(iPBButton[1], 8, 7, true);
+    SpecifyButtonTextOffsets(iPBButton[2], 8, 7, true);
+    SpecifyButtonTextWrappedWidth(iPBButton[0], 51);
+    SpecifyButtonTextWrappedWidth(iPBButton[1], 51);
+    SpecifyButtonTextWrappedWidth(iPBButton[2], 51);
+    SpecifyButtonTextJustification(iPBButton[0], BUTTON_TEXT_CENTER);
+    SpecifyButtonTextJustification(iPBButton[1], BUTTON_TEXT_CENTER);
+    SpecifyButtonTextJustification(iPBButton[2], BUTTON_TEXT_CENTER);
+    AllowDisabledButtonFastHelp(iPBButton[0], true);
+    AllowDisabledButtonFastHelp(iPBButton[1], true);
+    AllowDisabledButtonFastHelp(iPBButton[2], true);
+
+    gusRetreatButtonLeft = ButtonList[iPBButton[2]].Area.RegionTopLeftX;
+    gusRetreatButtonTop = ButtonList[iPBButton[2]].Area.RegionTopLeftY;
+    gusRetreatButtonRight = ButtonList[iPBButton[2]].Area.RegionBottomRightX;
+    gusRetreatButtonBottom = ButtonList[iPBButton[2]].Area.RegionBottomRightY;
+
+    SetButtonCursor(iPBButtonImage[0], MSYS_NO_CURSOR);
+    SetButtonCursor(iPBButtonImage[1], MSYS_NO_CURSOR);
+    SetButtonCursor(iPBButtonImage[2], MSYS_NO_CURSOR);
+
+    HideButton(iPBButton[0]);
+    HideButton(iPBButton[1]);
+    HideButton(iPBButton[2]);
+    gfPBButtonsHidden = true;
+
+    // ARM: this must now be set before any calls utilizing the GetCurrentBattleSectorXYZ() function
+    gfPreBattleInterfaceActive = true;
+
+    CheckForRobotAndIfItsControlled();
+
+    // wake everyone up
+    WakeUpAllMercsInSectorUnderAttack();
+
+    // Count the number of players involved or not involved in this battle
+    guiNumUninvolved = 0;
+    guiNumInvolved = 0;
+    for (
+      i = gTacticalStatus.Team[OUR_TEAM].bFirstID;
+      i <= gTacticalStatus.Team[OUR_TEAM].bLastID;
+      i++
+    ) {
+      if (
+        MercPtrs[i].bActive &&
+        MercPtrs[i].bLife &&
+        !(MercPtrs[i].uiStatusFlags & SOLDIER_VEHICLE)
+      ) {
+        if (PlayerMercInvolvedInThisCombat(MercPtrs[i])) {
+          // involved
+          if (!ubGroupID) {
+            // Record the first groupID.  If there are more than one group in this battle, we
+            // can detect it by comparing the first value with future values.  If we do, then
+            // we set a flag which determines whether to use the singular help text or plural version
+            // for the retreat button.
+            ubGroupID = MercPtrs[i].ubGroupID;
+            if (!gpBattleGroup) gpBattleGroup = GetGroup(ubGroupID);
+            if (bBestExpLevel > MercPtrs[i].bExpLevel)
+              bBestExpLevel = MercPtrs[i].bExpLevel;
+            if (MercPtrs[i].ubPrevSectorID == 255) {
+              // Not able to retreat (calculate it for group)
+              let pTempGroup: GROUP;
+              pTempGroup = GetGroup(ubGroupID);
+              Assert(pTempGroup);
+              CalculateGroupRetreatSector(pTempGroup);
             }
-          } else if (gfAutoAmbush && ubNumMobileEnemies > ubNumMercs) {
-            gubEnemyEncounterCode = Enum164.ENEMY_AMBUSH_CODE;
-          } else if (WhatPlayerKnowsAboutEnemiesInSector(gubPBSectorX, gubPBSectorY) == Enum159.KNOWS_NOTHING && CurrentPlayerProgressPercentage() >= 30 - gGameOptions.ubDifficultyLevel * 5) {
-            // if the enemy outnumbers the players, then there is a small chance of the enemies ambushing the group
-            if (ubNumMobileEnemies > ubNumMercs) {
-              let iChance: INT32;
-              pSector = SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)];
-              if (!(pSector.uiFlags & SF_ALREADY_VISITED)) {
-                iChance = (4 - bBestExpLevel + 2 * gGameOptions.ubDifficultyLevel + Math.trunc(CurrentPlayerProgressPercentage() / 10));
-                if (pSector.uiFlags & SF_ENEMY_AMBUSH_LOCATION) {
-                  iChance += 20;
-                }
-                if (gfCantRetreatInPBI) {
-                  iChance += 20;
-                }
-                if (PreRandom(100) < iChance) {
-                  gubEnemyEncounterCode = Enum164.ENEMY_AMBUSH_CODE;
+          } else if (ubGroupID != MercPtrs[i].ubGroupID) {
+            fUsePluralVersion = true;
+          }
+          guiNumInvolved++;
+        } else guiNumUninvolved++;
+      }
+    }
+
+    ubNumStationaryEnemies = NumStationaryEnemiesInSector(
+      gubPBSectorX,
+      gubPBSectorY,
+    );
+    ubNumMobileEnemies = NumMobileEnemiesInSector(gubPBSectorX, gubPBSectorY);
+    ubNumMercs = PlayerMercsInSector(gubPBSectorX, gubPBSectorY, gubPBSectorZ);
+
+    if (gfPersistantPBI) {
+      if (!pBattleGroup) {
+        // creature's attacking!
+        gubEnemyEncounterCode = Enum164.CREATURE_ATTACK_CODE;
+      } else if ((<GROUP>gpBattleGroup).fPlayer) {
+        if (
+          gubEnemyEncounterCode != Enum164.BLOODCAT_AMBUSH_CODE &&
+          gubEnemyEncounterCode != Enum164.ENTERING_BLOODCAT_LAIR_CODE
+        ) {
+          if (ubNumStationaryEnemies) {
+            gubEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
+          } else {
+            gubEnemyEncounterCode = Enum164.ENEMY_ENCOUNTER_CODE;
+
+            // Don't consider ambushes until the player has reached 25% (normal) progress
+            if (gfHighPotentialForAmbush) {
+              if (Chance(90)) {
+                gubEnemyEncounterCode = Enum164.ENEMY_AMBUSH_CODE;
+              }
+            } else if (gfAutoAmbush && ubNumMobileEnemies > ubNumMercs) {
+              gubEnemyEncounterCode = Enum164.ENEMY_AMBUSH_CODE;
+            } else if (
+              WhatPlayerKnowsAboutEnemiesInSector(gubPBSectorX, gubPBSectorY) ==
+                Enum159.KNOWS_NOTHING &&
+              CurrentPlayerProgressPercentage() >=
+                30 - gGameOptions.ubDifficultyLevel * 5
+            ) {
+              // if the enemy outnumbers the players, then there is a small chance of the enemies ambushing the group
+              if (ubNumMobileEnemies > ubNumMercs) {
+                let iChance: INT32;
+                pSector = SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)];
+                if (!(pSector.uiFlags & SF_ALREADY_VISITED)) {
+                  iChance =
+                    4 -
+                    bBestExpLevel +
+                    2 * gGameOptions.ubDifficultyLevel +
+                    Math.trunc(CurrentPlayerProgressPercentage() / 10);
+                  if (pSector.uiFlags & SF_ENEMY_AMBUSH_LOCATION) {
+                    iChance += 20;
+                  }
+                  if (gfCantRetreatInPBI) {
+                    iChance += 20;
+                  }
+                  if (PreRandom(100) < iChance) {
+                    gubEnemyEncounterCode = Enum164.ENEMY_AMBUSH_CODE;
+                  }
                 }
               }
             }
           }
         }
-      }
-    } else {
-      // Are enemies invading a town, or just encountered the player.
-      if (GetTownIdForSector(gubPBSectorX, gubPBSectorY)) {
-        gubEnemyEncounterCode = Enum164.ENEMY_INVASION_CODE;
       } else {
-        switch (SECTOR(gubPBSectorX, gubPBSectorY)) {
-          case Enum123.SEC_D2:
-          case Enum123.SEC_D15:
-          case Enum123.SEC_G8:
-            // SAM sites not in towns will also be considered to be important
-            gubEnemyEncounterCode = Enum164.ENEMY_INVASION_CODE;
-            break;
-          default:
-            gubEnemyEncounterCode = Enum164.ENEMY_ENCOUNTER_CODE;
-            break;
+        // Are enemies invading a town, or just encountered the player.
+        if (GetTownIdForSector(gubPBSectorX, gubPBSectorY)) {
+          gubEnemyEncounterCode = Enum164.ENEMY_INVASION_CODE;
+        } else {
+          switch (SECTOR(gubPBSectorX, gubPBSectorY)) {
+            case Enum123.SEC_D2:
+            case Enum123.SEC_D15:
+            case Enum123.SEC_G8:
+              // SAM sites not in towns will also be considered to be important
+              gubEnemyEncounterCode = Enum164.ENEMY_INVASION_CODE;
+              break;
+            default:
+              gubEnemyEncounterCode = Enum164.ENEMY_ENCOUNTER_CODE;
+              break;
+          }
         }
       }
     }
-  }
 
-  gfHighPotentialForAmbush = false;
+    gfHighPotentialForAmbush = false;
 
-  if (gfAutomaticallyStartAutoResolve) {
-    DisableButton(iPBButton[1]);
-    DisableButton(iPBButton[2]);
-  }
-
-  gfRenderPBInterface = true;
-  giHilitedInvolved = giHilitedUninvolved = -1;
-  MSYS_SetCurrentCursor(Enum317.CURSOR_NORMAL);
-  StopTimeCompression();
-
-  // hide all visible boxes
-  HideAllBoxes();
-  fShowAssignmentMenu = false;
-  fShowContractMenu = false;
-  DisableTeamInfoPanels();
-  if (ButtonList[giMapContractButton]) {
-    HideButton(giMapContractButton);
-  }
-  if (ButtonList[giCharInfoButton[0]]) {
-    HideButton(giCharInfoButton[0]);
-  }
-  if (ButtonList[giCharInfoButton[1]]) {
-    HideButton(giCharInfoButton[1]);
-  }
-  HideButton(giMapContractButton);
-
-  if (gubEnemyEncounterCode == Enum164.ENEMY_ENCOUNTER_CODE) {
-    // we know how many enemies are here, so until we leave the sector, we will continue to display the value.
-    // the flag will get cleared when time advances after the fEnemyInSector flag is clear.
-    pSector = SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)];
-
-    // ALWAYS use these 2 statements together, without setting the boolean, the flag will never be cleaned up!
-    pSector.uiFlags |= SF_PLAYER_KNOWS_ENEMIES_ARE_HERE;
-    gfResetAllPlayerKnowsEnemiesFlags = true;
-  }
-
-  // Set up fast help for buttons depending on the state of the button, and disable buttons
-  // when necessary.
-  if (gfPersistantPBI) {
-    if (gubEnemyEncounterCode == Enum164.ENTERING_ENEMY_SECTOR_CODE || gubEnemyEncounterCode == Enum164.ENTERING_BLOODCAT_LAIR_CODE) {
-      // Don't allow autoresolve for player initiated invasion battle types
-      DisableButton(iPBButton[0]);
-      SetButtonFastHelpText(iPBButton[0], gpStrategicString[Enum365.STR_PB_DISABLED_AUTORESOLVE_FASTHELP]);
-    } else if (gubEnemyEncounterCode == Enum164.ENEMY_AMBUSH_CODE || gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE) {
-      // Don't allow autoresolve for ambushes
-      DisableButton(iPBButton[0]);
-      SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[3]);
-    } else {
-      SetButtonFastHelpText(iPBButton[0], gpStrategicString[Enum365.STR_PB_AUTORESOLVE_FASTHELP]);
-    }
-    SetButtonFastHelpText(iPBButton[1], gpStrategicString[Enum365.STR_PB_GOTOSECTOR_FASTHELP]);
     if (gfAutomaticallyStartAutoResolve) {
       DisableButton(iPBButton[1]);
-    }
-    if (gfCantRetreatInPBI) {
-      gfCantRetreatInPBI = false;
-      fRetreatAnOption = false;
-    }
-    if (gfAutomaticallyStartAutoResolve || !fRetreatAnOption || gubEnemyEncounterCode == Enum164.ENEMY_AMBUSH_CODE || gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE || gubEnemyEncounterCode == Enum164.CREATURE_ATTACK_CODE) {
       DisableButton(iPBButton[2]);
-      SetButtonFastHelpText(iPBButton[2], gzNonPersistantPBIText[9]);
-    } else {
-      if (!fUsePluralVersion) {
-        SetButtonFastHelpText(iPBButton[2], gpStrategicString[Enum365.STR_BP_RETREATSINGLE_FASTHELP]);
-      } else {
-        SetButtonFastHelpText(iPBButton[2], gpStrategicString[Enum365.STR_BP_RETREATPLURAL_FASTHELP]);
-      }
     }
-  } else {
-    // use the explicit encounter code to determine what get's disable and the associated help text that is used.
 
-    // First of all, the retreat button is always disabled seeing a battle is in progress.
-    DisableButton(iPBButton[2]);
-    SetButtonFastHelpText(iPBButton[2], gzNonPersistantPBIText[0]);
-    SetButtonFastHelpText(iPBButton[1], gzNonPersistantPBIText[1]);
-    switch (gubExplicitEnemyEncounterCode) {
-      case Enum164.CREATURE_ATTACK_CODE:
-      case Enum164.ENEMY_ENCOUNTER_CODE:
-      case Enum164.ENEMY_INVASION_CODE:
-        SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[2]);
-        break;
-      case Enum164.ENTERING_ENEMY_SECTOR_CODE:
+    gfRenderPBInterface = true;
+    giHilitedInvolved = giHilitedUninvolved = -1;
+    MSYS_SetCurrentCursor(Enum317.CURSOR_NORMAL);
+    StopTimeCompression();
+
+    // hide all visible boxes
+    HideAllBoxes();
+    fShowAssignmentMenu = false;
+    fShowContractMenu = false;
+    DisableTeamInfoPanels();
+    if (ButtonList[giMapContractButton]) {
+      HideButton(giMapContractButton);
+    }
+    if (ButtonList[giCharInfoButton[0]]) {
+      HideButton(giCharInfoButton[0]);
+    }
+    if (ButtonList[giCharInfoButton[1]]) {
+      HideButton(giCharInfoButton[1]);
+    }
+    HideButton(giMapContractButton);
+
+    if (gubEnemyEncounterCode == Enum164.ENEMY_ENCOUNTER_CODE) {
+      // we know how many enemies are here, so until we leave the sector, we will continue to display the value.
+      // the flag will get cleared when time advances after the fEnemyInSector flag is clear.
+      pSector = SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)];
+
+      // ALWAYS use these 2 statements together, without setting the boolean, the flag will never be cleaned up!
+      pSector.uiFlags |= SF_PLAYER_KNOWS_ENEMIES_ARE_HERE;
+      gfResetAllPlayerKnowsEnemiesFlags = true;
+    }
+
+    // Set up fast help for buttons depending on the state of the button, and disable buttons
+    // when necessary.
+    if (gfPersistantPBI) {
+      if (
+        gubEnemyEncounterCode == Enum164.ENTERING_ENEMY_SECTOR_CODE ||
+        gubEnemyEncounterCode == Enum164.ENTERING_BLOODCAT_LAIR_CODE
+      ) {
+        // Don't allow autoresolve for player initiated invasion battle types
+        DisableButton(iPBButton[0]);
+        SetButtonFastHelpText(
+          iPBButton[0],
+          gpStrategicString[Enum365.STR_PB_DISABLED_AUTORESOLVE_FASTHELP],
+        );
+      } else if (
+        gubEnemyEncounterCode == Enum164.ENEMY_AMBUSH_CODE ||
+        gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE
+      ) {
+        // Don't allow autoresolve for ambushes
         DisableButton(iPBButton[0]);
         SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[3]);
-        break;
-      case Enum164.ENEMY_AMBUSH_CODE:
-        DisableButton(iPBButton[0]);
-        SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[4]);
-        break;
-      case Enum164.FIGHTING_CREATURES_CODE:
-        DisableButton(iPBButton[0]);
-        SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[5]);
-        break;
-      case Enum164.HOSTILE_CIVILIANS_CODE:
-        DisableButton(iPBButton[0]);
-        SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[6]);
-        break;
-      case Enum164.HOSTILE_BLOODCATS_CODE:
-      case Enum164.BLOODCAT_AMBUSH_CODE:
-      case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
-        DisableButton(iPBButton[0]);
-        SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[7]);
-        break;
+      } else {
+        SetButtonFastHelpText(
+          iPBButton[0],
+          gpStrategicString[Enum365.STR_PB_AUTORESOLVE_FASTHELP],
+        );
+      }
+      SetButtonFastHelpText(
+        iPBButton[1],
+        gpStrategicString[Enum365.STR_PB_GOTOSECTOR_FASTHELP],
+      );
+      if (gfAutomaticallyStartAutoResolve) {
+        DisableButton(iPBButton[1]);
+      }
+      if (gfCantRetreatInPBI) {
+        gfCantRetreatInPBI = false;
+        fRetreatAnOption = false;
+      }
+      if (
+        gfAutomaticallyStartAutoResolve ||
+        !fRetreatAnOption ||
+        gubEnemyEncounterCode == Enum164.ENEMY_AMBUSH_CODE ||
+        gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE ||
+        gubEnemyEncounterCode == Enum164.CREATURE_ATTACK_CODE
+      ) {
+        DisableButton(iPBButton[2]);
+        SetButtonFastHelpText(iPBButton[2], gzNonPersistantPBIText[9]);
+      } else {
+        if (!fUsePluralVersion) {
+          SetButtonFastHelpText(
+            iPBButton[2],
+            gpStrategicString[Enum365.STR_BP_RETREATSINGLE_FASTHELP],
+          );
+        } else {
+          SetButtonFastHelpText(
+            iPBButton[2],
+            gpStrategicString[Enum365.STR_BP_RETREATPLURAL_FASTHELP],
+          );
+        }
+      }
+    } else {
+      // use the explicit encounter code to determine what get's disable and the associated help text that is used.
+
+      // First of all, the retreat button is always disabled seeing a battle is in progress.
+      DisableButton(iPBButton[2]);
+      SetButtonFastHelpText(iPBButton[2], gzNonPersistantPBIText[0]);
+      SetButtonFastHelpText(iPBButton[1], gzNonPersistantPBIText[1]);
+      switch (gubExplicitEnemyEncounterCode) {
+        case Enum164.CREATURE_ATTACK_CODE:
+        case Enum164.ENEMY_ENCOUNTER_CODE:
+        case Enum164.ENEMY_INVASION_CODE:
+          SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[2]);
+          break;
+        case Enum164.ENTERING_ENEMY_SECTOR_CODE:
+          DisableButton(iPBButton[0]);
+          SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[3]);
+          break;
+        case Enum164.ENEMY_AMBUSH_CODE:
+          DisableButton(iPBButton[0]);
+          SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[4]);
+          break;
+        case Enum164.FIGHTING_CREATURES_CODE:
+          DisableButton(iPBButton[0]);
+          SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[5]);
+          break;
+        case Enum164.HOSTILE_CIVILIANS_CODE:
+          DisableButton(iPBButton[0]);
+          SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[6]);
+          break;
+        case Enum164.HOSTILE_BLOODCATS_CODE:
+        case Enum164.BLOODCAT_AMBUSH_CODE:
+        case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
+          DisableButton(iPBButton[0]);
+          SetButtonFastHelpText(iPBButton[0], gzNonPersistantPBIText[7]);
+          break;
+      }
     }
+
+    // Disable the options button when the auto resolve  screen comes up
+    EnableDisAbleMapScreenOptionsButton(false);
+
+    SetMusicMode(Enum328.MUSIC_TACTICAL_ENEMYPRESENT);
+
+    DoTransitionFromMapscreenToPreBattleInterface();
   }
 
-  // Disable the options button when the auto resolve  screen comes up
-  EnableDisAbleMapScreenOptionsButton(false);
+  function DoTransitionFromMapscreenToPreBattleInterface(): void {
+    let DstRect: SGPRect = createSGPRect();
+    let PBIRect: SGPRect = createSGPRect();
+    let uiStartTime: UINT32;
+    let uiCurrTime: UINT32;
+    let iPercentage: INT32;
+    let iFactor: INT32;
+    let uiTimeRange: UINT32;
+    let sStartLeft: INT16;
+    let sEndLeft: INT16;
+    let sStartTop: INT16;
+    let sEndTop: INT16;
+    let iLeft: INT32;
+    let iTop: INT32;
+    let iWidth: INT32;
+    let iHeight: INT32;
+    let fEnterAutoResolveMode: boolean = false;
 
-  SetMusicMode(Enum328.MUSIC_TACTICAL_ENEMYPRESENT);
+    if (!gfExtraBuffer) return;
 
-  DoTransitionFromMapscreenToPreBattleInterface();
-}
+    PauseTime(false);
 
-function DoTransitionFromMapscreenToPreBattleInterface(): void {
-  let DstRect: SGPRect = createSGPRect();
-  let PBIRect: SGPRect = createSGPRect();
-  let uiStartTime: UINT32;
-  let uiCurrTime: UINT32;
-  let iPercentage: INT32;
-  let iFactor: INT32;
-  let uiTimeRange: UINT32;
-  let sStartLeft: INT16;
-  let sEndLeft: INT16;
-  let sStartTop: INT16;
-  let sEndTop: INT16;
-  let iLeft: INT32;
-  let iTop: INT32;
-  let iWidth: INT32;
-  let iHeight: INT32;
-  let fEnterAutoResolveMode: boolean = false;
+    PBIRect.iLeft = 0;
+    PBIRect.iTop = 0;
+    PBIRect.iRight = 261;
+    PBIRect.iBottom = 359;
+    iWidth = 261;
+    iHeight = 359;
 
-  if (!gfExtraBuffer)
-    return;
+    uiTimeRange = 1000;
+    iPercentage = 0;
+    uiStartTime = GetJA2Clock();
 
-  PauseTime(false);
+    ({ sX: sStartLeft, sY: sStartTop } = GetScreenXYFromMapXY(
+      gubPBSectorX,
+      gubPBSectorY,
+    ));
+    sStartLeft += Math.trunc(MAP_GRID_X / 2);
+    sStartTop += Math.trunc(MAP_GRID_Y / 2);
+    sEndLeft = 131;
+    sEndTop = 180;
 
-  PBIRect.iLeft = 0;
-  PBIRect.iTop = 0;
-  PBIRect.iRight = 261;
-  PBIRect.iBottom = 359;
-  iWidth = 261;
-  iHeight = 359;
+    // save the mapscreen buffer
+    BlitBufferToBuffer(FRAME_BUFFER, guiEXTRABUFFER, 0, 0, 640, 480);
 
-  uiTimeRange = 1000;
-  iPercentage = 0;
-  uiStartTime = GetJA2Clock();
+    if (gfEnterAutoResolveMode) {
+      // If we are intending on immediately entering autoresolve, change the global flag so that it will actually
+      // render the interface once.  If gfEnterAutoResolveMode is clear, then RenderPreBattleInterface() won't do
+      // anything.
+      fEnterAutoResolveMode = true;
+      gfEnterAutoResolveMode = false;
+    }
+    // render the prebattle interface
+    RenderPreBattleInterface();
 
-  ({ sX: sStartLeft, sY: sStartTop } = GetScreenXYFromMapXY(gubPBSectorX, gubPBSectorY));
-  sStartLeft += Math.trunc(MAP_GRID_X / 2);
-  sStartTop += Math.trunc(MAP_GRID_Y / 2);
-  sEndLeft = 131;
-  sEndTop = 180;
+    gfIgnoreAllInput = true;
 
-  // save the mapscreen buffer
-  BlitBufferToBuffer(FRAME_BUFFER, guiEXTRABUFFER, 0, 0, 640, 480);
+    if (fEnterAutoResolveMode) {
+      // Change it back
+      gfEnterAutoResolveMode = true;
+    }
 
-  if (gfEnterAutoResolveMode) {
-    // If we are intending on immediately entering autoresolve, change the global flag so that it will actually
-    // render the interface once.  If gfEnterAutoResolveMode is clear, then RenderPreBattleInterface() won't do
-    // anything.
-    fEnterAutoResolveMode = true;
-    gfEnterAutoResolveMode = false;
-  }
-  // render the prebattle interface
-  RenderPreBattleInterface();
+    BlitBufferToBuffer(guiSAVEBUFFER, FRAME_BUFFER, 27, 54, 209, 32);
+    RenderButtons();
+    BlitBufferToBuffer(FRAME_BUFFER, guiSAVEBUFFER, 27, 54, 209, 32);
+    gfRenderPBInterface = true;
 
-  gfIgnoreAllInput = true;
-
-  if (fEnterAutoResolveMode) {
-    // Change it back
-    gfEnterAutoResolveMode = true;
-  }
-
-  BlitBufferToBuffer(guiSAVEBUFFER, FRAME_BUFFER, 27, 54, 209, 32);
-  RenderButtons();
-  BlitBufferToBuffer(FRAME_BUFFER, guiSAVEBUFFER, 27, 54, 209, 32);
-  gfRenderPBInterface = true;
-
-  // hide the prebattle interface
-  BlitBufferToBuffer(guiEXTRABUFFER, FRAME_BUFFER, 0, 0, 261, 359);
-  PlayJA2SampleFromFile("SOUNDS\\Laptop power up (8-11).wav", RATE_11025, HIGHVOLUME, 1, MIDDLEPAN);
-  InvalidateScreen();
-  RefreshScreen();
-
-  iPercentage = 100; // FIXME: Synchronous rendering
-  while (iPercentage < 100) {
-    uiCurrTime = GetJA2Clock();
-    iPercentage = Math.trunc((uiCurrTime - uiStartTime) * 100 / uiTimeRange);
-    iPercentage = Math.min(iPercentage, 100);
-
-    // Factor the percentage so that it is modified by a gravity falling acceleration effect.
-    iFactor = (iPercentage - 50) * 2;
-    if (iPercentage < 50)
-      iPercentage = (iPercentage + iPercentage * iFactor * 0.01 + 0.5);
-    else
-      iPercentage = (iPercentage + (100 - iPercentage) * iFactor * 0.01 + 0.05);
-
-    // Calculate the center point.
-    iLeft = sStartLeft - Math.trunc((sStartLeft - sEndLeft + 1) * iPercentage / 100);
-    if (sStartTop > sEndTop)
-      iTop = sStartTop - Math.trunc((sStartTop - sEndTop + 1) * iPercentage / 100);
-    else
-      iTop = sStartTop + Math.trunc((sEndTop - sStartTop + 1) * iPercentage / 100);
-
-    DstRect.iLeft = iLeft - Math.trunc(iWidth * iPercentage / 200);
-    DstRect.iRight = DstRect.iLeft + Math.max(Math.trunc(iWidth * iPercentage / 100), 1);
-    DstRect.iTop = iTop - Math.trunc(iHeight * iPercentage / 200);
-    DstRect.iBottom = DstRect.iTop + Math.max(Math.trunc(iHeight * iPercentage / 100), 1);
-
-    BltStretchVideoSurface(FRAME_BUFFER, guiSAVEBUFFER, 0, 0, 0, PBIRect, DstRect);
-
+    // hide the prebattle interface
+    BlitBufferToBuffer(guiEXTRABUFFER, FRAME_BUFFER, 0, 0, 261, 359);
+    PlayJA2SampleFromFile(
+      "SOUNDS\\Laptop power up (8-11).wav",
+      RATE_11025,
+      HIGHVOLUME,
+      1,
+      MIDDLEPAN,
+    );
     InvalidateScreen();
     RefreshScreen();
 
-    // Restore the previous rect.
-    BlitBufferToBuffer(guiEXTRABUFFER, FRAME_BUFFER, DstRect.iLeft, DstRect.iTop, (DstRect.iRight - DstRect.iLeft + 1), (DstRect.iBottom - DstRect.iTop + 1));
+    iPercentage = 100; // FIXME: Synchronous rendering
+    while (iPercentage < 100) {
+      uiCurrTime = GetJA2Clock();
+      iPercentage = Math.trunc(
+        ((uiCurrTime - uiStartTime) * 100) / uiTimeRange,
+      );
+      iPercentage = Math.min(iPercentage, 100);
+
+      // Factor the percentage so that it is modified by a gravity falling acceleration effect.
+      iFactor = (iPercentage - 50) * 2;
+      if (iPercentage < 50)
+        iPercentage = iPercentage + iPercentage * iFactor * 0.01 + 0.5;
+      else
+        iPercentage = iPercentage + (100 - iPercentage) * iFactor * 0.01 + 0.05;
+
+      // Calculate the center point.
+      iLeft =
+        sStartLeft -
+        Math.trunc(((sStartLeft - sEndLeft + 1) * iPercentage) / 100);
+      if (sStartTop > sEndTop)
+        iTop =
+          sStartTop -
+          Math.trunc(((sStartTop - sEndTop + 1) * iPercentage) / 100);
+      else
+        iTop =
+          sStartTop +
+          Math.trunc(((sEndTop - sStartTop + 1) * iPercentage) / 100);
+
+      DstRect.iLeft = iLeft - Math.trunc((iWidth * iPercentage) / 200);
+      DstRect.iRight =
+        DstRect.iLeft + Math.max(Math.trunc((iWidth * iPercentage) / 100), 1);
+      DstRect.iTop = iTop - Math.trunc((iHeight * iPercentage) / 200);
+      DstRect.iBottom =
+        DstRect.iTop + Math.max(Math.trunc((iHeight * iPercentage) / 100), 1);
+
+      BltStretchVideoSurface(
+        FRAME_BUFFER,
+        guiSAVEBUFFER,
+        0,
+        0,
+        0,
+        PBIRect,
+        DstRect,
+      );
+
+      InvalidateScreen();
+      RefreshScreen();
+
+      // Restore the previous rect.
+      BlitBufferToBuffer(
+        guiEXTRABUFFER,
+        FRAME_BUFFER,
+        DstRect.iLeft,
+        DstRect.iTop,
+        DstRect.iRight - DstRect.iLeft + 1,
+        DstRect.iBottom - DstRect.iTop + 1,
+      );
+    }
+    BlitBufferToBuffer(FRAME_BUFFER, guiSAVEBUFFER, 0, 0, 640, 480);
   }
-  BlitBufferToBuffer(FRAME_BUFFER, guiSAVEBUFFER, 0, 0, 640, 480);
-}
 
-export function KillPreBattleInterface(): void {
-  if (!gfPreBattleInterfaceActive)
-    return;
+  export function KillPreBattleInterface(): void {
+    if (!gfPreBattleInterfaceActive) return;
 
-  fDisableMapInterfaceDueToBattle = false;
-  MSYS_RemoveRegion(PBInterfaceBlanket);
+    fDisableMapInterfaceDueToBattle = false;
+    MSYS_RemoveRegion(PBInterfaceBlanket);
 
-  // The panel
-  DeleteVideoObjectFromIndex(uiInterfaceImages);
+    // The panel
+    DeleteVideoObjectFromIndex(uiInterfaceImages);
 
-  // The 3 buttons
-  RemoveButton(iPBButton[0]);
-  RemoveButton(iPBButton[1]);
-  RemoveButton(iPBButton[2]);
-  UnloadButtonImage(iPBButtonImage[0]);
-  UnloadButtonImage(iPBButtonImage[1]);
-  UnloadButtonImage(iPBButtonImage[2]);
+    // The 3 buttons
+    RemoveButton(iPBButton[0]);
+    RemoveButton(iPBButton[1]);
+    RemoveButton(iPBButton[2]);
+    UnloadButtonImage(iPBButtonImage[0]);
+    UnloadButtonImage(iPBButtonImage[1]);
+    UnloadButtonImage(iPBButtonImage[2]);
 
-  /*
+    /*
   MSYS_RemoveRegion( &InvolvedRegion );
   if( guiNumUninvolved )
           MSYS_RemoveRegion( &UninvolvedRegion );
   */
 
-  gfPreBattleInterfaceActive = false;
+    gfPreBattleInterfaceActive = false;
 
-  // UpdateCharRegionHelpText( );
+    // UpdateCharRegionHelpText( );
 
-  // re draw affected regions
-  fMapPanelDirty = true;
-  fTeamPanelDirty = true;
-  fMapScreenBottomDirty = true;
-  fCharacterInfoPanelDirty = true;
-  gfDisplayPotentialRetreatPaths = false;
+    // re draw affected regions
+    fMapPanelDirty = true;
+    fTeamPanelDirty = true;
+    fMapScreenBottomDirty = true;
+    fCharacterInfoPanelDirty = true;
+    gfDisplayPotentialRetreatPaths = false;
 
-  // Enable the options button when the auto resolve  screen comes up
-  EnableDisAbleMapScreenOptionsButton(true);
+    // Enable the options button when the auto resolve  screen comes up
+    EnableDisAbleMapScreenOptionsButton(true);
 
-  ColorFillVideoSurfaceArea(guiSAVEBUFFER, 0, 0, 261, 359, 0);
+    ColorFillVideoSurfaceArea(guiSAVEBUFFER, 0, 0, 261, 359, 0);
 
-  EnableTeamInfoPanels();
-  if (ButtonList[giMapContractButton]) {
-    ShowButton(giMapContractButton);
+    EnableTeamInfoPanels();
+    if (ButtonList[giMapContractButton]) {
+      ShowButton(giMapContractButton);
+    }
+    if (ButtonList[giCharInfoButton[0]]) {
+      ShowButton(giCharInfoButton[0]);
+    }
+    if (ButtonList[giCharInfoButton[1]]) {
+      ShowButton(giCharInfoButton[1]);
+    }
   }
-  if (ButtonList[giCharInfoButton[0]]) {
-    ShowButton(giCharInfoButton[0]);
-  }
-  if (ButtonList[giCharInfoButton[1]]) {
-    ShowButton(giCharInfoButton[1]);
-  }
-}
 
-function RenderPBHeader(): { x: INT32, width: INT32 } {
-  let str: string /* UINT16[100] */ = '';
-  let x: INT32;
-  let width: INT32;
-  SetFont(FONT10ARIALBOLD());
-  if (gfBlinkHeader) {
-    if (GetJA2Clock() % 1000 < 667) {
-      SetFontForeground(FONT_WHITE);
+  function RenderPBHeader(): { x: INT32; width: INT32 } {
+    let str: string /* UINT16[100] */ = "";
+    let x: INT32;
+    let width: INT32;
+    SetFont(FONT10ARIALBOLD());
+    if (gfBlinkHeader) {
+      if (GetJA2Clock() % 1000 < 667) {
+        SetFontForeground(FONT_WHITE);
+      } else {
+        SetFontForeground(FONT_LTRED);
+      }
     } else {
-      SetFontForeground(FONT_LTRED);
+      SetFontForeground(FONT_BEIGE);
     }
-  } else {
-    SetFontForeground(FONT_BEIGE);
-  }
-  SetFontShadow(FONT_NEARBLACK);
-  if (!gfPersistantPBI) {
-    str = gzNonPersistantPBIText[8];
-  } else
-    switch (gubEnemyEncounterCode) {
-      case Enum164.ENEMY_INVASION_CODE:
-        str = gpStrategicString[Enum365.STR_PB_ENEMYINVASION_HEADER];
-        break;
-      case Enum164.ENEMY_ENCOUNTER_CODE:
-        str = gpStrategicString[Enum365.STR_PB_ENEMYENCOUNTER_HEADER];
-        break;
-      case Enum164.ENEMY_AMBUSH_CODE:
-        str = gpStrategicString[Enum365.STR_PB_ENEMYAMBUSH_HEADER];
-        gfBlinkHeader = true;
-        break;
-      case Enum164.ENTERING_ENEMY_SECTOR_CODE:
-        str = gpStrategicString[Enum365.STR_PB_ENTERINGENEMYSECTOR_HEADER];
-        break;
-      case Enum164.CREATURE_ATTACK_CODE:
-        str = gpStrategicString[Enum365.STR_PB_CREATUREATTACK_HEADER];
-        gfBlinkHeader = true;
-        break;
-      case Enum164.BLOODCAT_AMBUSH_CODE:
-        str = gpStrategicString[Enum365.STR_PB_BLOODCATAMBUSH_HEADER];
-        gfBlinkHeader = true;
-        break;
-      case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
-        str = gpStrategicString[Enum365.STR_PB_ENTERINGBLOODCATLAIR_HEADER];
-        break;
-    }
-  width = StringPixLength(str, FONT10ARIALBOLD());
-  x = 130 - Math.trunc(width / 2);
-  mprintf(x, 4, str);
-  InvalidateRegion(0, 0, 231, 12);
-
-  return { x, width };
-}
-
-export function RenderPreBattleInterface(): void {
-  let pGroup: GROUP | null;
-  let hVObject: SGPVObject;
-  let i: INT32;
-  let x: INT32;
-  let y: INT32;
-  let line: INT32;
-  let width: INT32;
-  let str: string /* UINT16[100] */;
-  let pSectorName: string /* UINT16[128] */;
-  let ubHPPercent: UINT8;
-  let ubBPPercent: UINT8;
-  let fMouseInRetreatButtonArea: boolean;
-  let ubJunk: UINT8;
-  let ubJunk__Pointer = createPointer(() => ubJunk, (v) => ubJunk = v);
-  // PLAYERGROUP *pPlayer;
-
-  // This code determines if the cursor is inside the rectangle consisting of the
-  // retreat button.  If it is inside, then we set up the variables so that the retreat
-  // arrows get drawn in the mapscreen.
-  if (ButtonList[iPBButton[2]].uiFlags & BUTTON_ENABLED) {
-    if (gusMouseXPos < gusRetreatButtonLeft || gusMouseXPos > gusRetreatButtonRight || gusMouseYPos < gusRetreatButtonTop || gusMouseYPos > gusRetreatButtonBottom)
-      fMouseInRetreatButtonArea = false;
-    else
-      fMouseInRetreatButtonArea = true;
-    if (fMouseInRetreatButtonArea != gfDisplayPotentialRetreatPaths) {
-      gfDisplayPotentialRetreatPaths = fMouseInRetreatButtonArea;
-      fMapPanelDirty = true;
-    }
-  }
-
-  if (gfRenderPBInterface) {
-    // set font destinanation buffer to the save buffer
-    SetFontDestBuffer(guiSAVEBUFFER, 0, 0, 640, 480, false);
-
-    if (gfPBButtonsHidden) {
-      ShowButton(iPBButton[0]);
-      ShowButton(iPBButton[1]);
-      ShowButton(iPBButton[2]);
-      gfPBButtonsHidden = false;
-    } else {
-      MarkAButtonDirty(iPBButton[0]);
-      MarkAButtonDirty(iPBButton[1]);
-      MarkAButtonDirty(iPBButton[2]);
-    }
-
-    gfRenderPBInterface = false;
-    hVObject = GetVideoObject(uiInterfaceImages);
-    // main panel
-    BltVideoObject(guiSAVEBUFFER, hVObject, Enum162.MAINPANEL, 0, 0, VO_BLT_SRCTRANSPARENCY, null);
-    // main title
-
-    ({ x, width } = RenderPBHeader());
-    // now draw the title bars up to the text.
-    for (i = x - 12; i > 20; i -= 10) {
-      BltVideoObject(guiSAVEBUFFER, hVObject, Enum162.TITLE_BAR_PIECE, i, 6, VO_BLT_SRCTRANSPARENCY, null);
-    }
-    for (i = x + width + 2; i < 231; i += 10) {
-      BltVideoObject(guiSAVEBUFFER, hVObject, Enum162.TITLE_BAR_PIECE, i, 6, VO_BLT_SRCTRANSPARENCY, null);
-    }
-
-    y = BOTTOM_Y - ACTUAL_HEIGHT - ROW_HEIGHT * Math.max(guiNumUninvolved, 1);
-    BltVideoObject(guiSAVEBUFFER, hVObject, Enum162.UNINVOLVED_HEADER, 8, y, VO_BLT_SRCTRANSPARENCY, null);
-
-    SetFont(BLOCKFONT());
-    SetFontForeground(FONT_BEIGE);
-    str = gpStrategicString[Enum365.STR_PB_LOCATION];
-    width = StringPixLength(str, BLOCKFONT());
-    if (width > 64) {
-      SetFont(BLOCKFONTNARROW());
-      width = StringPixLength(str, BLOCKFONTNARROW());
-    }
-    mprintf(65 - width, 17, str);
-
-    SetFont(BLOCKFONT());
-    if (gubEnemyEncounterCode != Enum164.CREATURE_ATTACK_CODE) {
-      str = gpStrategicString[Enum365.STR_PB_ENEMIES];
-    } else {
-      str = gpStrategicString[Enum365.STR_PB_CREATURES];
-    }
-    width = StringPixLength(str, BLOCKFONT());
-    if (width > 52) {
-      SetFont(BLOCKFONTNARROW());
-      width = StringPixLength(str, BLOCKFONTNARROW());
-    }
-    mprintf(54 - width, 38, str);
-
-    SetFont(BLOCKFONT());
-    str = gpStrategicString[Enum365.STR_PB_MERCS];
-    width = StringPixLength(str, BLOCKFONT());
-    if (width > 52) {
-      SetFont(BLOCKFONTNARROW());
-      width = StringPixLength(str, BLOCKFONTNARROW());
-    }
-    mprintf(139 - width, 38, str);
-
-    SetFont(BLOCKFONT());
-    str = gpStrategicString[Enum365.STR_PB_MILITIA];
-    width = StringPixLength(str, BLOCKFONT());
-    if (width > 52) {
-      SetFont(BLOCKFONTNARROW());
-      width = StringPixLength(str, BLOCKFONTNARROW());
-    }
-    mprintf(224 - width, 38, str);
-
-    // Draw the bottom columns
-    for (i = 0; i < Math.max(guiNumUninvolved, 1); i++) {
-      y = BOTTOM_Y - ROW_HEIGHT * (i + 1) + 1;
-      BltVideoObject(guiSAVEBUFFER, hVObject, Enum162.BOTTOM_COLUMN, 161, y, VO_BLT_SRCTRANSPARENCY, null);
-    }
-
-    for (i = 0; i < (21 - Math.max(guiNumUninvolved, 1)); i++) {
-      y = TOP_Y + ROW_HEIGHT * i;
-      BltVideoObject(guiSAVEBUFFER, hVObject, Enum162.TOP_COLUMN, 186, y, VO_BLT_SRCTRANSPARENCY, null);
-    }
-
-    // location
-    SetFont(FONT10ARIAL());
-    SetFontForeground(FONT_YELLOW);
     SetFontShadow(FONT_NEARBLACK);
+    if (!gfPersistantPBI) {
+      str = gzNonPersistantPBIText[8];
+    } else
+      switch (gubEnemyEncounterCode) {
+        case Enum164.ENEMY_INVASION_CODE:
+          str = gpStrategicString[Enum365.STR_PB_ENEMYINVASION_HEADER];
+          break;
+        case Enum164.ENEMY_ENCOUNTER_CODE:
+          str = gpStrategicString[Enum365.STR_PB_ENEMYENCOUNTER_HEADER];
+          break;
+        case Enum164.ENEMY_AMBUSH_CODE:
+          str = gpStrategicString[Enum365.STR_PB_ENEMYAMBUSH_HEADER];
+          gfBlinkHeader = true;
+          break;
+        case Enum164.ENTERING_ENEMY_SECTOR_CODE:
+          str = gpStrategicString[Enum365.STR_PB_ENTERINGENEMYSECTOR_HEADER];
+          break;
+        case Enum164.CREATURE_ATTACK_CODE:
+          str = gpStrategicString[Enum365.STR_PB_CREATUREATTACK_HEADER];
+          gfBlinkHeader = true;
+          break;
+        case Enum164.BLOODCAT_AMBUSH_CODE:
+          str = gpStrategicString[Enum365.STR_PB_BLOODCATAMBUSH_HEADER];
+          gfBlinkHeader = true;
+          break;
+        case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
+          str = gpStrategicString[Enum365.STR_PB_ENTERINGBLOODCATLAIR_HEADER];
+          break;
+      }
+    width = StringPixLength(str, FONT10ARIALBOLD());
+    x = 130 - Math.trunc(width / 2);
+    mprintf(x, 4, str);
+    InvalidateRegion(0, 0, 231, 12);
 
-    pSectorName = GetSectorIDString(gubPBSectorX, gubPBSectorY, gubPBSectorZ, true);
-    mprintf(70, 17, "%s %s", gpStrategicString[Enum365.STR_PB_SECTOR], pSectorName);
+    return { x, width };
+  }
 
-    // enemy
-    SetFont(FONT14ARIAL());
-    if (gubEnemyEncounterCode == Enum164.CREATURE_ATTACK_CODE || gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE || gubEnemyEncounterCode == Enum164.ENTERING_BLOODCAT_LAIR_CODE || WhatPlayerKnowsAboutEnemiesInSector(gubPBSectorX, gubPBSectorY) != Enum159.KNOWS_HOW_MANY) {
-      // don't know how many
-      str = "?";
-      SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)].bLastKnownEnemies = -2;
-    } else {
-      // know exactly how many
-      i = NumEnemiesInSector(gubPBSectorX, gubPBSectorY);
-      str = swprintf("%d", i);
-      SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)].bLastKnownEnemies = i;
-    }
-    x = 57 + Math.trunc((27 - StringPixLength(str, FONT14ARIAL())) / 2);
-    y = 36;
-    mprintf(x, y, str);
-    // player
-    str = swprintf("%d", guiNumInvolved);
-    x = 142 + Math.trunc((27 - StringPixLength(str, FONT14ARIAL())) / 2);
-    mprintf(x, y, str);
-    // militia
-    str = swprintf("%d", CountAllMilitiaInSector(gubPBSectorX, gubPBSectorY));
-    x = 227 + Math.trunc((27 - StringPixLength(str, FONT14ARIAL())) / 2);
-    mprintf(x, y, str);
-    SetFontShadow(FONT_NEARBLACK);
+  export function RenderPreBattleInterface(): void {
+    let pGroup: GROUP | null;
+    let hVObject: SGPVObject;
+    let i: INT32;
+    let x: INT32;
+    let y: INT32;
+    let line: INT32;
+    let width: INT32;
+    let str: string /* UINT16[100] */;
+    let pSectorName: string /* UINT16[128] */;
+    let ubHPPercent: UINT8;
+    let ubBPPercent: UINT8;
+    let fMouseInRetreatButtonArea: boolean;
+    let ubJunk: UINT8;
+    let ubJunk__Pointer = createPointer(
+      () => ubJunk,
+      (v) => (ubJunk = v),
+    );
+    // PLAYERGROUP *pPlayer;
 
-    SetFont(BLOCKFONT2());
-    SetFontForeground(FONT_YELLOW);
-
-    // print out the participants of the battle.
-    // |  NAME  | ASSIGN |  COND  |   HP   |   BP   |
-    line = 0;
-    y = TOP_Y + 1;
-    for (i = gTacticalStatus.Team[OUR_TEAM].bFirstID; i <= gTacticalStatus.Team[OUR_TEAM].bLastID; i++) {
-      if (MercPtrs[i].bActive && MercPtrs[i].bLife && !(MercPtrs[i].uiStatusFlags & SOLDIER_VEHICLE)) {
-        if (PlayerMercInvolvedInThisCombat(MercPtrs[i])) {
-          // involved
-          if (line == giHilitedInvolved)
-            SetFontForeground(FONT_WHITE);
-          else
-            SetFontForeground(FONT_YELLOW);
-          // NAME
-          str = MercPtrs[i].name;
-          x = 17 + Math.trunc((52 - StringPixLength(str, BLOCKFONT2())) / 2);
-          mprintf(x, y, str);
-          // ASSIGN
-          str = GetMapscreenMercAssignmentString(MercPtrs[i]);
-          x = 72 + Math.trunc((54 - StringPixLength(str, BLOCKFONT2())) / 2);
-          mprintf(x, y, str);
-          // COND
-          ({ szCondition: str, ubHPPercent, ubBPPercent } = GetSoldierConditionInfo(MercPtrs[i]));
-          x = 129 + Math.trunc((58 - StringPixLength(str, BLOCKFONT2())) / 2);
-          mprintf(x, y, str);
-          // HP
-          str = swprintf("%d%%", ubHPPercent);
-          x = 189 + Math.trunc((25 - StringPixLength(str, BLOCKFONT2())) / 2);
-          str += "%";
-          mprintf(x, y, str);
-          // BP
-          str = swprintf("%d%%", ubBPPercent);
-          x = 217 + Math.trunc((25 - StringPixLength(str, BLOCKFONT2())) / 2);
-          str += "%";
-          mprintf(x, y, str);
-
-          line++;
-          y += ROW_HEIGHT;
-        }
+    // This code determines if the cursor is inside the rectangle consisting of the
+    // retreat button.  If it is inside, then we set up the variables so that the retreat
+    // arrows get drawn in the mapscreen.
+    if (ButtonList[iPBButton[2]].uiFlags & BUTTON_ENABLED) {
+      if (
+        gusMouseXPos < gusRetreatButtonLeft ||
+        gusMouseXPos > gusRetreatButtonRight ||
+        gusMouseYPos < gusRetreatButtonTop ||
+        gusMouseYPos > gusRetreatButtonBottom
+      )
+        fMouseInRetreatButtonArea = false;
+      else fMouseInRetreatButtonArea = true;
+      if (fMouseInRetreatButtonArea != gfDisplayPotentialRetreatPaths) {
+        gfDisplayPotentialRetreatPaths = fMouseInRetreatButtonArea;
+        fMapPanelDirty = true;
       }
     }
 
-    // print out the uninvolved members of the battle
-    // |  NAME  | ASSIGN |  LOC   |  DEST  |  DEP   |
-    if (!guiNumUninvolved) {
+    if (gfRenderPBInterface) {
+      // set font destinanation buffer to the save buffer
+      SetFontDestBuffer(guiSAVEBUFFER, 0, 0, 640, 480, false);
+
+      if (gfPBButtonsHidden) {
+        ShowButton(iPBButton[0]);
+        ShowButton(iPBButton[1]);
+        ShowButton(iPBButton[2]);
+        gfPBButtonsHidden = false;
+      } else {
+        MarkAButtonDirty(iPBButton[0]);
+        MarkAButtonDirty(iPBButton[1]);
+        MarkAButtonDirty(iPBButton[2]);
+      }
+
+      gfRenderPBInterface = false;
+      hVObject = GetVideoObject(uiInterfaceImages);
+      // main panel
+      BltVideoObject(
+        guiSAVEBUFFER,
+        hVObject,
+        Enum162.MAINPANEL,
+        0,
+        0,
+        VO_BLT_SRCTRANSPARENCY,
+        null,
+      );
+      // main title
+
+      ({ x, width } = RenderPBHeader());
+      // now draw the title bars up to the text.
+      for (i = x - 12; i > 20; i -= 10) {
+        BltVideoObject(
+          guiSAVEBUFFER,
+          hVObject,
+          Enum162.TITLE_BAR_PIECE,
+          i,
+          6,
+          VO_BLT_SRCTRANSPARENCY,
+          null,
+        );
+      }
+      for (i = x + width + 2; i < 231; i += 10) {
+        BltVideoObject(
+          guiSAVEBUFFER,
+          hVObject,
+          Enum162.TITLE_BAR_PIECE,
+          i,
+          6,
+          VO_BLT_SRCTRANSPARENCY,
+          null,
+        );
+      }
+
+      y = BOTTOM_Y - ACTUAL_HEIGHT - ROW_HEIGHT * Math.max(guiNumUninvolved, 1);
+      BltVideoObject(
+        guiSAVEBUFFER,
+        hVObject,
+        Enum162.UNINVOLVED_HEADER,
+        8,
+        y,
+        VO_BLT_SRCTRANSPARENCY,
+        null,
+      );
+
+      SetFont(BLOCKFONT());
+      SetFontForeground(FONT_BEIGE);
+      str = gpStrategicString[Enum365.STR_PB_LOCATION];
+      width = StringPixLength(str, BLOCKFONT());
+      if (width > 64) {
+        SetFont(BLOCKFONTNARROW());
+        width = StringPixLength(str, BLOCKFONTNARROW());
+      }
+      mprintf(65 - width, 17, str);
+
+      SetFont(BLOCKFONT());
+      if (gubEnemyEncounterCode != Enum164.CREATURE_ATTACK_CODE) {
+        str = gpStrategicString[Enum365.STR_PB_ENEMIES];
+      } else {
+        str = gpStrategicString[Enum365.STR_PB_CREATURES];
+      }
+      width = StringPixLength(str, BLOCKFONT());
+      if (width > 52) {
+        SetFont(BLOCKFONTNARROW());
+        width = StringPixLength(str, BLOCKFONTNARROW());
+      }
+      mprintf(54 - width, 38, str);
+
+      SetFont(BLOCKFONT());
+      str = gpStrategicString[Enum365.STR_PB_MERCS];
+      width = StringPixLength(str, BLOCKFONT());
+      if (width > 52) {
+        SetFont(BLOCKFONTNARROW());
+        width = StringPixLength(str, BLOCKFONTNARROW());
+      }
+      mprintf(139 - width, 38, str);
+
+      SetFont(BLOCKFONT());
+      str = gpStrategicString[Enum365.STR_PB_MILITIA];
+      width = StringPixLength(str, BLOCKFONT());
+      if (width > 52) {
+        SetFont(BLOCKFONTNARROW());
+        width = StringPixLength(str, BLOCKFONTNARROW());
+      }
+      mprintf(224 - width, 38, str);
+
+      // Draw the bottom columns
+      for (i = 0; i < Math.max(guiNumUninvolved, 1); i++) {
+        y = BOTTOM_Y - ROW_HEIGHT * (i + 1) + 1;
+        BltVideoObject(
+          guiSAVEBUFFER,
+          hVObject,
+          Enum162.BOTTOM_COLUMN,
+          161,
+          y,
+          VO_BLT_SRCTRANSPARENCY,
+          null,
+        );
+      }
+
+      for (i = 0; i < 21 - Math.max(guiNumUninvolved, 1); i++) {
+        y = TOP_Y + ROW_HEIGHT * i;
+        BltVideoObject(
+          guiSAVEBUFFER,
+          hVObject,
+          Enum162.TOP_COLUMN,
+          186,
+          y,
+          VO_BLT_SRCTRANSPARENCY,
+          null,
+        );
+      }
+
+      // location
+      SetFont(FONT10ARIAL());
       SetFontForeground(FONT_YELLOW);
-      str = gpStrategicString[Enum365.STR_PB_NONE];
-      x = 17 + Math.trunc((52 - StringPixLength(str, BLOCKFONT2())) / 2);
-      y = BOTTOM_Y - ROW_HEIGHT + 2;
+      SetFontShadow(FONT_NEARBLACK);
+
+      pSectorName = GetSectorIDString(
+        gubPBSectorX,
+        gubPBSectorY,
+        gubPBSectorZ,
+        true,
+      );
+      mprintf(
+        70,
+        17,
+        "%s %s",
+        gpStrategicString[Enum365.STR_PB_SECTOR],
+        pSectorName,
+      );
+
+      // enemy
+      SetFont(FONT14ARIAL());
+      if (
+        gubEnemyEncounterCode == Enum164.CREATURE_ATTACK_CODE ||
+        gubEnemyEncounterCode == Enum164.BLOODCAT_AMBUSH_CODE ||
+        gubEnemyEncounterCode == Enum164.ENTERING_BLOODCAT_LAIR_CODE ||
+        WhatPlayerKnowsAboutEnemiesInSector(gubPBSectorX, gubPBSectorY) !=
+          Enum159.KNOWS_HOW_MANY
+      ) {
+        // don't know how many
+        str = "?";
+        SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)].bLastKnownEnemies = -2;
+      } else {
+        // know exactly how many
+        i = NumEnemiesInSector(gubPBSectorX, gubPBSectorY);
+        str = swprintf("%d", i);
+        SectorInfo[SECTOR(gubPBSectorX, gubPBSectorY)].bLastKnownEnemies = i;
+      }
+      x = 57 + Math.trunc((27 - StringPixLength(str, FONT14ARIAL())) / 2);
+      y = 36;
       mprintf(x, y, str);
-    } else {
-      pGroup = gpGroupList;
-      y = BOTTOM_Y - ROW_HEIGHT * guiNumUninvolved + 2;
-      for (i = gTacticalStatus.Team[OUR_TEAM].bFirstID; i <= gTacticalStatus.Team[OUR_TEAM].bLastID; i++) {
-        if (MercPtrs[i].bActive && MercPtrs[i].bLife && !(MercPtrs[i].uiStatusFlags & SOLDIER_VEHICLE)) {
-          if (!PlayerMercInvolvedInThisCombat(MercPtrs[i])) {
-            // uninvolved
-            if (line == giHilitedUninvolved)
-              SetFontForeground(FONT_WHITE);
-            else
-              SetFontForeground(FONT_YELLOW);
+      // player
+      str = swprintf("%d", guiNumInvolved);
+      x = 142 + Math.trunc((27 - StringPixLength(str, FONT14ARIAL())) / 2);
+      mprintf(x, y, str);
+      // militia
+      str = swprintf("%d", CountAllMilitiaInSector(gubPBSectorX, gubPBSectorY));
+      x = 227 + Math.trunc((27 - StringPixLength(str, FONT14ARIAL())) / 2);
+      mprintf(x, y, str);
+      SetFontShadow(FONT_NEARBLACK);
+
+      SetFont(BLOCKFONT2());
+      SetFontForeground(FONT_YELLOW);
+
+      // print out the participants of the battle.
+      // |  NAME  | ASSIGN |  COND  |   HP   |   BP   |
+      line = 0;
+      y = TOP_Y + 1;
+      for (
+        i = gTacticalStatus.Team[OUR_TEAM].bFirstID;
+        i <= gTacticalStatus.Team[OUR_TEAM].bLastID;
+        i++
+      ) {
+        if (
+          MercPtrs[i].bActive &&
+          MercPtrs[i].bLife &&
+          !(MercPtrs[i].uiStatusFlags & SOLDIER_VEHICLE)
+        ) {
+          if (PlayerMercInvolvedInThisCombat(MercPtrs[i])) {
+            // involved
+            if (line == giHilitedInvolved) SetFontForeground(FONT_WHITE);
+            else SetFontForeground(FONT_YELLOW);
             // NAME
             str = MercPtrs[i].name;
             x = 17 + Math.trunc((52 - StringPixLength(str, BLOCKFONT2())) / 2);
@@ -913,220 +1119,343 @@ export function RenderPreBattleInterface(): void {
             str = GetMapscreenMercAssignmentString(MercPtrs[i]);
             x = 72 + Math.trunc((54 - StringPixLength(str, BLOCKFONT2())) / 2);
             mprintf(x, y, str);
-            // LOC
-            str = GetMapscreenMercLocationString(MercPtrs[i]);
-            x = 128 + Math.trunc((33 - StringPixLength(str, BLOCKFONT2())) / 2);
+            // COND
+            ({
+              szCondition: str,
+              ubHPPercent,
+              ubBPPercent,
+            } = GetSoldierConditionInfo(MercPtrs[i]));
+            x = 129 + Math.trunc((58 - StringPixLength(str, BLOCKFONT2())) / 2);
             mprintf(x, y, str);
-            // DEST
-            str = GetMapscreenMercDestinationString(MercPtrs[i]);
-            if (str.length > 0) {
-              x = 164 + Math.trunc((41 - StringPixLength(str, BLOCKFONT2())) / 2);
-              mprintf(x, y, str);
-            }
-            // DEP
-            str = GetMapscreenMercDepartureString(MercPtrs[i], ubJunk__Pointer);
-            x = 208 + Math.trunc((34 - StringPixLength(str, BLOCKFONT2())) / 2);
+            // HP
+            str = swprintf("%d%%", ubHPPercent);
+            x = 189 + Math.trunc((25 - StringPixLength(str, BLOCKFONT2())) / 2);
+            str += "%";
             mprintf(x, y, str);
+            // BP
+            str = swprintf("%d%%", ubBPPercent);
+            x = 217 + Math.trunc((25 - StringPixLength(str, BLOCKFONT2())) / 2);
+            str += "%";
+            mprintf(x, y, str);
+
             line++;
             y += ROW_HEIGHT;
           }
         }
       }
-    }
 
-    // mark any and ALL pop up boxes as altered
-    MarkAllBoxesAsAltered();
-    RestoreExternBackgroundRect(0, 0, 261, 359);
-
-    // restore font destinanation buffer to the frame buffer
-    SetFontDestBuffer(FRAME_BUFFER, 0, 0, 640, 480, false);
-  } else if (gfBlinkHeader) {
-    ({ x, width } = RenderPBHeader()); // the text is important enough to blink.
-  }
-
-  // InvalidateRegion( 0, 0, 261, 359 );
-  if (gfEnterAutoResolveMode) {
-    gfEnterAutoResolveMode = false;
-    EnterAutoResolveMode(gubPBSectorX, gubPBSectorY);
-    // return;
-  }
-
-  gfIgnoreAllInput = false;
-}
-
-function AutoResolveBattleCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (!gfIgnoreAllInput) {
-    if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
-      if (_KeyDown(ALT) && CHEATER_CHEAT_LEVEL())
-      {
-        if (!gfPersistantPBI) {
-          return;
-        }
-        PlayJA2Sample(Enum330.EXPLOSION_1, RATE_11025, HIGHVOLUME, 1, MIDDLEPAN);
-        gStrategicStatus.usPlayerKills += NumEnemiesInSector(gubPBSectorX, gubPBSectorY);
-        EliminateAllEnemies(gubPBSectorX, gubPBSectorY);
-        SetMusicMode(Enum328.MUSIC_TACTICAL_VICTORY);
-        btn.uiFlags &= ~BUTTON_CLICKED_ON;
-        DrawButton(btn.IDNum);
-        InvalidateRegion(btn.Area.RegionTopLeftX, btn.Area.RegionTopLeftY, btn.Area.RegionBottomRightX, btn.Area.RegionBottomRightY);
-        ExecuteBaseDirtyRectQueue();
-        EndFrameBufferRender();
-        RefreshScreen();
-        KillPreBattleInterface();
-        StopTimeCompression();
-        SetMusicMode(Enum328.MUSIC_TACTICAL_NOTHING);
-        return;
-      }
-      gfEnterAutoResolveMode = true;
-    }
-  }
-}
-
-function GoToSectorCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (!gfIgnoreAllInput) {
-    if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
-      if (_KeyDown(ALT) && CHEATER_CHEAT_LEVEL())
-      {
-        if (!gfPersistantPBI) {
-          return;
-        }
-        PlayJA2Sample(Enum330.EXPLOSION_1, RATE_11025, HIGHVOLUME, 1, MIDDLEPAN);
-        gStrategicStatus.usPlayerKills += NumEnemiesInSector(gubPBSectorX, gubPBSectorY);
-        EliminateAllEnemies(gubPBSectorX, gubPBSectorY);
-        SetMusicMode(Enum328.MUSIC_TACTICAL_VICTORY);
-        btn.uiFlags &= ~BUTTON_CLICKED_ON;
-        DrawButton(btn.IDNum);
-        InvalidateRegion(btn.Area.RegionTopLeftX, btn.Area.RegionTopLeftY, btn.Area.RegionBottomRightX, btn.Area.RegionBottomRightY);
-        ExecuteBaseDirtyRectQueue();
-        EndFrameBufferRender();
-        RefreshScreen();
-        KillPreBattleInterface();
-        StopTimeCompression();
-        SetMusicMode(Enum328.MUSIC_TACTICAL_NOTHING);
-        return;
-      }
-      if (gfPersistantPBI && gpBattleGroup && gpBattleGroup.fPlayer && gubEnemyEncounterCode != Enum164.ENEMY_AMBUSH_CODE && gubEnemyEncounterCode != Enum164.CREATURE_ATTACK_CODE && gubEnemyEncounterCode != Enum164.BLOODCAT_AMBUSH_CODE) {
-        gfEnterTacticalPlacementGUI = true;
-      }
-      btn.uiFlags &= ~BUTTON_CLICKED_ON;
-      DrawButton(btn.IDNum);
-      InvalidateRegion(btn.Area.RegionTopLeftX, btn.Area.RegionTopLeftY, btn.Area.RegionBottomRightX, btn.Area.RegionBottomRightY);
-      ExecuteBaseDirtyRectQueue();
-      EndFrameBufferRender();
-      RefreshScreen();
-      if (gubPBSectorX == gWorldSectorX && gubPBSectorY == gWorldSectorY && !gbWorldSectorZ) {
-        gfGotoSectorTransition = true;
-      }
-
-      // first time going to the sector?
-      if (gfPersistantPBI) {
-        // put everyone on duty, and remove mercs from vehicles, too
-        PutNonSquadMercsInBattleSectorOnSquads(true);
-
-        // we nuke the groups existing route & destination in advance
-        ClearMovementForAllInvolvedPlayerGroups();
+      // print out the uninvolved members of the battle
+      // |  NAME  | ASSIGN |  LOC   |  DEST  |  DEP   |
+      if (!guiNumUninvolved) {
+        SetFontForeground(FONT_YELLOW);
+        str = gpStrategicString[Enum365.STR_PB_NONE];
+        x = 17 + Math.trunc((52 - StringPixLength(str, BLOCKFONT2())) / 2);
+        y = BOTTOM_Y - ROW_HEIGHT + 2;
+        mprintf(x, y, str);
       } else {
-        // Clear the battlegroup pointer.
-        gpBattleGroup = null;
+        pGroup = gpGroupList;
+        y = BOTTOM_Y - ROW_HEIGHT * guiNumUninvolved + 2;
+        for (
+          i = gTacticalStatus.Team[OUR_TEAM].bFirstID;
+          i <= gTacticalStatus.Team[OUR_TEAM].bLastID;
+          i++
+        ) {
+          if (
+            MercPtrs[i].bActive &&
+            MercPtrs[i].bLife &&
+            !(MercPtrs[i].uiStatusFlags & SOLDIER_VEHICLE)
+          ) {
+            if (!PlayerMercInvolvedInThisCombat(MercPtrs[i])) {
+              // uninvolved
+              if (line == giHilitedUninvolved) SetFontForeground(FONT_WHITE);
+              else SetFontForeground(FONT_YELLOW);
+              // NAME
+              str = MercPtrs[i].name;
+              x =
+                17 + Math.trunc((52 - StringPixLength(str, BLOCKFONT2())) / 2);
+              mprintf(x, y, str);
+              // ASSIGN
+              str = GetMapscreenMercAssignmentString(MercPtrs[i]);
+              x =
+                72 + Math.trunc((54 - StringPixLength(str, BLOCKFONT2())) / 2);
+              mprintf(x, y, str);
+              // LOC
+              str = GetMapscreenMercLocationString(MercPtrs[i]);
+              x =
+                128 + Math.trunc((33 - StringPixLength(str, BLOCKFONT2())) / 2);
+              mprintf(x, y, str);
+              // DEST
+              str = GetMapscreenMercDestinationString(MercPtrs[i]);
+              if (str.length > 0) {
+                x =
+                  164 +
+                  Math.trunc((41 - StringPixLength(str, BLOCKFONT2())) / 2);
+                mprintf(x, y, str);
+              }
+              // DEP
+              str = GetMapscreenMercDepartureString(
+                MercPtrs[i],
+                ubJunk__Pointer,
+              );
+              x =
+                208 + Math.trunc((34 - StringPixLength(str, BLOCKFONT2())) / 2);
+              mprintf(x, y, str);
+              line++;
+              y += ROW_HEIGHT;
+            }
+          }
+        }
       }
 
-      // must come AFTER anything that needs gpBattleGroup, as it wipes it out
-      SetCurrentWorldSector(gubPBSectorX, gubPBSectorY, gubPBSectorZ);
+      // mark any and ALL pop up boxes as altered
+      MarkAllBoxesAsAltered();
+      RestoreExternBackgroundRect(0, 0, 261, 359);
 
-      KillPreBattleInterface();
-      SetTacticalInterfaceFlags(0);
+      // restore font destinanation buffer to the frame buffer
+      SetFontDestBuffer(FRAME_BUFFER, 0, 0, 640, 480, false);
+    } else if (gfBlinkHeader) {
+      ({ x, width } = RenderPBHeader()); // the text is important enough to blink.
     }
+
+    // InvalidateRegion( 0, 0, 261, 359 );
+    if (gfEnterAutoResolveMode) {
+      gfEnterAutoResolveMode = false;
+      EnterAutoResolveMode(gubPBSectorX, gubPBSectorY);
+      // return;
+    }
+
+    gfIgnoreAllInput = false;
   }
-}
 
-function RetreatMercsCallback(btn: GUI_BUTTON, reason: INT32): void {
-  if (!gfIgnoreAllInput) {
-    if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
-      // get them outta here!
-      RetreatAllInvolvedPlayerGroups();
-
-      // NOTE: this code assumes you can never retreat while underground
-      HandleLoyaltyImplicationsOfMercRetreat(RETREAT_PBI, gubPBSectorX, gubPBSectorY, 0);
-      if (CountAllMilitiaInSector(gubPBSectorX, gubPBSectorY)) {
-        // Mercs retreat, but enemies still need to fight the militia
+  function AutoResolveBattleCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (!gfIgnoreAllInput) {
+      if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
+        if (_KeyDown(ALT) && CHEATER_CHEAT_LEVEL()) {
+          if (!gfPersistantPBI) {
+            return;
+          }
+          PlayJA2Sample(
+            Enum330.EXPLOSION_1,
+            RATE_11025,
+            HIGHVOLUME,
+            1,
+            MIDDLEPAN,
+          );
+          gStrategicStatus.usPlayerKills += NumEnemiesInSector(
+            gubPBSectorX,
+            gubPBSectorY,
+          );
+          EliminateAllEnemies(gubPBSectorX, gubPBSectorY);
+          SetMusicMode(Enum328.MUSIC_TACTICAL_VICTORY);
+          btn.uiFlags &= ~BUTTON_CLICKED_ON;
+          DrawButton(btn.IDNum);
+          InvalidateRegion(
+            btn.Area.RegionTopLeftX,
+            btn.Area.RegionTopLeftY,
+            btn.Area.RegionBottomRightX,
+            btn.Area.RegionBottomRightY,
+          );
+          ExecuteBaseDirtyRectQueue();
+          EndFrameBufferRender();
+          RefreshScreen();
+          KillPreBattleInterface();
+          StopTimeCompression();
+          SetMusicMode(Enum328.MUSIC_TACTICAL_NOTHING);
+          return;
+        }
         gfEnterAutoResolveMode = true;
-        return;
       }
-
-      // Warp time by 5 minutes so that player can't just go back into the sector he left.
-      WarpGameTime(300, Enum131.WARPTIME_NO_PROCESSING_OF_EVENTS);
-      ResetMovementForEnemyGroupsInLocation(gubPBSectorX, gubPBSectorY);
-
-      btn.uiFlags &= ~BUTTON_CLICKED_ON;
-      DrawButton(btn.IDNum);
-      InvalidateRegion(btn.Area.RegionTopLeftX, btn.Area.RegionTopLeftY, btn.Area.RegionBottomRightX, btn.Area.RegionBottomRightY);
-      ExecuteBaseDirtyRectQueue();
-      EndFrameBufferRender();
-      RefreshScreen();
-      KillPreBattleInterface();
-      StopTimeCompression();
-      gpBattleGroup = null;
-      gfBlitBattleSectorLocator = false;
-
-      SetMusicMode(Enum328.MUSIC_TACTICAL_NOTHING);
     }
   }
-}
 
-const enum Enum163 {
-  COND_EXCELLENT,
-  COND_GOOD,
-  COND_FAIR,
-  COND_WOUNDED,
-  COND_FATIGUED,
-  COND_BLEEDING,
-  COND_UNCONCIOUS,
-  COND_DYING,
-  COND_DEAD,
-}
+  function GoToSectorCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (!gfIgnoreAllInput) {
+      if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
+        if (_KeyDown(ALT) && CHEATER_CHEAT_LEVEL()) {
+          if (!gfPersistantPBI) {
+            return;
+          }
+          PlayJA2Sample(
+            Enum330.EXPLOSION_1,
+            RATE_11025,
+            HIGHVOLUME,
+            1,
+            MIDDLEPAN,
+          );
+          gStrategicStatus.usPlayerKills += NumEnemiesInSector(
+            gubPBSectorX,
+            gubPBSectorY,
+          );
+          EliminateAllEnemies(gubPBSectorX, gubPBSectorY);
+          SetMusicMode(Enum328.MUSIC_TACTICAL_VICTORY);
+          btn.uiFlags &= ~BUTTON_CLICKED_ON;
+          DrawButton(btn.IDNum);
+          InvalidateRegion(
+            btn.Area.RegionTopLeftX,
+            btn.Area.RegionTopLeftY,
+            btn.Area.RegionBottomRightX,
+            btn.Area.RegionBottomRightY,
+          );
+          ExecuteBaseDirtyRectQueue();
+          EndFrameBufferRender();
+          RefreshScreen();
+          KillPreBattleInterface();
+          StopTimeCompression();
+          SetMusicMode(Enum328.MUSIC_TACTICAL_NOTHING);
+          return;
+        }
+        if (
+          gfPersistantPBI &&
+          gpBattleGroup &&
+          gpBattleGroup.fPlayer &&
+          gubEnemyEncounterCode != Enum164.ENEMY_AMBUSH_CODE &&
+          gubEnemyEncounterCode != Enum164.CREATURE_ATTACK_CODE &&
+          gubEnemyEncounterCode != Enum164.BLOODCAT_AMBUSH_CODE
+        ) {
+          gfEnterTacticalPlacementGUI = true;
+        }
+        btn.uiFlags &= ~BUTTON_CLICKED_ON;
+        DrawButton(btn.IDNum);
+        InvalidateRegion(
+          btn.Area.RegionTopLeftX,
+          btn.Area.RegionTopLeftY,
+          btn.Area.RegionBottomRightX,
+          btn.Area.RegionBottomRightY,
+        );
+        ExecuteBaseDirtyRectQueue();
+        EndFrameBufferRender();
+        RefreshScreen();
+        if (
+          gubPBSectorX == gWorldSectorX &&
+          gubPBSectorY == gWorldSectorY &&
+          !gbWorldSectorZ
+        ) {
+          gfGotoSectorTransition = true;
+        }
 
-function GetSoldierConditionInfo(pSoldier: SOLDIERTYPE): { szCondition: string, ubHPPercent: UINT8, ubBPPercent: UINT8 } {
-  let szCondition: string;
-  let ubHPPercent: UINT8;
-  let ubBPPercent: UINT8;
+        // first time going to the sector?
+        if (gfPersistantPBI) {
+          // put everyone on duty, and remove mercs from vehicles, too
+          PutNonSquadMercsInBattleSectorOnSquads(true);
 
-  Assert(pSoldier);
-  ubHPPercent = Math.trunc(pSoldier.bLife * 100 / pSoldier.bLifeMax);
-  ubBPPercent = pSoldier.bBreath;
-  // Go from the worst condition to the best.
-  if (!pSoldier.bLife) {
-    // 0 life
-    szCondition = pConditionStrings[Enum163.COND_DEAD];
-  } else if (pSoldier.bLife < OKLIFE && pSoldier.bBleeding) {
-    // life less than OKLIFE and bleeding
-    szCondition = pConditionStrings[Enum163.COND_DYING];
-  } else if (pSoldier.bBreath < OKBREATH && pSoldier.bCollapsed) {
-    // breath less than OKBREATH
-    szCondition = pConditionStrings[Enum163.COND_UNCONCIOUS];
-  } else if (pSoldier.bBleeding > MIN_BLEEDING_THRESHOLD) {
-    // bleeding
-    szCondition = pConditionStrings[Enum163.COND_BLEEDING];
-  } else if (pSoldier.bLife * 100 < pSoldier.bLifeMax * 50) {
-    // less than 50% life
-    szCondition = pConditionStrings[Enum163.COND_WOUNDED];
-  } else if (pSoldier.bBreath < 50) {
-    // breath less than half
-    szCondition = pConditionStrings[Enum163.COND_FATIGUED];
-  } else if (pSoldier.bLife * 100 < pSoldier.bLifeMax * 67) {
-    // less than 67% life
-    szCondition = pConditionStrings[Enum163.COND_FAIR];
-  } else if (pSoldier.bLife * 100 < pSoldier.bLifeMax * 86) {
-    // less than 86% life
-    szCondition = pConditionStrings[Enum163.COND_GOOD];
-  } else {
-    // 86%+ life
-    szCondition = pConditionStrings[Enum163.COND_EXCELLENT];
+          // we nuke the groups existing route & destination in advance
+          ClearMovementForAllInvolvedPlayerGroups();
+        } else {
+          // Clear the battlegroup pointer.
+          gpBattleGroup = null;
+        }
+
+        // must come AFTER anything that needs gpBattleGroup, as it wipes it out
+        SetCurrentWorldSector(gubPBSectorX, gubPBSectorY, gubPBSectorZ);
+
+        KillPreBattleInterface();
+        SetTacticalInterfaceFlags(0);
+      }
+    }
   }
 
-  return { szCondition, ubHPPercent, ubBPPercent };
-}
+  function RetreatMercsCallback(btn: GUI_BUTTON, reason: INT32): void {
+    if (!gfIgnoreAllInput) {
+      if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
+        // get them outta here!
+        RetreatAllInvolvedPlayerGroups();
 
-/*
+        // NOTE: this code assumes you can never retreat while underground
+        HandleLoyaltyImplicationsOfMercRetreat(
+          RETREAT_PBI,
+          gubPBSectorX,
+          gubPBSectorY,
+          0,
+        );
+        if (CountAllMilitiaInSector(gubPBSectorX, gubPBSectorY)) {
+          // Mercs retreat, but enemies still need to fight the militia
+          gfEnterAutoResolveMode = true;
+          return;
+        }
+
+        // Warp time by 5 minutes so that player can't just go back into the sector he left.
+        WarpGameTime(300, Enum131.WARPTIME_NO_PROCESSING_OF_EVENTS);
+        ResetMovementForEnemyGroupsInLocation(gubPBSectorX, gubPBSectorY);
+
+        btn.uiFlags &= ~BUTTON_CLICKED_ON;
+        DrawButton(btn.IDNum);
+        InvalidateRegion(
+          btn.Area.RegionTopLeftX,
+          btn.Area.RegionTopLeftY,
+          btn.Area.RegionBottomRightX,
+          btn.Area.RegionBottomRightY,
+        );
+        ExecuteBaseDirtyRectQueue();
+        EndFrameBufferRender();
+        RefreshScreen();
+        KillPreBattleInterface();
+        StopTimeCompression();
+        gpBattleGroup = null;
+        gfBlitBattleSectorLocator = false;
+
+        SetMusicMode(Enum328.MUSIC_TACTICAL_NOTHING);
+      }
+    }
+  }
+
+  const enum Enum163 {
+    COND_EXCELLENT,
+    COND_GOOD,
+    COND_FAIR,
+    COND_WOUNDED,
+    COND_FATIGUED,
+    COND_BLEEDING,
+    COND_UNCONCIOUS,
+    COND_DYING,
+    COND_DEAD,
+  }
+
+  function GetSoldierConditionInfo(pSoldier: SOLDIERTYPE): {
+    szCondition: string;
+    ubHPPercent: UINT8;
+    ubBPPercent: UINT8;
+  } {
+    let szCondition: string;
+    let ubHPPercent: UINT8;
+    let ubBPPercent: UINT8;
+
+    Assert(pSoldier);
+    ubHPPercent = Math.trunc((pSoldier.bLife * 100) / pSoldier.bLifeMax);
+    ubBPPercent = pSoldier.bBreath;
+    // Go from the worst condition to the best.
+    if (!pSoldier.bLife) {
+      // 0 life
+      szCondition = pConditionStrings[Enum163.COND_DEAD];
+    } else if (pSoldier.bLife < OKLIFE && pSoldier.bBleeding) {
+      // life less than OKLIFE and bleeding
+      szCondition = pConditionStrings[Enum163.COND_DYING];
+    } else if (pSoldier.bBreath < OKBREATH && pSoldier.bCollapsed) {
+      // breath less than OKBREATH
+      szCondition = pConditionStrings[Enum163.COND_UNCONCIOUS];
+    } else if (pSoldier.bBleeding > MIN_BLEEDING_THRESHOLD) {
+      // bleeding
+      szCondition = pConditionStrings[Enum163.COND_BLEEDING];
+    } else if (pSoldier.bLife * 100 < pSoldier.bLifeMax * 50) {
+      // less than 50% life
+      szCondition = pConditionStrings[Enum163.COND_WOUNDED];
+    } else if (pSoldier.bBreath < 50) {
+      // breath less than half
+      szCondition = pConditionStrings[Enum163.COND_FATIGUED];
+    } else if (pSoldier.bLife * 100 < pSoldier.bLifeMax * 67) {
+      // less than 67% life
+      szCondition = pConditionStrings[Enum163.COND_FAIR];
+    } else if (pSoldier.bLife * 100 < pSoldier.bLifeMax * 86) {
+      // less than 86% life
+      szCondition = pConditionStrings[Enum163.COND_GOOD];
+    } else {
+      // 86%+ life
+      szCondition = pConditionStrings[Enum163.COND_EXCELLENT];
+    }
+
+    return { szCondition, ubHPPercent, ubBPPercent };
+  }
+
+  /*
 void InvolvedMoveCallback( MOUSE_REGION *reg, INT32 reason )
 {
         gfRenderPBInterface = TRUE;
@@ -1260,362 +1589,530 @@ SOLDIERTYPE* UninvolvedSoldier( INT32 index )
 }
 */
 
-export function ActivatePreBattleAutoresolveAction(): void {
-  if (ButtonList[iPBButton[0]].uiFlags & BUTTON_ENABLED) {
-    // Feign call the autoresolve button using the callback
-    AutoResolveBattleCallback(ButtonList[iPBButton[0]], MSYS_CALLBACK_REASON_LBUTTON_UP);
-  }
-}
-
-export function ActivatePreBattleEnterSectorAction(): void {
-  if (ButtonList[iPBButton[1]].uiFlags & BUTTON_ENABLED) {
-    // Feign call the enter sector button using the callback
-    GoToSectorCallback(ButtonList[iPBButton[1]], MSYS_CALLBACK_REASON_LBUTTON_UP);
-  }
-}
-
-export function ActivatePreBattleRetreatAction(): void {
-  if (ButtonList[iPBButton[2]].uiFlags & BUTTON_ENABLED) {
-    // Feign call the retreat button using the callback
-    RetreatMercsCallback(ButtonList[iPBButton[2]], MSYS_CALLBACK_REASON_LBUTTON_UP);
-  }
-}
-
-function ActivateAutomaticAutoResolveStart(): void {
-  ButtonList[iPBButton[0]].uiFlags |= BUTTON_CLICKED_ON;
-  gfIgnoreAllInput = false;
-  AutoResolveBattleCallback(ButtonList[iPBButton[0]], MSYS_CALLBACK_REASON_LBUTTON_UP);
-}
-
-export function CalculateNonPersistantPBIInfo(): void {
-  // We need to set up the non-persistant PBI
-  if (!gfBlitBattleSectorLocator || gubPBSectorX != gWorldSectorX || gubPBSectorY != gWorldSectorY || gubPBSectorZ != gbWorldSectorZ) {
-    // Either the locator isn't on or the locator info is in a different sector
-
-    // Calculated the encounter type
-    gubEnemyEncounterCode = Enum164.NO_ENCOUNTER_CODE;
-    gubExplicitEnemyEncounterCode = Enum164.NO_ENCOUNTER_CODE;
-    if (HostileCiviliansPresent()) {
-      // There are hostile civilians, so no autoresolve allowed.
-      gubExplicitEnemyEncounterCode = Enum164.HOSTILE_CIVILIANS_CODE;
-    } else if (HostileBloodcatsPresent()) {
-      // There are bloodcats in the sector, so no autoresolve allowed
-      gubExplicitEnemyEncounterCode = Enum164.HOSTILE_BLOODCATS_CODE;
-    } else if (gbWorldSectorZ) {
-      let pSector: UNDERGROUND_SECTORINFO | null = FindUnderGroundSector(gWorldSectorX, gWorldSectorY, gbWorldSectorZ);
-      Assert(pSector);
-      if (pSector.ubCreaturesInBattle) {
-        gubExplicitEnemyEncounterCode = Enum164.FIGHTING_CREATURES_CODE;
-      } else if (pSector.ubAdminsInBattle || pSector.ubTroopsInBattle || pSector.ubElitesInBattle) {
-        gubExplicitEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
-        gubEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
-      }
-    } else {
-      let pSector: SECTORINFO = SectorInfo[SECTOR(gWorldSectorX, gWorldSectorY)];
-      Assert(pSector);
-      if (pSector.ubCreaturesInBattle) {
-        gubExplicitEnemyEncounterCode = Enum164.FIGHTING_CREATURES_CODE;
-      } else if (pSector.ubAdminsInBattle || pSector.ubTroopsInBattle || pSector.ubElitesInBattle) {
-        gubExplicitEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
-        gubEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
-      }
-    }
-    if (gubExplicitEnemyEncounterCode != Enum164.NO_ENCOUNTER_CODE) {
-      // Set up the location as well as turning on the blit flag.
-      gubPBSectorX = gWorldSectorX;
-      gubPBSectorY = gWorldSectorY;
-      gubPBSectorZ = gbWorldSectorZ;
-      gfBlitBattleSectorLocator = true;
-    }
-  }
-}
-
-function ClearNonPersistantPBIInfo(): void {
-  gfBlitBattleSectorLocator = false;
-}
-
-function PutNonSquadMercsInBattleSectorOnSquads(fExitVehicles: boolean): void {
-  let pGroup: GROUP | null;
-  let pNextGroup: GROUP | null;
-
-  // IMPORTANT: Have to do this by group, so everyone inside vehicles gets assigned to the same squad.  Needed for
-  // the tactical placement interface to work in case of simultaneous multi-vehicle arrivals!
-
-  pGroup = gpGroupList;
-  while (pGroup) {
-    // store ptr to next group in list, temporary groups will get deallocated as soon as the merc in it is put on a squad!
-    pNextGroup = pGroup.next;
-
-    if (PlayerGroupInvolvedInThisCombat(pGroup)) {
-      // the helicopter group CAN be involved, if it's on the ground, in which case everybody must get out of it
-      if (IsGroupTheHelicopterGroup(pGroup)) {
-        // only happens if chopper is on the ground...
-        Assert(!fHelicopterIsAirBorne);
-
-        // put anyone in it into movement group
-        MoveAllInHelicopterToFootMovementGroup();
-      } else {
-        PutNonSquadMercsInPlayerGroupOnSquads(pGroup, fExitVehicles);
-      }
-    }
-
-    pGroup = pNextGroup;
-  }
-}
-
-function PutNonSquadMercsInPlayerGroupOnSquads(pGroup: GROUP, fExitVehicles: boolean): void {
-  let pPlayer: PLAYERGROUP | null;
-  let pNextPlayer: PLAYERGROUP | null;
-  let pSoldier: SOLDIERTYPE;
-  let bUniqueVehicleSquad: INT8 = -1;
-  let fSuccess: boolean = <boolean><unknown>undefined;
-
-  if (pGroup.fVehicle) {
-    // put these guys on their own squad (we need to return their group ID, and can only return one, so they need a unique one
-    bUniqueVehicleSquad = GetFirstEmptySquad();
-    if (bUniqueVehicleSquad == -1) {
-      return;
+  export function ActivatePreBattleAutoresolveAction(): void {
+    if (ButtonList[iPBButton[0]].uiFlags & BUTTON_ENABLED) {
+      // Feign call the autoresolve button using the callback
+      AutoResolveBattleCallback(
+        ButtonList[iPBButton[0]],
+        MSYS_CALLBACK_REASON_LBUTTON_UP,
+      );
     }
   }
 
-  pPlayer = pGroup.pPlayerList;
+  export function ActivatePreBattleEnterSectorAction(): void {
+    if (ButtonList[iPBButton[1]].uiFlags & BUTTON_ENABLED) {
+      // Feign call the enter sector button using the callback
+      GoToSectorCallback(
+        ButtonList[iPBButton[1]],
+        MSYS_CALLBACK_REASON_LBUTTON_UP,
+      );
+    }
+  }
 
-  while (pPlayer) {
-    pSoldier = pPlayer.pSoldier;
-    Assert(pSoldier);
+  export function ActivatePreBattleRetreatAction(): void {
+    if (ButtonList[iPBButton[2]].uiFlags & BUTTON_ENABLED) {
+      // Feign call the retreat button using the callback
+      RetreatMercsCallback(
+        ButtonList[iPBButton[2]],
+        MSYS_CALLBACK_REASON_LBUTTON_UP,
+      );
+    }
+  }
 
-    // store ptr to next soldier in group, once removed from group, his info will get memfree'd!
-    pNextPlayer = pPlayer.next;
+  function ActivateAutomaticAutoResolveStart(): void {
+    ButtonList[iPBButton[0]].uiFlags |= BUTTON_CLICKED_ON;
+    gfIgnoreAllInput = false;
+    AutoResolveBattleCallback(
+      ButtonList[iPBButton[0]],
+      MSYS_CALLBACK_REASON_LBUTTON_UP,
+    );
+  }
 
-    if (pSoldier.bActive && pSoldier.bLife && !(pSoldier.uiStatusFlags & SOLDIER_VEHICLE)) {
-      // if involved, but off-duty (includes mercs inside vehicles!)
-      if (PlayerMercInvolvedInThisCombat(pSoldier) && (pSoldier.bAssignment >= Enum117.ON_DUTY)) {
-        // if in a vehicle, pull him out
-        if (pSoldier.bAssignment == Enum117.VEHICLE) {
-          if (fExitVehicles) {
-            TakeSoldierOutOfVehicle(pSoldier);
+  export function CalculateNonPersistantPBIInfo(): void {
+    // We need to set up the non-persistant PBI
+    if (
+      !gfBlitBattleSectorLocator ||
+      gubPBSectorX != gWorldSectorX ||
+      gubPBSectorY != gWorldSectorY ||
+      gubPBSectorZ != gbWorldSectorZ
+    ) {
+      // Either the locator isn't on or the locator info is in a different sector
 
-            // put them on the unique squad assigned to people leaving this vehicle.  Can't add them to existing squads,
-            // because if this is a simultaneous group attack, the mercs could be coming from different sides, and the
-            // placement screen can't handle mercs on the same squad arriving from difference edges!
-            fSuccess = AddCharacterToSquad(pSoldier, bUniqueVehicleSquad);
-          }
-        } else {
-          // add him to ANY on duty foot squad
-          fSuccess = AddCharacterToAnySquad(pSoldier);
+      // Calculated the encounter type
+      gubEnemyEncounterCode = Enum164.NO_ENCOUNTER_CODE;
+      gubExplicitEnemyEncounterCode = Enum164.NO_ENCOUNTER_CODE;
+      if (HostileCiviliansPresent()) {
+        // There are hostile civilians, so no autoresolve allowed.
+        gubExplicitEnemyEncounterCode = Enum164.HOSTILE_CIVILIANS_CODE;
+      } else if (HostileBloodcatsPresent()) {
+        // There are bloodcats in the sector, so no autoresolve allowed
+        gubExplicitEnemyEncounterCode = Enum164.HOSTILE_BLOODCATS_CODE;
+      } else if (gbWorldSectorZ) {
+        let pSector: UNDERGROUND_SECTORINFO | null = FindUnderGroundSector(
+          gWorldSectorX,
+          gWorldSectorY,
+          gbWorldSectorZ,
+        );
+        Assert(pSector);
+        if (pSector.ubCreaturesInBattle) {
+          gubExplicitEnemyEncounterCode = Enum164.FIGHTING_CREATURES_CODE;
+        } else if (
+          pSector.ubAdminsInBattle ||
+          pSector.ubTroopsInBattle ||
+          pSector.ubElitesInBattle
+        ) {
+          gubExplicitEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
+          gubEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
         }
-
-        // it better work...
-        Assert(fSuccess);
-
-        // clear any desired squad assignments
-        pSoldier.ubNumTraversalsAllowedToMerge = 0;
-        pSoldier.ubDesiredSquadAssignment = NO_ASSIGNMENT;
-
-        // stand him up
-        MakeSoldiersTacticalAnimationReflectAssignment(pSoldier);
+      } else {
+        let pSector: SECTORINFO =
+          SectorInfo[SECTOR(gWorldSectorX, gWorldSectorY)];
+        Assert(pSector);
+        if (pSector.ubCreaturesInBattle) {
+          gubExplicitEnemyEncounterCode = Enum164.FIGHTING_CREATURES_CODE;
+        } else if (
+          pSector.ubAdminsInBattle ||
+          pSector.ubTroopsInBattle ||
+          pSector.ubElitesInBattle
+        ) {
+          gubExplicitEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
+          gubEnemyEncounterCode = Enum164.ENTERING_ENEMY_SECTOR_CODE;
+        }
       }
-    }
-
-    pPlayer = pNextPlayer;
-  }
-}
-
-export function WakeUpAllMercsInSectorUnderAttack(): void {
-  let iCounter: INT32 = 0;
-  let iNumberOfMercsOnTeam: INT32 = 0;
-  let pSoldier: SOLDIERTYPE;
-
-  // get number of possible grunts on team
-  iNumberOfMercsOnTeam = gTacticalStatus.Team[OUR_TEAM].bLastID;
-
-  // any mercs not on duty should be added to the first avail squad
-  for (iCounter = 0; iCounter < iNumberOfMercsOnTeam; iCounter++) {
-    pSoldier = Menptr[iCounter];
-
-    if (pSoldier.bActive && pSoldier.bLife && !(pSoldier.uiStatusFlags & SOLDIER_VEHICLE)) {
-      // if involved, but asleep
-      if (PlayerMercInvolvedInThisCombat(pSoldier) && (pSoldier.fMercAsleep == true)) {
-        // FORCE him wake him up
-        SetMercAwake(pSoldier, false, true);
+      if (gubExplicitEnemyEncounterCode != Enum164.NO_ENCOUNTER_CODE) {
+        // Set up the location as well as turning on the blit flag.
+        gubPBSectorX = gWorldSectorX;
+        gubPBSectorY = gWorldSectorY;
+        gubPBSectorZ = gbWorldSectorZ;
+        gfBlitBattleSectorLocator = true;
       }
     }
   }
-}
 
-// we are entering the sector, clear out all mvt orders for grunts
-function ClearMovementForAllInvolvedPlayerGroups(): void {
-  let pGroup: GROUP | null;
-
-  pGroup = gpGroupList;
-  while (pGroup) {
-    if (PlayerGroupInvolvedInThisCombat(pGroup)) {
-      // clear their strategic movement (mercpaths and waypoints)
-      ClearMercPathsAndWaypointsForAllInGroup(pGroup);
-    }
-    pGroup = pGroup.next;
+  function ClearNonPersistantPBIInfo(): void {
+    gfBlitBattleSectorLocator = false;
   }
-}
 
-export function RetreatAllInvolvedPlayerGroups(): void {
-  let pGroup: GROUP | null;
+  function PutNonSquadMercsInBattleSectorOnSquads(
+    fExitVehicles: boolean,
+  ): void {
+    let pGroup: GROUP | null;
+    let pNextGroup: GROUP | null;
 
-  // make sure guys stop their off duty assignments, like militia training!
-  // but don't exit vehicles - drive off in them!
-  PutNonSquadMercsInBattleSectorOnSquads(false);
+    // IMPORTANT: Have to do this by group, so everyone inside vehicles gets assigned to the same squad.  Needed for
+    // the tactical placement interface to work in case of simultaneous multi-vehicle arrivals!
 
-  pGroup = gpGroupList;
-  while (pGroup) {
-    if (PlayerGroupInvolvedInThisCombat(pGroup)) {
-      // don't retreat empty vehicle groups!
-      if (!pGroup.fVehicle || (pGroup.fVehicle && DoesVehicleGroupHaveAnyPassengers(pGroup))) {
+    pGroup = gpGroupList;
+    while (pGroup) {
+      // store ptr to next group in list, temporary groups will get deallocated as soon as the merc in it is put on a squad!
+      pNextGroup = pGroup.next;
+
+      if (PlayerGroupInvolvedInThisCombat(pGroup)) {
+        // the helicopter group CAN be involved, if it's on the ground, in which case everybody must get out of it
+        if (IsGroupTheHelicopterGroup(pGroup)) {
+          // only happens if chopper is on the ground...
+          Assert(!fHelicopterIsAirBorne);
+
+          // put anyone in it into movement group
+          MoveAllInHelicopterToFootMovementGroup();
+        } else {
+          PutNonSquadMercsInPlayerGroupOnSquads(pGroup, fExitVehicles);
+        }
+      }
+
+      pGroup = pNextGroup;
+    }
+  }
+
+  function PutNonSquadMercsInPlayerGroupOnSquads(
+    pGroup: GROUP,
+    fExitVehicles: boolean,
+  ): void {
+    let pPlayer: PLAYERGROUP | null;
+    let pNextPlayer: PLAYERGROUP | null;
+    let pSoldier: SOLDIERTYPE;
+    let bUniqueVehicleSquad: INT8 = -1;
+    let fSuccess: boolean = <boolean>(<unknown>undefined);
+
+    if (pGroup.fVehicle) {
+      // put these guys on their own squad (we need to return their group ID, and can only return one, so they need a unique one
+      bUniqueVehicleSquad = GetFirstEmptySquad();
+      if (bUniqueVehicleSquad == -1) {
+        return;
+      }
+    }
+
+    pPlayer = pGroup.pPlayerList;
+
+    while (pPlayer) {
+      pSoldier = pPlayer.pSoldier;
+      Assert(pSoldier);
+
+      // store ptr to next soldier in group, once removed from group, his info will get memfree'd!
+      pNextPlayer = pPlayer.next;
+
+      if (
+        pSoldier.bActive &&
+        pSoldier.bLife &&
+        !(pSoldier.uiStatusFlags & SOLDIER_VEHICLE)
+      ) {
+        // if involved, but off-duty (includes mercs inside vehicles!)
+        if (
+          PlayerMercInvolvedInThisCombat(pSoldier) &&
+          pSoldier.bAssignment >= Enum117.ON_DUTY
+        ) {
+          // if in a vehicle, pull him out
+          if (pSoldier.bAssignment == Enum117.VEHICLE) {
+            if (fExitVehicles) {
+              TakeSoldierOutOfVehicle(pSoldier);
+
+              // put them on the unique squad assigned to people leaving this vehicle.  Can't add them to existing squads,
+              // because if this is a simultaneous group attack, the mercs could be coming from different sides, and the
+              // placement screen can't handle mercs on the same squad arriving from difference edges!
+              fSuccess = AddCharacterToSquad(pSoldier, bUniqueVehicleSquad);
+            }
+          } else {
+            // add him to ANY on duty foot squad
+            fSuccess = AddCharacterToAnySquad(pSoldier);
+          }
+
+          // it better work...
+          Assert(fSuccess);
+
+          // clear any desired squad assignments
+          pSoldier.ubNumTraversalsAllowedToMerge = 0;
+          pSoldier.ubDesiredSquadAssignment = NO_ASSIGNMENT;
+
+          // stand him up
+          MakeSoldiersTacticalAnimationReflectAssignment(pSoldier);
+        }
+      }
+
+      pPlayer = pNextPlayer;
+    }
+  }
+
+  export function WakeUpAllMercsInSectorUnderAttack(): void {
+    let iCounter: INT32 = 0;
+    let iNumberOfMercsOnTeam: INT32 = 0;
+    let pSoldier: SOLDIERTYPE;
+
+    // get number of possible grunts on team
+    iNumberOfMercsOnTeam = gTacticalStatus.Team[OUR_TEAM].bLastID;
+
+    // any mercs not on duty should be added to the first avail squad
+    for (iCounter = 0; iCounter < iNumberOfMercsOnTeam; iCounter++) {
+      pSoldier = Menptr[iCounter];
+
+      if (
+        pSoldier.bActive &&
+        pSoldier.bLife &&
+        !(pSoldier.uiStatusFlags & SOLDIER_VEHICLE)
+      ) {
+        // if involved, but asleep
+        if (
+          PlayerMercInvolvedInThisCombat(pSoldier) &&
+          pSoldier.fMercAsleep == true
+        ) {
+          // FORCE him wake him up
+          SetMercAwake(pSoldier, false, true);
+        }
+      }
+    }
+  }
+
+  // we are entering the sector, clear out all mvt orders for grunts
+  function ClearMovementForAllInvolvedPlayerGroups(): void {
+    let pGroup: GROUP | null;
+
+    pGroup = gpGroupList;
+    while (pGroup) {
+      if (PlayerGroupInvolvedInThisCombat(pGroup)) {
+        // clear their strategic movement (mercpaths and waypoints)
         ClearMercPathsAndWaypointsForAllInGroup(pGroup);
-        RetreatGroupToPreviousSector(pGroup);
+      }
+      pGroup = pGroup.next;
+    }
+  }
+
+  export function RetreatAllInvolvedPlayerGroups(): void {
+    let pGroup: GROUP | null;
+
+    // make sure guys stop their off duty assignments, like militia training!
+    // but don't exit vehicles - drive off in them!
+    PutNonSquadMercsInBattleSectorOnSquads(false);
+
+    pGroup = gpGroupList;
+    while (pGroup) {
+      if (PlayerGroupInvolvedInThisCombat(pGroup)) {
+        // don't retreat empty vehicle groups!
+        if (
+          !pGroup.fVehicle ||
+          (pGroup.fVehicle && DoesVehicleGroupHaveAnyPassengers(pGroup))
+        ) {
+          ClearMercPathsAndWaypointsForAllInGroup(pGroup);
+          RetreatGroupToPreviousSector(pGroup);
+        }
+      }
+      pGroup = pGroup.next;
+    }
+  }
+
+  export function PlayerMercInvolvedInThisCombat(
+    pSoldier: SOLDIERTYPE,
+  ): boolean {
+    Assert(pSoldier);
+    Assert(pSoldier.bActive);
+
+    if (
+      !pSoldier.fBetweenSectors &&
+      pSoldier.bAssignment != Enum117.IN_TRANSIT &&
+      pSoldier.bAssignment != Enum117.ASSIGNMENT_POW &&
+      pSoldier.bAssignment != Enum117.ASSIGNMENT_DEAD &&
+      !(pSoldier.uiStatusFlags & SOLDIER_VEHICLE) &&
+      // Robot is involved if it has a valid controller with it, uninvolved otherwise
+      (!AM_A_ROBOT(pSoldier) || pSoldier.ubRobotRemoteHolderID != NOBODY) &&
+      !SoldierAboardAirborneHeli(pSoldier)
+    ) {
+      if (
+        CurrentBattleSectorIs(
+          pSoldier.sSectorX,
+          pSoldier.sSectorY,
+          pSoldier.bSectorZ,
+        )
+      ) {
+        // involved
+        return true;
       }
     }
-    pGroup = pGroup.next;
-  }
-}
 
-export function PlayerMercInvolvedInThisCombat(pSoldier: SOLDIERTYPE): boolean {
-  Assert(pSoldier);
-  Assert(pSoldier.bActive);
-
-  if (!pSoldier.fBetweenSectors && pSoldier.bAssignment != Enum117.IN_TRANSIT && pSoldier.bAssignment != Enum117.ASSIGNMENT_POW && pSoldier.bAssignment != Enum117.ASSIGNMENT_DEAD && !(pSoldier.uiStatusFlags & SOLDIER_VEHICLE) &&
-      // Robot is involved if it has a valid controller with it, uninvolved otherwise
-      (!AM_A_ROBOT(pSoldier) || (pSoldier.ubRobotRemoteHolderID != NOBODY)) && !SoldierAboardAirborneHeli(pSoldier)) {
-    if (CurrentBattleSectorIs(pSoldier.sSectorX, pSoldier.sSectorY, pSoldier.bSectorZ)) {
-      // involved
-      return true;
-    }
-  }
-
-  // not involved
-  return false;
-}
-
-export function PlayerGroupInvolvedInThisCombat(pGroup: GROUP): boolean {
-  Assert(pGroup);
-
-  // player group, non-empty, not between sectors, in the right sector, isn't a group of in transit, dead, or POW mercs,
-  // and either not the helicopter group, or the heli is on the ground
-  if (pGroup.fPlayer && pGroup.ubGroupSize && !pGroup.fBetweenSectors && !GroupHasInTransitDeadOrPOWMercs(pGroup) && (!IsGroupTheHelicopterGroup(pGroup) || !fHelicopterIsAirBorne)) {
-    if (CurrentBattleSectorIs(pGroup.ubSectorX, pGroup.ubSectorY, pGroup.ubSectorZ)) {
-      // involved
-      return true;
-    }
-  }
-
-  // not involved
-  return false;
-}
-
-function CurrentBattleSectorIs(sSectorX: INT16, sSectorY: INT16, sSectorZ: INT16): boolean {
-  let sBattleSectorX: INT16;
-  let sBattleSectorY: INT16;
-  let sBattleSectorZ: INT16;
-  let fSuccess: boolean;
-
-  ({ sSectorX: sBattleSectorX, sSectorY: sBattleSectorY, sSectorZ: sBattleSectorZ } = GetCurrentBattleSectorXYZ());
-
-  if ((sSectorX == sBattleSectorX) && (sSectorY == sBattleSectorY) && (sSectorZ == sBattleSectorZ)) {
-    // yup!
-    return true;
-  } else {
-    // wrong sector, no battle here
+    // not involved
     return false;
   }
-}
 
-function CheckForRobotAndIfItsControlled(): void {
-  let i: INT32;
+  export function PlayerGroupInvolvedInThisCombat(pGroup: GROUP): boolean {
+    Assert(pGroup);
 
-  // search for the robot on player's team
-  for (i = gTacticalStatus.Team[OUR_TEAM].bFirstID; i <= gTacticalStatus.Team[OUR_TEAM].bLastID; i++) {
-    if (MercPtrs[i].bActive && MercPtrs[i].bLife && AM_A_ROBOT(MercPtrs[i])) {
-      // check whether it has a valid controller with it. This sets its ubRobotRemoteHolderID field.
-      UpdateRobotControllerGivenRobot(MercPtrs[i]);
-
-      // if he has a controller, set controllers
-      if (MercPtrs[i].ubRobotRemoteHolderID != NOBODY) {
-        UpdateRobotControllerGivenController(MercPtrs[MercPtrs[i].ubRobotRemoteHolderID]);
+    // player group, non-empty, not between sectors, in the right sector, isn't a group of in transit, dead, or POW mercs,
+    // and either not the helicopter group, or the heli is on the ground
+    if (
+      pGroup.fPlayer &&
+      pGroup.ubGroupSize &&
+      !pGroup.fBetweenSectors &&
+      !GroupHasInTransitDeadOrPOWMercs(pGroup) &&
+      (!IsGroupTheHelicopterGroup(pGroup) || !fHelicopterIsAirBorne)
+    ) {
+      if (
+        CurrentBattleSectorIs(
+          pGroup.ubSectorX,
+          pGroup.ubSectorY,
+          pGroup.ubSectorZ,
+        )
+      ) {
+        // involved
+        return true;
       }
-
-      break;
     }
+
+    // not involved
+    return false;
   }
-}
 
-export function LogBattleResults(ubVictoryCode: UINT8): void {
-  let sSectorX: INT16;
-  let sSectorY: INT16;
-  let sSectorZ: INT16;
-  ({ sSectorX, sSectorY, sSectorZ } = GetCurrentBattleSectorXYZ());
-  if (ubVictoryCode == Enum165.LOG_VICTORY) {
-    switch (gubEnemyEncounterCode) {
-      case Enum164.ENEMY_INVASION_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_DEFENDEDTOWNSECTOR, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.ENEMY_ENCOUNTER_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_WONBATTLE, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.ENEMY_AMBUSH_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_WIPEDOUTENEMYAMBUSH, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.ENTERING_ENEMY_SECTOR_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_SUCCESSFULATTACK, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.CREATURE_ATTACK_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_CREATURESATTACKED, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.BLOODCAT_AMBUSH_CODE:
-      case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_SLAUGHTEREDBLOODCATS, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-    }
-  } else {
-    switch (gubEnemyEncounterCode) {
-      case Enum164.ENEMY_INVASION_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_LOSTTOWNSECTOR, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.ENEMY_ENCOUNTER_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_LOSTBATTLE, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.ENEMY_AMBUSH_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_FATALAMBUSH, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.ENTERING_ENEMY_SECTOR_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_UNSUCCESSFULATTACK, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.CREATURE_ATTACK_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_CREATURESATTACKED, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-      case Enum164.BLOODCAT_AMBUSH_CODE:
-      case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
-        AddHistoryToPlayersLog(Enum83.HISTORY_KILLEDBYBLOODCATS, 0, GetWorldTotalMin(), sSectorX, sSectorY);
-        break;
-    }
-  }
-}
+  function CurrentBattleSectorIs(
+    sSectorX: INT16,
+    sSectorY: INT16,
+    sSectorZ: INT16,
+  ): boolean {
+    let sBattleSectorX: INT16;
+    let sBattleSectorY: INT16;
+    let sBattleSectorZ: INT16;
+    let fSuccess: boolean;
 
-export function HandlePreBattleInterfaceStates(): void {
-  if (gfEnteringMapScreenToEnterPreBattleInterface && !gfEnteringMapScreen) {
-    gfEnteringMapScreenToEnterPreBattleInterface = false;
-    if (!gfUsePersistantPBI) {
-      InitPreBattleInterface(null, false);
-      gfUsePersistantPBI = true;
+    ({
+      sSectorX: sBattleSectorX,
+      sSectorY: sBattleSectorY,
+      sSectorZ: sBattleSectorZ,
+    } = GetCurrentBattleSectorXYZ());
+
+    if (
+      sSectorX == sBattleSectorX &&
+      sSectorY == sBattleSectorY &&
+      sSectorZ == sBattleSectorZ
+    ) {
+      // yup!
+      return true;
     } else {
-      InitPreBattleInterface(gpBattleGroup, true);
+      // wrong sector, no battle here
+      return false;
     }
-  } else if (gfDelayAutoResolveStart && gfPreBattleInterfaceActive) {
-    gfDelayAutoResolveStart = false;
-    gfAutomaticallyStartAutoResolve = true;
-  } else if (gfAutomaticallyStartAutoResolve) {
-    gfAutomaticallyStartAutoResolve = false;
-    ActivateAutomaticAutoResolveStart();
-  } else if (gfTransitionMapscreenToAutoResolve) {
-    gfTransitionMapscreenToAutoResolve = false;
   }
-}
 
+  function CheckForRobotAndIfItsControlled(): void {
+    let i: INT32;
+
+    // search for the robot on player's team
+    for (
+      i = gTacticalStatus.Team[OUR_TEAM].bFirstID;
+      i <= gTacticalStatus.Team[OUR_TEAM].bLastID;
+      i++
+    ) {
+      if (MercPtrs[i].bActive && MercPtrs[i].bLife && AM_A_ROBOT(MercPtrs[i])) {
+        // check whether it has a valid controller with it. This sets its ubRobotRemoteHolderID field.
+        UpdateRobotControllerGivenRobot(MercPtrs[i]);
+
+        // if he has a controller, set controllers
+        if (MercPtrs[i].ubRobotRemoteHolderID != NOBODY) {
+          UpdateRobotControllerGivenController(
+            MercPtrs[MercPtrs[i].ubRobotRemoteHolderID],
+          );
+        }
+
+        break;
+      }
+    }
+  }
+
+  export function LogBattleResults(ubVictoryCode: UINT8): void {
+    let sSectorX: INT16;
+    let sSectorY: INT16;
+    let sSectorZ: INT16;
+    ({ sSectorX, sSectorY, sSectorZ } = GetCurrentBattleSectorXYZ());
+    if (ubVictoryCode == Enum165.LOG_VICTORY) {
+      switch (gubEnemyEncounterCode) {
+        case Enum164.ENEMY_INVASION_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_DEFENDEDTOWNSECTOR,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.ENEMY_ENCOUNTER_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_WONBATTLE,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.ENEMY_AMBUSH_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_WIPEDOUTENEMYAMBUSH,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.ENTERING_ENEMY_SECTOR_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_SUCCESSFULATTACK,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.CREATURE_ATTACK_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_CREATURESATTACKED,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.BLOODCAT_AMBUSH_CODE:
+        case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_SLAUGHTEREDBLOODCATS,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+      }
+    } else {
+      switch (gubEnemyEncounterCode) {
+        case Enum164.ENEMY_INVASION_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_LOSTTOWNSECTOR,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.ENEMY_ENCOUNTER_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_LOSTBATTLE,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.ENEMY_AMBUSH_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_FATALAMBUSH,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.ENTERING_ENEMY_SECTOR_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_UNSUCCESSFULATTACK,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.CREATURE_ATTACK_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_CREATURESATTACKED,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+        case Enum164.BLOODCAT_AMBUSH_CODE:
+        case Enum164.ENTERING_BLOODCAT_LAIR_CODE:
+          AddHistoryToPlayersLog(
+            Enum83.HISTORY_KILLEDBYBLOODCATS,
+            0,
+            GetWorldTotalMin(),
+            sSectorX,
+            sSectorY,
+          );
+          break;
+      }
+    }
+  }
+
+  export function HandlePreBattleInterfaceStates(): void {
+    if (gfEnteringMapScreenToEnterPreBattleInterface && !gfEnteringMapScreen) {
+      gfEnteringMapScreenToEnterPreBattleInterface = false;
+      if (!gfUsePersistantPBI) {
+        InitPreBattleInterface(null, false);
+        gfUsePersistantPBI = true;
+      } else {
+        InitPreBattleInterface(gpBattleGroup, true);
+      }
+    } else if (gfDelayAutoResolveStart && gfPreBattleInterfaceActive) {
+      gfDelayAutoResolveStart = false;
+      gfAutomaticallyStartAutoResolve = true;
+    } else if (gfAutomaticallyStartAutoResolve) {
+      gfAutomaticallyStartAutoResolve = false;
+      ActivateAutomaticAutoResolveStart();
+    } else if (gfTransitionMapscreenToAutoResolve) {
+      gfTransitionMapscreenToAutoResolve = false;
+    }
+  }
 }
