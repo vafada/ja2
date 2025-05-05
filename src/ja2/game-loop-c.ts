@@ -152,6 +152,7 @@ export function GameLoop(): void {
   if (uiOldScreen != guiCurrentScreen) {
     HandleNewScreenChange(uiOldScreen, guiCurrentScreen);
     guiCurrentScreen = uiOldScreen;
+    console.log("new guiCurrentScreen", guiCurrentScreen);
   }
 
   RefreshScreen();
@@ -159,11 +160,6 @@ export function GameLoop(): void {
   guiGameCycleCounter++;
 
   UpdateClock();
-}
-
-function SetCurrentScreen(uiNewScreen: UINT32): void {
-  guiCurrentScreen = uiNewScreen;
-  GameScreens[guiCurrentScreen].HandleScreen();
 }
 
 export function SetPendingNewScreen(uiNewScreen: UINT32): void {

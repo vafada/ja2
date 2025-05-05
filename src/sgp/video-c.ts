@@ -914,7 +914,6 @@ function ScrollJA2Background(uiDirection: UINT32, sScrollXIncrement: INT16, sScr
   // SaveBackgroundRects();
 }
 
-/* static */ let RefreshScreen__uiRefreshThreadState: UINT32;
 /* static */ let RefreshScreen__uiIndex: UINT32;
 /* static */ let RefreshScreen__fShowMouse: boolean;
 /* static */ let RefreshScreen__Region: RECT = createRect();
@@ -923,7 +922,6 @@ function ScrollJA2Background(uiDirection: UINT32, sScrollXIncrement: INT16, sScr
 export function RefreshScreen(): void {
   let usScreenWidth: UINT16;
   let usScreenHeight: UINT16;
-  let uiTime: UINT32;
 
   RefreshScreen__Region.left = 0;
   RefreshScreen__Region.top = 0;
@@ -953,7 +951,7 @@ export function RefreshScreen(): void {
     case VIDEO_ON: //
       // Excellent, everything is cosher, we continue on
       //
-      RefreshScreen__uiRefreshThreadState = guiRefreshThreadState = THREAD_ON;
+      guiRefreshThreadState = THREAD_ON;
       usScreenWidth = gusScreenWidth;
       usScreenHeight = gusScreenHeight;
       break;
@@ -967,7 +965,7 @@ export function RefreshScreen(): void {
       // This are suspended. Make sure the refresh function does try to access any of the direct
       // draw surfaces
       //
-      RefreshScreen__uiRefreshThreadState = guiRefreshThreadState = THREAD_SUSPENDED;
+      guiRefreshThreadState = THREAD_SUSPENDED;
       break;
     case VIDEO_SHUTTING_DOWN: //
                               // Well things are shutting down. So we need to bugger out of there. Don't forget to leave the

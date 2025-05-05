@@ -49,23 +49,20 @@ export function MainMenuScreenInit(): boolean {
 
 export function MainMenuScreenHandle(): UINT32 {
   let cnt: UINT32;
-  let uiTime: UINT32;
 
   if (guiSplashStartTime + 4000 > GetJA2Clock()) {
     SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
     SetMusicMode(Enum328.MUSIC_NONE);
     return Enum26.MAINMENU_SCREEN; // The splash screen hasn't been up long enough yet.
   }
+
   if (guiSplashFrameFade) {
     // Fade the splash screen.
-    uiTime = GetJA2Clock();
     if (guiSplashFrameFade > 2)
       ShadowVideoSurfaceRectUsingLowPercentTable(FRAME_BUFFER, 0, 0, 640, 480);
     else if (guiSplashFrameFade > 1)
       ColorFillVideoSurfaceArea(FRAME_BUFFER, 0, 0, 640, 480, 0);
     else {
-      uiTime = GetJA2Clock();
-      // while( GetJA2Clock() < uiTime + 375 );
       SetMusicMode(Enum328.MUSIC_MAIN_MENU);
     }
 

@@ -171,17 +171,13 @@ export function InitScreenHandle(): UINT32 {
   let vs_desc: VSURFACE_DESC = createVSurfaceDesc();
 
   if (InitScreenHandle__ubCurrentScreen == 255) {
-// FIXME: Language-specific code
-// #ifdef ENGLISH
+
     if (gfDoneWithSplashScreen) {
       InitScreenHandle__ubCurrentScreen = 0;
     } else {
       SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
       return Enum26.INTRO_SCREEN;
     }
-// #else
-//     ubCurrentScreen = 0;
-// #endif
   }
 
   if (InitScreenHandle__ubCurrentScreen == 0) {

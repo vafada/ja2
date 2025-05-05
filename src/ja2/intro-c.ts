@@ -1,11 +1,5 @@
 namespace ja2 {
 
-const enum Enum19 {
-  INTRO_TXT__CANT_FIND_INTRO,
-}
-
-// ddd
-
 // ggg
 let gfIntroScreenEntry: boolean;
 let gfIntroScreenExit: boolean;
@@ -13,7 +7,6 @@ let gfIntroScreenExit: boolean;
 let guiIntroExitScreen: UINT32 = Enum26.INTRO_SCREEN;
 
 const SMKINTRO_FIRST_VIDEO = 255;
-const SMKINTRO_NO_VIDEO = -1;
 
 // enums for the various smacker files
 const enum Enum20 {
@@ -36,26 +29,6 @@ const enum Enum20 {
   // there are no more videos shown for the endgame
   SMKINTRO_LAST_END_GAME,
 }
-
-let giCurrentIntroBeingPlayed: INT32 = SMKINTRO_NO_VIDEO;
-
-let gpzSmackerFileNames: string[] /* Pointer<CHAR>[] */ = [
-  // begining of the game
-  "INTRO\\Rebel_cr.smk",
-  "INTRO\\Omerta.smk",
-  "INTRO\\Prague_cr.smk",
-  "INTRO\\Prague.smk",
-
-  // endgame
-  "INTRO\\Throne_Mig.smk",
-  "INTRO\\Throne_NoMig.smk",
-  "INTRO\\Heli_FlyBy.smk",
-  "INTRO\\Heli_Sky.smk",
-  "INTRO\\Heli_NoSky.smk",
-
-  "INTRO\\SplashScreen.smk",
-  "INTRO\\TalonSoftid_endhold.smk",
-];
 
 // enums used for when the intro screen can come up, either begining game intro, or end game cinematic
 let gbIntroScreenMode: INT8 = -1;
@@ -101,8 +74,6 @@ export function IntroScreenHandle(): UINT32 {
 }
 
 function EnterIntroScreen(): boolean {
-  let iFirstVideoID: INT32 = -1;
-
   ClearMainMenu();
 
   SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
@@ -121,25 +92,16 @@ function EnterIntroScreen(): boolean {
   return true;
 }
 
-function RenderIntroScreen(): void {
-}
-
 function ExitIntroScreen(): void {
 }
 
 function HandleIntroScreen(): void {
-  let fFlicStillPlaying: boolean = false;
-
   // if we are exiting this screen, this frame, dont update the screen
   if (gfIntroScreenExit)
     return;
 
-  // handle smaker each frame
-  fFlicStillPlaying = false;
 
   PrepareToExitIntroScreen();
-  giCurrentIntroBeingPlayed = -1;
-
 
   InvalidateScreen();
 }
