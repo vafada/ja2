@@ -97,8 +97,6 @@ namespace ja2 {
   //	Initialize the mouse system.
   //
   export function MSYS_Init(): INT32 {
-    RegisterDebugTopic(TOPIC_MOUSE_SYSTEM, "Mouse Region System");
-
     if (MSYS_RegList != null) MSYS_TrashRegList();
 
     MSYS_CurrentID = MSYS_ID_SYSTEM;

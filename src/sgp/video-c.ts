@@ -167,27 +167,6 @@ namespace ja2 {
   );
   let guiDirtyRegionExCount: UINT32;
 
-  //
-  // Screen output stuff
-  //
-
-  let gfPrintFrameBuffer: boolean;
-  let guiPrintFrameBufferIndex: UINT32;
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // External Variables
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // Local Function Prototypes
-  //
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
   export function InitializeVideoManager(hInstance: HTMLElement): boolean {
     let uiIndex: UINT32;
     let hWindow: HTMLCanvasElement;
@@ -313,8 +292,6 @@ namespace ja2 {
     gfForceFullScreenRefresh = true;
     gpFrameBufferRefreshOverride = null;
     gpCursorStore = null;
-    gfPrintFrameBuffer = false;
-    guiPrintFrameBufferIndex = 0;
 
     //
     // This function must be called to setup RGB information
@@ -324,71 +301,6 @@ namespace ja2 {
 
     return true;
   }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-  export function ShutdownVideoManager(): void {
-    // UINT32  uiRefreshThreadState;
-
-    DebugMsg(TOPIC_VIDEO, DBG_LEVEL_0, "Shutting down the video manager");
-
-    //
-    // Toggle the state of the video manager to indicate to the refresh thread that it needs to shut itself
-    // down
-    //
-
-    gpMouseCursorOriginal = <ImageData>(<unknown>null);
-    gpMouseCursor = <ImageData>(<unknown>null);
-    gMouseCursorBackground[0].pSurface = <ImageData>(<unknown>null);
-    gpBackBuffer = <ImageData>(<unknown>null);
-    gpPrimarySurface = <ImageData>(<unknown>null);
-
-    gpDirectDrawObject = <CanvasRenderingContext2D>(<unknown>null);
-
-    // destroy the window
-    // DestroyWindow( ghWindow );
-
-    guiVideoManagerState = VIDEO_OFF;
-
-    if (gpCursorStore != null) {
-      DeleteVideoObject(gpCursorStore);
-      gpCursorStore = null;
-    }
-
-    // ATE: Release mouse cursor!
-    FreeMouseCursor();
-
-    UnRegisterDebugTopic(TOPIC_VIDEO, "Video");
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  export function SuspendVideoManager(): void {
-    guiVideoManagerState = VIDEO_SUSPENDED;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  export function RestoreVideoManager(): boolean {
-    //
-    // Make sure the video manager is indeed suspended before moving on
-    //
-
-    if (guiVideoManagerState == VIDEO_SUSPENDED) {
-      //
-      // Set the video state to VIDEO_ON
-      //
-
-      guiFrameBufferState = BUFFER_DIRTY;
-      guiMouseBufferState = BUFFER_DIRTY;
-      gfForceFullScreenRefresh = true;
-      guiVideoManagerState = VIDEO_ON;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   export function GetCurrentVideoSettings(): {
     usWidth: UINT16;
@@ -401,44 +313,6 @@ namespace ja2 {
       ubBitDepth: gubScreenPixelDepth,
     };
   }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  function CanBlitToFrameBuffer(): boolean {
-    let fCanBlit: boolean;
-
-    //
-    // W A R N I N G ---- W A R N I N G ---- W A R N I N G ---- W A R N I N G ---- W A R N I N G ----
-    //
-    // This function is intended to be called by a thread which has already locked the
-    // FRAME_BUFFER_MUTEX mutual exclusion section. Anything else will cause the application to
-    // yack
-    //
-
-    fCanBlit = guiFrameBufferState == BUFFER_READY;
-
-    return fCanBlit;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  function CanBlitToMouseBuffer(): boolean {
-    let fCanBlit: boolean;
-
-    //
-    // W A R N I N G ---- W A R N I N G ---- W A R N I N G ---- W A R N I N G ---- W A R N I N G ----
-    //
-    // This function is intended to be called by a thread which has already locked the
-    // MOUSE_BUFFER_MUTEX mutual exclusion section. Anything else will cause the application to
-    // yack
-    //
-
-    fCanBlit = guiMouseBufferState == BUFFER_READY;
-
-    return fCanBlit;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   export function InvalidateRegion(
     iLeft: INT32,
@@ -2002,12 +1876,6 @@ namespace ja2 {
     guiFrameBufferState = BUFFER_DIRTY;
 
     return;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-  export function PrintScreen(): void {
-    gfPrintFrameBuffer = true;
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -235,49 +235,6 @@ namespace ja2 {
     });
   }
 
-  export function ShutdownInputManager(): void {
-    // There's very little to do when shutting down the input manager. In the future, this is where the keyboard and
-    // mouse hooks will be destroyed
-    UnRegisterDebugTopic(TOPIC_INPUT, "Input Manager");
-  }
-
-  function QueuePureEvent(
-    ubInputEvent: UINT16,
-    usParam: UINT32,
-    uiParam: UINT32,
-  ): void {
-    let uiTimer: UINT32;
-    let usKeyState: UINT16;
-
-    uiTimer = GetTickCount();
-    usKeyState = gfShiftState | gfCtrlState | gfAltState;
-
-    // Can we queue up one more event, if not, the event is lost forever
-    if (gusQueueCount == 256) {
-      // No more queue space
-      return;
-    }
-
-    // Okey Dokey, we can queue up the event, so we do it
-    gEventQueue[gusTailIndex].uiTimeStamp = uiTimer;
-    gEventQueue[gusTailIndex].usKeyState = usKeyState;
-    gEventQueue[gusTailIndex].usEvent = ubInputEvent;
-    gEventQueue[gusTailIndex].usParam = usParam;
-    gEventQueue[gusTailIndex].uiParam = uiParam;
-
-    // Increment the number of items on the input queue
-    gusQueueCount++;
-
-    // Increment the gusTailIndex pointer
-    if (gusTailIndex == 255) {
-      // The gusTailIndex is about to wrap around the queue ring
-      gusTailIndex = 0;
-    } else {
-      // We simply increment the gusTailIndex
-      gusTailIndex++;
-    }
-  }
-
   export function QueueEvent(
     ubInputEvent: UINT16,
     usParam: UINT32,
@@ -830,7 +787,6 @@ namespace ja2 {
             // DB this used to be keyed to SCRL_LOCK
             // which I believe Luis gave the wrong value
             //#ifndef JA2
-            PrintScreen();
           } else {
             // No special keys have been pressed
             // Call KeyChange() and pass FALSE to indicate key has been PRESSED and not RELEASED

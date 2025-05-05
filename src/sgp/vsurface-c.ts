@@ -74,7 +74,6 @@ namespace ja2 {
     // Call shutdown first...
     Assert(!gpVSurfaceHead);
     Assert(!gpVSurfaceTail);
-    RegisterDebugTopic(TOPIC_VIDEOSURFACE, "Video Surface Manager");
     gpVSurfaceHead = gpVSurfaceTail = null;
 
     giMemUsedInSurfaces = 0;

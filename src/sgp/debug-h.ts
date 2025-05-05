@@ -13,15 +13,16 @@ namespace ja2 {
   // Release Mode
   //*******************************************************************************************
 
-  export const RegisterDebugTopic = (a: number, b: string) => {};
   export const UnRegisterDebugTopic = (a: number, b: string) => {};
 
   export const FastDebugMsg = (a: string) => {
     console.log(a);
   };
 
-  export const DbgMessage = (a: number, b: number, c: string) => {
-    console.log(a, b, c);
+  export const DbgMessage = (a: number, dbgLevel: number, c: string) => {
+    if (dbgLevel >= DBG_LEVEL_2) {
+      console.log(a, c);
+    }
   };
 
   export const DebugMsg = (a: number, b: number, c: string) => {

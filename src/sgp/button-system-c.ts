@@ -1203,11 +1203,6 @@ namespace ja2 {
   export function InitButtonSystem(): boolean {
     let x: INT32;
 
-    RegisterDebugTopic(
-      TOPIC_BUTTON_HANDLER,
-      "Button System & Button Image Manager",
-    );
-
     // Clear out button list
     for (x = 0; x < MAX_BUTTONS; x++) {
       ButtonList[x] = <GUI_BUTTON>(<unknown>null);
@@ -1244,11 +1239,6 @@ namespace ja2 {
     }
     // Shutdown the button image manager sub-system
     ShutdownButtonImageManager();
-
-    UnRegisterDebugTopic(
-      TOPIC_BUTTON_HANDLER,
-      "Button System & Button Image Manager",
-    );
   }
 
   function RemoveButtonsMarkedForDeletion(): void {

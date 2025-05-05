@@ -1302,9 +1302,6 @@ namespace ja2 {
 
     FontDestWrap = false;
 
-    // register the appropriate debug topics
-    RegisterDebugTopic(TOPIC_FONT_HANDLER, "Font Manager");
-
     pFManager = createFontManager();
 
     pTransTab = createFontTranslationTable();
@@ -1328,8 +1325,6 @@ namespace ja2 {
   //*****************************************************************************
   export function ShutdownFontManager(): void {
     let count: INT32;
-
-    UnRegisterDebugTopic(TOPIC_FONT_HANDLER, "Font Manager");
 
     for (count = 0; count < MAX_FONTS; count++) {
       if (FontObjs[count] != null) UnloadFont(count);
