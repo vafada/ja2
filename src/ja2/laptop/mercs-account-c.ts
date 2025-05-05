@@ -150,7 +150,7 @@ namespace ja2 {
       DoLapTopMessageBox(
         Enum24.MSG_BOX_BLUE_ON_GREY,
         "Transfer failed.  No funds available.",
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );
@@ -313,7 +313,7 @@ namespace ja2 {
         DoLapTopMessageBox(
           Enum24.MSG_BOX_BLUE_ON_GREY,
           wzAuthorizeString,
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_YESNO,
           MercAuthorizePaymentMessageBoxCallBack,
         );

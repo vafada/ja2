@@ -271,7 +271,7 @@ namespace ja2 {
     hHandle = GetVideoObject(guiBrownBackgroundForTeamPanel);
 
     // DO MAX BREATH
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       if (
         gusSelectedSoldier == pSoldier.ubID &&
         gTacticalStatus.ubCurrentTeam == OUR_TEAM &&

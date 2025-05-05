@@ -21,7 +21,7 @@ namespace ja2 {
 
     // Init animation system
     if (!InitAnimationSystem()) {
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     // Init lighting system
@@ -31,7 +31,7 @@ namespace ja2 {
     InitalizeDialogueControl();
 
     if (!InitStrategicEngine()) {
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     // needs to be called here to init the SectorInfo struct
@@ -39,7 +39,7 @@ namespace ja2 {
 
     // Init tactical engine
     if (!InitTacticalEngine()) {
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     // Init timer system
@@ -54,12 +54,12 @@ namespace ja2 {
 
     // Init Event Manager
     if (!InitializeEventManager()) {
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     // Initailize World
     if (!InitializeWorld()) {
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     InitTileCache();
@@ -71,7 +71,7 @@ namespace ja2 {
 
     DetermineRGBDistributionSettings();
 
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   export function ShutdownJA2(): void {
@@ -101,7 +101,7 @@ namespace ja2 {
     ShutdownDialogueControl();
 
     // Shutdown Screens
-    for (uiIndex = 0; uiIndex < Enum26.MAX_SCREENS; uiIndex++) {
+    for (uiIndex = 0; uiIndex < ScreenIds.MAX_SCREENS; uiIndex++) {
       GameScreens[uiIndex].ShutdownScreen();
     }
 

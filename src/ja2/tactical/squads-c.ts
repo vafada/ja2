@@ -452,7 +452,7 @@ namespace ja2 {
           // if we are not loading a saved game
           if (
             !(gTacticalStatus.uiFlags & LOADING_SAVED_GAME) &&
-            guiCurrentScreen == Enum26.GAME_SCREEN
+            guiCurrentScreen == ScreenIds.GAME_SCREEN
           ) {
             UpdateCurrentlySelectedMerc(pCharacter, iCounterA);
           }
@@ -736,8 +736,8 @@ namespace ja2 {
     // ARM: can't call SetCurrentSquad() in mapscreen, it calls SelectSoldier(), that will initialize interface panels!!!
     // ATE: Adjusted conditions a bit ( sometimes were not getting selected )
     if (
-      guiCurrentScreen == Enum26.LAPTOP_SCREEN ||
-      guiCurrentScreen == Enum26.MAP_SCREEN
+      guiCurrentScreen == ScreenIds.LAPTOP_SCREEN ||
+      guiCurrentScreen == ScreenIds.MAP_SCREEN
     ) {
       return false;
     }

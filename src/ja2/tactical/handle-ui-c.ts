@@ -747,7 +747,7 @@ namespace ja2 {
   // MAIN TACTICAL UI HANDLER
   /* static */ let HandleTacticalUI__pOldIntTile: LEVELNODE | null /* Pointer<LEVELNODE> */;
   export function HandleTacticalUI(): UINT32 {
-    let ReturnVal: UINT32 = Enum26.GAME_SCREEN;
+    let ReturnVal: UINT32 = ScreenIds.GAME_SCREEN;
     let uiNewEvent: UINT32 = 0;
     let uiNewEvent__Pointer = createPointer(
       () => uiNewEvent,
@@ -1315,12 +1315,12 @@ namespace ja2 {
   function UIHandleIDoNothing(pUIEvent: UI_EVENT): UINT32 {
     guiNewUICursor = Enum210.NORMAL_SNAPUICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleExit(pUIEvent: UI_EVENT): UINT32 {
     gfProgramIsRunning = false;
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   /* static */ let UIHandleNewMerc__ubTemp: UINT8 = 3;
@@ -1381,7 +1381,7 @@ namespace ja2 {
         SelectSoldier(pSoldier.ubID, false, true);
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleNewBadMerc(pUIEvent: UI_EVENT): UINT32 {
@@ -1400,7 +1400,7 @@ namespace ja2 {
     ) {
       // Are we an OK dest?
       if (!IsLocationSittable(usMapPos, false)) {
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       usRandom = Random(10);
@@ -1462,15 +1462,15 @@ namespace ja2 {
         AllTeamsLookForAll(NO_INTERRUPTS);
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleEnterEditMode(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.EDIT_SCREEN;
+    return ScreenIds.EDIT_SCREEN;
   }
 
   function UIHandleEnterPalEditMode(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.PALEDIT_SCREEN;
+    return ScreenIds.PALEDIT_SCREEN;
   }
 
   export function UIHandleEndTurn(pUIEvent: UI_EVENT | null): UINT32 {
@@ -1503,7 +1503,7 @@ namespace ja2 {
       EndTurn(gbPlayerNum + 1);
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleTestHit(pUIEvent: UI_EVENT): UINT32 {
@@ -1545,7 +1545,7 @@ namespace ja2 {
         NOWHERE,
       );
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function ChangeInterfaceLevel(sLevel: INT16): void {
@@ -1580,7 +1580,7 @@ namespace ja2 {
       ChangeInterfaceLevel(0);
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleSelectMerc(pUIEvent: UI_EVENT): UINT32 {
@@ -1603,7 +1603,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   /* static */ let UIHandleMOnTerrain__sGridNoForItemsOver: INT16;
@@ -1629,7 +1629,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     gUIActionModeChangeDueToMouseOver = false;
@@ -1639,7 +1639,7 @@ namespace ja2 {
       if (OK_ENTERABLE_VEHICLE(pSoldier)) {
         if (!UIHandleOnMerc(true)) {
           guiNewUICursor = Enum210.FLOATING_X_UICURSOR;
-          return Enum26.GAME_SCREEN;
+          return ScreenIds.GAME_SCREEN;
         }
       }
     }
@@ -1701,7 +1701,7 @@ namespace ja2 {
 
           guiNewUICursor = Enum210.FLOATING_X_UICURSOR;
 
-          return Enum26.GAME_SCREEN;
+          return ScreenIds.GAME_SCREEN;
         }
       }
 
@@ -1803,7 +1803,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleMovementMenu(pUIEvent: UI_EVENT): UINT32 {
@@ -1811,7 +1811,7 @@ namespace ja2 {
 
     // Get soldier
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     // Popup Menu
@@ -1874,11 +1874,11 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandlePositionMenu(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleAOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -1894,11 +1894,11 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (gpItemPointer != null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     // Get soldier to determine range
@@ -1976,7 +1976,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleMChangeToAction(pUIEvent: UI_EVENT): UINT32 {
@@ -1986,13 +1986,13 @@ namespace ja2 {
 
     // guiNewUICursor = CONFIRM_MOVE_UICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleMChangeToHandMode(pUIEvent: UI_EVENT): UINT32 {
     ErasePath(false);
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleAChangeToMove(pUIEvent: UI_EVENT): UINT32 {
@@ -2004,7 +2004,7 @@ namespace ja2 {
 
     gfPlotNewMovement = true;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleCWait(pUIEvent: UI_EVENT): UINT32 {
@@ -2022,7 +2022,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) !== null) {
@@ -2031,7 +2031,7 @@ namespace ja2 {
       if (pInvTile && gpInvTileThatCausedMoveConfirm != pInvTile) {
         // Get out og this mode...
         guiPendingOverrideEvent = Enum207.A_CHANGE_TO_MOVE;
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       uiCursorFlags = GetCursorMovementFlags();
@@ -2052,7 +2052,7 @@ namespace ja2 {
           gfUIHandleShowMoveGrid = 2;
         }
 
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       // Display action points
@@ -2080,7 +2080,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   // NOTE, ONCE AT THIS FUNCTION, WE HAVE ASSUMED TO HAVE CHECKED FOR ENOUGH APS THROUGH
@@ -2110,7 +2110,7 @@ namespace ja2 {
           ),
         )
       ) {
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       // ERASE PATH
@@ -2255,7 +2255,7 @@ namespace ja2 {
                   pStructure,
                   ubDirection,
                 );
-                return Enum26.GAME_SCREEN;
+                return ScreenIds.GAME_SCREEN;
               }
             } else {
               ScreenMsg(
@@ -2263,7 +2263,7 @@ namespace ja2 {
                 MSG_UI_FEEDBACK,
                 TacticalStr[Enum335.NO_PATH],
               );
-              return Enum26.GAME_SCREEN;
+              return ScreenIds.GAME_SCREEN;
             }
           }
 
@@ -2322,21 +2322,21 @@ namespace ja2 {
         }
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleMCycleMoveAll(pUIEvent: UI_EVENT): UINT32 {
     let pSoldier: SOLDIERTYPE | null;
 
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (gfUICanBeginAllMoveCycle) {
       gfUIAllMoveOn = 1;
       gfUICanBeginAllMoveCycle = false;
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleMCycleMovement(pUIEvent: UI_EVENT): UINT32 {
@@ -2344,7 +2344,7 @@ namespace ja2 {
     let fGoodMode: boolean = false;
 
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     gfUIAllMoveOn = 0;
@@ -2352,7 +2352,7 @@ namespace ja2 {
     if (pSoldier.ubBodyType == Enum194.ROBOTNOWEAPON) {
       pSoldier.usUIMovementMode = Enum193.WALKING;
       gfPlotNewMovement = true;
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     do {
@@ -2383,11 +2383,11 @@ namespace ja2 {
 
     gfPlotNewMovement = true;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleCOnTerrain(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   /* static */ let UIHandleMAdjustStanceMode__gusAnchorMouseY: UINT16;
@@ -2631,7 +2631,7 @@ namespace ja2 {
 
     UIHandleMAdjustStanceMode__uiOldShowUPDownArrows = guiShowUPDownArrows;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleAChangeToConfirmAction(pUIEvent: UI_EVENT): UINT32 {
@@ -2643,7 +2643,7 @@ namespace ja2 {
 
     ResetBurstLocations();
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleCAOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -2658,7 +2658,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) !== null) {
@@ -2672,7 +2672,7 @@ namespace ja2 {
       UIHandleOnMerc(false);
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleMercAttack(
@@ -2860,7 +2860,7 @@ namespace ja2 {
           ),
         )
       ) {
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       // Get soldier
@@ -2898,7 +2898,7 @@ namespace ja2 {
             DoMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               zStr,
-              Enum26.GAME_SCREEN,
+              ScreenIds.GAME_SCREEN,
               MSG_BOX_FLAG_YESNO,
               AttackRequesterCallback,
               null,
@@ -2912,7 +2912,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleAEndAction(pUIEvent: UI_EVENT): UINT32 {
@@ -2930,7 +2930,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) !== null) {
@@ -2950,7 +2950,7 @@ namespace ja2 {
         }
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleCAEndConfirmAction(pUIEvent: UI_EVENT): UINT32 {
@@ -2960,7 +2960,7 @@ namespace ja2 {
       HandleEndConfirmCursor(pSoldier);
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleIOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -2975,7 +2975,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (!UIHandleOnMerc(true)) {
@@ -2990,11 +2990,11 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleIChangeToIdle(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandlePADJAdjustStance(pUIEvent: UI_EVENT): UINT32 {
@@ -3027,7 +3027,7 @@ namespace ja2 {
         // AdjustNoAPToFinishMove( pSoldier, FALSE );
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function GetAdjustedAnimHeight(ubAnimHeight: UINT8, bChange: INT8): UINT8 {
@@ -3339,7 +3339,7 @@ namespace ja2 {
   }
 
   function UIHandlePOPUPMSG(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleHCOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -3354,11 +3354,11 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     // If we are out of breath, no cursor...
@@ -3382,31 +3382,31 @@ namespace ja2 {
         );
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleHCGettingItem(pUIEvent: UI_EVENT): UINT32 {
     guiNewUICursor = Enum210.NORMAL_FREEUICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleTATalkingMenu(pUIEvent: UI_EVENT): UINT32 {
     guiNewUICursor = Enum210.NORMAL_FREEUICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleEXExitSectorMenu(pUIEvent: UI_EVENT): UINT32 {
     guiNewUICursor = Enum210.NORMAL_FREEUICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleOpenDoorMenu(pUIEvent: UI_EVENT): UINT32 {
     guiNewUICursor = Enum210.NORMAL_FREEUICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function ToggleHandCursorMode(puiNewEvent: Pointer<UINT32>): void {
@@ -3586,7 +3586,7 @@ namespace ja2 {
   }
 
   function UIHandleILoadLevel(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   function UIHandleISoldierDebug(pUIEvent: UI_EVENT): UINT32 {
@@ -3597,17 +3597,17 @@ namespace ja2 {
     SetDebugRenderHook(DebugSoldierPage4, 3);
     gCurDebugPage = 1;
 
-    return Enum26.DEBUG_SCREEN;
+    return ScreenIds.DEBUG_SCREEN;
   }
 
   function UIHandleILOSDebug(pUIEvent: UI_EVENT): UINT32 {
     SetDebugRenderHook(DebugStructurePage1, 0);
-    return Enum26.DEBUG_SCREEN;
+    return ScreenIds.DEBUG_SCREEN;
   }
 
   function UIHandleILevelNodeDebug(pUIEvent: UI_EVENT): UINT32 {
     SetDebugRenderHook(DebugLevelNodePage, 0);
-    return Enum26.DEBUG_SCREEN;
+    return ScreenIds.DEBUG_SCREEN;
   }
 
   function UIHandleIETOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -3616,7 +3616,7 @@ namespace ja2 {
 
     SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function UIHandleSoldierStanceChange(
@@ -3732,7 +3732,7 @@ namespace ja2 {
   }
 
   function UIHandleIETEndTurn(pUIEvent: UI_EVENT): UINT32 {
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleIGotoDemoMode(pUIEvent: UI_EVENT): UINT32 {
@@ -3741,27 +3741,27 @@ namespace ja2 {
 
   function UIHandleILoadFirstLevel(pUIEvent: UI_EVENT): UINT32 {
     gubCurrentScene = 0;
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   function UIHandleILoadSecondLevel(pUIEvent: UI_EVENT): UINT32 {
     gubCurrentScene = 1;
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   function UIHandleILoadThirdLevel(pUIEvent: UI_EVENT): UINT32 {
     gubCurrentScene = 2;
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   function UIHandleILoadFourthLevel(pUIEvent: UI_EVENT): UINT32 {
     gubCurrentScene = 3;
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   function UIHandleILoadFifthLevel(pUIEvent: UI_EVENT): UINT32 {
     gubCurrentScene = 4;
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   /* static */ let GetCursorMovementFlags__fStationary: boolean = false;
@@ -4938,7 +4938,7 @@ namespace ja2 {
 
     // Get soldier
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     gfUIDisplayActionPoints = true;
@@ -4948,7 +4948,7 @@ namespace ja2 {
 
     // Get soldier
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     GetMouseXY(
@@ -4977,13 +4977,13 @@ namespace ja2 {
       gfUIDisplayActionPointsInvalid = true;
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleLCChangeToLook(pUIEvent: UI_EVENT): UINT32 {
     ErasePath(true);
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function MakeSoldierTurn(
@@ -5042,7 +5042,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (gTacticalStatus.fAtLeastOneGuyOnMultiSelect) {
@@ -5062,14 +5062,14 @@ namespace ja2 {
     } else {
       // Get soldier
       if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       if (MakeSoldierTurn(pSoldier, sXPos, sYPos)) {
         SetUIBusy(pSoldier.ubID);
       }
     }
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleTOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -5083,7 +5083,7 @@ namespace ja2 {
 
     // Get soldier
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (
@@ -5094,7 +5094,7 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (ValidQuickExchangePosition()) {
@@ -5188,20 +5188,20 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleTChangeToTalking(pUIEvent: UI_EVENT): UINT32 {
     ErasePath(true);
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleLUIOnTerrain(pUIEvent: UI_EVENT): UINT32 {
     // guiNewUICursor = NO_UICURSOR;
     //	SetCurrentCursorFromDatabase( VIDEO_NO_CURSOR );
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleLUIBeginLock(pUIEvent: UI_EVENT): UINT32 {
@@ -5236,7 +5236,7 @@ namespace ja2 {
       LockPauseState(16);
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function UIHandleLUIEndLock(pUIEvent: UI_EVENT | null): UINT32 {
@@ -5269,7 +5269,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function CheckForDisabledRegionRemove(): void {
@@ -5300,7 +5300,7 @@ namespace ja2 {
     // guiNewUICursor = NO_UICURSOR;
     // SetCurrentCursorFromDatabase( VIDEO_NO_CURSOR );
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function GetGridNoScreenXY(
@@ -5627,7 +5627,7 @@ namespace ja2 {
     }
 
     if (!fAtLeastOne) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     // ATE: Now loop through our guys and see if any fit!
@@ -5668,7 +5668,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleJumpOverOnTerrain(pUIEvent: UI_EVENT): UINT32 {
@@ -5677,7 +5677,7 @@ namespace ja2 {
 
     // Here, first get map screen
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (
@@ -5688,12 +5688,12 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (!IsValidJumpLocation(pSoldier, usMapPos, false)) {
       guiPendingOverrideEvent = Enum207.M_ON_TERRAIN;
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     // Display APs....
@@ -5704,7 +5704,7 @@ namespace ja2 {
 
     guiNewUICursor = Enum210.JUMP_OVER_UICURSOR;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleJumpOver(pUIEvent: UI_EVENT): UINT32 {
@@ -5714,7 +5714,7 @@ namespace ja2 {
 
     // Here, first get map screen
     if ((pSoldier = GetSoldier(gusSelectedSoldier)) === null) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (
@@ -5725,11 +5725,11 @@ namespace ja2 {
         ),
       )
     ) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (!IsValidJumpLocation(pSoldier, usMapPos, false)) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     SetUIBusy(pSoldier.ubID);
@@ -5753,7 +5753,7 @@ namespace ja2 {
     // pSoldier->fTurningFromPronePosition = TURNING_FROM_PRONE_OFF;
     pSoldier.usPendingAnimation = Enum193.JUMP_OVER_BLOCKING_PERSON;
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleLABeginLockOurTurn(pUIEvent: UI_EVENT): UINT32 {
@@ -5793,7 +5793,7 @@ namespace ja2 {
       LockPauseState(17);
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   function UIHandleLAEndLockOurTurn(pUIEvent: UI_EVENT | null): UINT32 {
@@ -5827,7 +5827,7 @@ namespace ja2 {
       UnPauseGame();
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function IsValidTalkableNPCFromMouse(
@@ -6033,7 +6033,7 @@ namespace ja2 {
         }
 
         // If Q on, turn off.....
-        if (guiCurrentScreen == Enum26.DEBUG_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.DEBUG_SCREEN) {
           gfExitDebugScreen = true;
         }
 
@@ -6519,7 +6519,7 @@ namespace ja2 {
 
     ErasePath(true);
 
-    GameScreens[Enum26.GAME_SCREEN].HandleScreen();
+    GameScreens[ScreenIds.GAME_SCREEN].HandleScreen();
 
     gfTacticalForceNoCursor = false;
 

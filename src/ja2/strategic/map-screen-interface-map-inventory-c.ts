@@ -795,7 +795,7 @@ namespace ja2 {
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             gzLateLocalizedString[38],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );
@@ -810,7 +810,7 @@ namespace ja2 {
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           pMapInventoryErrorString[1],
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           MSG_BOX_FLAG_OK,
           null,
         );
@@ -843,7 +843,7 @@ namespace ja2 {
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             sString,
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );
@@ -871,7 +871,7 @@ namespace ja2 {
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             pMapInventoryErrorString[3],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );
@@ -923,7 +923,7 @@ namespace ja2 {
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             pMapInventoryErrorString[4],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );

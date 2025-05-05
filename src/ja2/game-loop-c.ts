@@ -28,7 +28,7 @@ namespace ja2 {
     InitTacticalSave(true);
 
     // Initialize Game Screens.
-    for (uiIndex = 0; uiIndex < Enum26.MAX_SCREENS; uiIndex++) {
+    for (uiIndex = 0; uiIndex < ScreenIds.MAX_SCREENS; uiIndex++) {
       if (GameScreens[uiIndex].InitializeScreen() == false) {
         // Failed to initialize one of the screens.
         return false;
@@ -47,7 +47,7 @@ namespace ja2 {
     // preload mapscreen graphics
     HandlePreloadOfMapGraphics();
 
-    guiCurrentScreen = Enum26.INIT_SCREEN;
+    guiCurrentScreen = ScreenIds.INIT_SCREEN;
 
     return true;
   }
@@ -162,24 +162,24 @@ namespace ja2 {
     }
 
     if (gfGlobalError) {
-      guiCurrentScreen = Enum26.ERROR_SCREEN;
+      guiCurrentScreen = ScreenIds.ERROR_SCREEN;
     }
 
     // ATE: Force to be in message box screen!
     if (gfInMsgBox) {
-      guiPendingScreen = Enum26.MSG_BOX_SCREEN;
+      guiPendingScreen = ScreenIds.MSG_BOX_SCREEN;
     }
 
     if (guiPendingScreen != NO_PENDING_SCREEN) {
       // Based on active screen, deinit!
       if (guiPendingScreen != guiCurrentScreen) {
         switch (guiCurrentScreen) {
-          case Enum26.MAP_SCREEN:
-            if (guiPendingScreen != Enum26.MSG_BOX_SCREEN) {
+          case ScreenIds.MAP_SCREEN:
+            if (guiPendingScreen != ScreenIds.MSG_BOX_SCREEN) {
               EndMapScreen(false);
             }
             break;
-          case Enum26.LAPTOP_SCREEN:
+          case ScreenIds.LAPTOP_SCREEN:
             ExitLaptop();
             break;
         }
@@ -223,8 +223,8 @@ namespace ja2 {
   ): void {
     // if we are not going into the message box screen, and we didnt just come from it
     if (
-      uiNewScreen != Enum26.MSG_BOX_SCREEN &&
-      uiOldScreen != Enum26.MSG_BOX_SCREEN
+      uiNewScreen != ScreenIds.MSG_BOX_SCREEN &&
+      uiOldScreen != ScreenIds.MSG_BOX_SCREEN
     ) {
       // reset the help screen
       NewScreenSoResetHelpScreen();
@@ -242,13 +242,13 @@ namespace ja2 {
       INV_INTERFACE_START_Y,
     );
 
-    if (guiCurrentScreen == Enum26.ERROR_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.ERROR_SCREEN) {
       // an assert failure, don't bring up the box!
       gfProgramIsRunning = false;
       return;
     }
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN) {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         pMessageStrings[Enum333.MSG_EXITGAME],
@@ -266,24 +266,24 @@ namespace ja2 {
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         pMessageStrings[Enum333.MSG_EXITGAME],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_YESNO,
         EndGameMessageBoxCallBack,
       );
-    } else if (guiCurrentScreen == Enum26.LAPTOP_SCREEN) {
+    } else if (guiCurrentScreen == ScreenIds.LAPTOP_SCREEN) {
       // set up for laptop
       DoLapTopSystemMessageBox(
         Enum24.MSG_BOX_LAPTOP_DEFAULT,
         pMessageStrings[Enum333.MSG_EXITGAME],
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         MSG_BOX_FLAG_YESNO,
         EndGameMessageBoxCallBack,
       );
-    } else if (guiCurrentScreen == Enum26.SHOPKEEPER_SCREEN) {
+    } else if (guiCurrentScreen == ScreenIds.SHOPKEEPER_SCREEN) {
       DoSkiMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         pMessageStrings[Enum333.MSG_EXITGAME],
-        Enum26.SHOPKEEPER_SCREEN,
+        ScreenIds.SHOPKEEPER_SCREEN,
         MSG_BOX_FLAG_YESNO,
         EndGameMessageBoxCallBack,
       );
@@ -291,9 +291,9 @@ namespace ja2 {
       // check if error or editor
 
       if (
-        guiCurrentScreen == Enum26.ERROR_SCREEN ||
-        guiCurrentScreen == Enum26.EDIT_SCREEN ||
-        guiCurrentScreen == Enum26.DEBUG_SCREEN
+        guiCurrentScreen == ScreenIds.ERROR_SCREEN ||
+        guiCurrentScreen == ScreenIds.EDIT_SCREEN ||
+        guiCurrentScreen == ScreenIds.DEBUG_SCREEN
       ) {
         // then don't prompt
         gfProgramIsRunning = false;

@@ -1066,7 +1066,7 @@ namespace ja2 {
     // ATE: We could be replacing already existing, active text
     // so let's remove the region so it be rebuilt...
 
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       if (region.uiFlags & MSYS_GOT_BACKGROUND)
         FreeBackgroundRectPending(region.FastHelpRect);
 

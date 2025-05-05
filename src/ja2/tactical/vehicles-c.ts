@@ -404,7 +404,7 @@ INT16 sVehicleInternalOrigArmorValues[ NUMBER_OF_TYPES_OF_VEHICLES ][ NUMBER_OF_
 
     if (pVehicleSoldier) {
       // can't call SelectSoldier in mapscreen, that will initialize interface panels!!!
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         SelectSoldier(pVehicleSoldier.ubID, false, true);
       }
 
@@ -487,7 +487,7 @@ INT16 sVehicleInternalOrigArmorValues[ NUMBER_OF_TYPES_OF_VEHICLES ][ NUMBER_OF_
           EVENT_StopMerc(pSoldier, pSoldier.sGridNo, pSoldier.bDirection);
 
           // can't call SetCurrentSquad OR SelectSoldier in mapscreen, that will initialize interface panels!!!
-          if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+          if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
             SetCurrentSquad(pVehicleSoldier.bAssignment, true);
           }
         }
@@ -1453,7 +1453,7 @@ void RemoveSoldierFromVehicleBetweenSectors( pSoldier, iId )
       AddCharacterToUniqueSquad(pSoldier);
 
       // can't call SetCurrentSquad OR SelectSoldier in mapscreen, that will initialize interface panels!!!
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         SetCurrentSquad(pSoldier.bAssignment, true);
 
         SelectSoldier(pSoldier.ubID, false, true);

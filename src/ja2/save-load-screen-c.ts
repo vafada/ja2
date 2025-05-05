@@ -100,7 +100,7 @@ namespace ja2 {
   let gfExitAfterMessageBox: boolean = false;
   let giSaveLoadMessageBox: INT32 = -1; // SaveLoad pop up messages index value
 
-  let guiSaveLoadExitScreen: UINT32 = Enum26.SAVE_LOAD_SCREEN;
+  let guiSaveLoadExitScreen: UINT32 = ScreenIds.SAVE_LOAD_SCREEN;
 
   // Contains the array of valid save game locations
   export let gbSaveGameArray: UINT8[] /* boolean[NUM_SAVE_GAMES] */ =
@@ -244,7 +244,7 @@ namespace ja2 {
     // If we are not exiting the screen, render the buttons
     if (
       !gfSaveLoadScreenExit &&
-      guiSaveLoadExitScreen == Enum26.SAVE_LOAD_SCREEN
+      guiSaveLoadExitScreen == ScreenIds.SAVE_LOAD_SCREEN
     ) {
       // render buttons marked dirty
       RenderButtons();
@@ -261,8 +261,8 @@ namespace ja2 {
       return guiSaveLoadExitScreen;
     }
 
-    if (HandleBeginFadeOut(Enum26.SAVE_LOAD_SCREEN)) {
-      return Enum26.SAVE_LOAD_SCREEN;
+    if (HandleBeginFadeOut(ScreenIds.SAVE_LOAD_SCREEN)) {
+      return ScreenIds.SAVE_LOAD_SCREEN;
     }
 
     if (gfSaveLoadScreenExit) {
@@ -274,7 +274,7 @@ namespace ja2 {
       RenderSaveLoadScreen();
     }
 
-    if (HandleBeginFadeIn(Enum26.SAVE_LOAD_SCREEN)) {
+    if (HandleBeginFadeIn(ScreenIds.SAVE_LOAD_SCREEN)) {
     }
 
     return guiSaveLoadExitScreen;
@@ -285,7 +285,7 @@ namespace ja2 {
   }
 
   function SetSaveLoadExitScreen(uiScreen: UINT32): void {
-    if (uiScreen == Enum26.GAME_SCREEN) {
+    if (uiScreen == ScreenIds.GAME_SCREEN) {
       EnterTacticalScreen();
     }
 
@@ -326,7 +326,7 @@ namespace ja2 {
       gfHadToMakeBasementLevels = false;
     }
 
-    guiSaveLoadExitScreen = Enum26.SAVE_LOAD_SCREEN;
+    guiSaveLoadExitScreen = ScreenIds.SAVE_LOAD_SCREEN;
     // init the list
     InitSaveGameArray();
 
@@ -749,7 +749,7 @@ namespace ja2 {
       DoSaveLoadMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zSaveLoadText[Enum371.SLG_SAVE_GAME_ERROR],
-        Enum26.SAVE_LOAD_SCREEN,
+        ScreenIds.SAVE_LOAD_SCREEN,
         MSG_BOX_FLAG_OK,
         RedrawSaveLoadScreenAfterMessageBox,
       );
@@ -926,9 +926,9 @@ namespace ja2 {
             if (gbSelectedSaveLocation == -1) {
               if (gfCameDirectlyFromGame)
                 SetSaveLoadExitScreen(guiPreviousOptionScreen);
-              else if (guiPreviousOptionScreen == Enum26.MAINMENU_SCREEN)
-                SetSaveLoadExitScreen(Enum26.MAINMENU_SCREEN);
-              else SetSaveLoadExitScreen(Enum26.OPTIONS_SCREEN);
+              else if (guiPreviousOptionScreen == ScreenIds.MAINMENU_SCREEN)
+                SetSaveLoadExitScreen(ScreenIds.MAINMENU_SCREEN);
+              else SetSaveLoadExitScreen(ScreenIds.OPTIONS_SCREEN);
             } else {
               // Reset the selected slot background graphic
               gbSaveGameSelectedLocation[gbSelectedSaveLocation] =
@@ -999,7 +999,7 @@ namespace ja2 {
         DoSaveLoadMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           sText,
-          Enum26.SAVE_LOAD_SCREEN,
+          ScreenIds.SAVE_LOAD_SCREEN,
           MSG_BOX_FLAG_YESNO,
           ConfirmSavedGameMessageBoxCallBack,
         );
@@ -1017,7 +1017,7 @@ namespace ja2 {
           DoSaveLoadMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             zSaveLoadText[Enum371.SLG_GAME_VERSION_DIF],
-            Enum26.SAVE_LOAD_SCREEN,
+            ScreenIds.SAVE_LOAD_SCREEN,
             MSG_BOX_FLAG_YESNO,
             LoadSavedGameWarningMessageBoxCallBack,
           );
@@ -1025,7 +1025,7 @@ namespace ja2 {
           DoSaveLoadMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             zSaveLoadText[Enum371.SLG_SAVED_GAME_VERSION_DIF],
-            Enum26.SAVE_LOAD_SCREEN,
+            ScreenIds.SAVE_LOAD_SCREEN,
             MSG_BOX_FLAG_YESNO,
             LoadSavedGameWarningMessageBoxCallBack,
           );
@@ -1033,7 +1033,7 @@ namespace ja2 {
           DoSaveLoadMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             zSaveLoadText[Enum371.SLG_BOTH_GAME_AND_SAVED_GAME_DIF],
-            Enum26.SAVE_LOAD_SCREEN,
+            ScreenIds.SAVE_LOAD_SCREEN,
             MSG_BOX_FLAG_YESNO,
             LoadSavedGameWarningMessageBoxCallBack,
           );
@@ -1598,9 +1598,9 @@ namespace ja2 {
       // Exit back
       if (gfCameDirectlyFromGame)
         SetSaveLoadExitScreen(guiPreviousOptionScreen);
-      else if (guiPreviousOptionScreen == Enum26.MAINMENU_SCREEN)
-        SetSaveLoadExitScreen(Enum26.MAINMENU_SCREEN);
-      else SetSaveLoadExitScreen(Enum26.OPTIONS_SCREEN);
+      else if (guiPreviousOptionScreen == ScreenIds.MAINMENU_SCREEN)
+        SetSaveLoadExitScreen(ScreenIds.MAINMENU_SCREEN);
+      else SetSaveLoadExitScreen(ScreenIds.OPTIONS_SCREEN);
 
       InvalidateRegion(
         btn.Area.RegionTopLeftX,
@@ -1708,7 +1708,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
         DoSaveLoadMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           pMessageStrings[Enum333.MSG_QUICK_SAVE_RESERVED_FOR_TACTICAL],
-          Enum26.SAVE_LOAD_SCREEN,
+          ScreenIds.SAVE_LOAD_SCREEN,
           MSG_BOX_FLAG_OK,
           RedrawSaveLoadScreenAfterMessageBox,
         );
@@ -1886,7 +1886,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
     // if we are exiting, dont create the fields
     if (
       gfSaveLoadScreenExit ||
-      guiSaveLoadExitScreen != Enum26.SAVE_LOAD_SCREEN
+      guiSaveLoadExitScreen != ScreenIds.SAVE_LOAD_SCREEN
     )
       return;
 
@@ -2065,7 +2065,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
       DoSaveLoadMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zSaveLoadText[Enum371.SLG_DELETE_ALL_SAVE_GAMES],
-        Enum26.SAVE_LOAD_SCREEN,
+        ScreenIds.SAVE_LOAD_SCREEN,
         MSG_BOX_FLAG_YESNO,
         LoadSavedGameDeleteAllSaveGameMessageBoxCallBack,
       );
@@ -2083,7 +2083,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
 
     gfExitAfterMessageBox = true;
 
-    SetSaveLoadExitScreen(Enum26.OPTIONS_SCREEN);
+    SetSaveLoadExitScreen(ScreenIds.OPTIONS_SCREEN);
 
     gbSelectedSaveLocation = -1;
   }
@@ -2181,7 +2181,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
           DoSaveLoadMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             zSaveLoadText[Enum371.SLG_LOAD_GAME_ERROR],
-            Enum26.SAVE_LOAD_SCREEN,
+            ScreenIds.SAVE_LOAD_SCREEN,
             MSG_BOX_FLAG_OK,
             FailedLoadingGameCallBack,
           );
@@ -2195,7 +2195,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
         DoSaveLoadMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zSaveLoadText[Enum371.SLG_LOAD_GAME_ERROR],
-          Enum26.SAVE_LOAD_SCREEN,
+          ScreenIds.SAVE_LOAD_SCREEN,
           MSG_BOX_FLAG_OK,
           FailedLoadingGameCallBack,
         );
@@ -2207,7 +2207,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
 
     if (gotoSuccessfullyCorrectedSave) {
       // If we are to go to map screen after loading the game
-      if (guiScreenToGotoAfterLoadingSavedGame == Enum26.MAP_SCREEN) {
+      if (guiScreenToGotoAfterLoadingSavedGame == ScreenIds.MAP_SCREEN) {
         gFadeInDoneCallback = DoneFadeInForSaveLoadScreen;
 
         SetSaveLoadExitScreen(guiScreenToGotoAfterLoadingSavedGame);
@@ -2235,7 +2235,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
     // if we are supposed to stay in tactical, due nothing,
     // if we are supposed to goto mapscreen, leave tactical and go to mapscreen
 
-    if (guiScreenToGotoAfterLoadingSavedGame == Enum26.MAP_SCREEN) {
+    if (guiScreenToGotoAfterLoadingSavedGame == ScreenIds.MAP_SCREEN) {
       if (!gfPauseDueToPlayerGamePause) {
         UnLockPauseState();
         UnPauseGame();
@@ -2300,13 +2300,13 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
     // yes
     if (bExitValue == MSG_BOX_RETURN_OK) {
       // if the current screen is tactical
-      if (guiPreviousOptionScreen == Enum26.MAP_SCREEN) {
-        SetPendingNewScreen(Enum26.MAINMENU_SCREEN);
+      if (guiPreviousOptionScreen == ScreenIds.MAP_SCREEN) {
+        SetPendingNewScreen(ScreenIds.MAINMENU_SCREEN);
       } else {
-        LeaveTacticalScreen(Enum26.MAINMENU_SCREEN);
+        LeaveTacticalScreen(ScreenIds.MAINMENU_SCREEN);
       }
 
-      SetSaveLoadExitScreen(Enum26.MAINMENU_SCREEN);
+      SetSaveLoadExitScreen(ScreenIds.MAINMENU_SCREEN);
 
       // We want to reinitialize the game
       ReStartingGame();
@@ -2347,11 +2347,11 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
       // Unset the fact that we are saving a game
       gTacticalStatus.uiFlags &= ~LOADING_SAVED_GAME;
 
-      if (guiPreviousOptionScreen == Enum26.MAP_SCREEN)
+      if (guiPreviousOptionScreen == ScreenIds.MAP_SCREEN)
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zSaveLoadText[Enum371.SLG_SAVE_GAME_ERROR],
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           MSG_BOX_FLAG_OK,
           null,
         );
@@ -2359,7 +2359,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zSaveLoadText[Enum371.SLG_SAVE_GAME_ERROR],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_OK,
           null,
           null,
@@ -2380,7 +2380,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
     gbSelectedSaveLocation = 0;
 
     // if the game is paused, and we are in tactical, unpause
-    if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
       PauseTime(false);
     }
 
@@ -2543,7 +2543,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
       DoSaveLoadMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zSaveLoadText[Enum371.SLG_SAVE_GAME_ERROR],
-        Enum26.SAVE_LOAD_SCREEN,
+        ScreenIds.SAVE_LOAD_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );
@@ -2556,7 +2556,7 @@ void BtnSlgLoadCallback(GUI_BUTTON *btn,INT32 reason)
 
   function StartFadeOutForSaveLoadScreen(): void {
     // if the game is paused, and we are in tactical, unpause
-    if (guiPreviousOptionScreen == Enum26.GAME_SCREEN) {
+    if (guiPreviousOptionScreen == ScreenIds.GAME_SCREEN) {
       PauseTime(false);
     }
 

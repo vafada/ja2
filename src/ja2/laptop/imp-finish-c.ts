@@ -331,7 +331,7 @@ namespace ja2 {
         DoLapTopMessageBox(
           Enum24.MSG_BOX_IMP_STYLE,
           pImpPopUpStrings[1],
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_YESNO,
           FinishMessageBoxCallBack,
         );

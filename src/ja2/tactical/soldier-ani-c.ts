@@ -3737,7 +3737,7 @@ namespace ja2 {
             gTacticalStatus.ubEnemyKilledOnAttackKiller = pSoldier.ubAttackerID;
 
             // also check if we are in mapscreen, if so update soldier's list
-            if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+            if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
               ReBuildCharactersList();
             }
           } else if (pSoldier.bVisible == 1) {

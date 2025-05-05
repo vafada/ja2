@@ -116,7 +116,7 @@ enum
 
   let gubGameOptionScreenHandler: UINT8 = Enum7.GIO_NOTHING;
 
-  let gubGIOExitScreen: UINT32 = Enum26.GAME_INIT_OPTIONS_SCREEN;
+  let gubGIOExitScreen: UINT32 = ScreenIds.GAME_INIT_OPTIONS_SCREEN;
 
   let guiGIOMainBackGroundImage: UINT32;
 
@@ -433,7 +433,7 @@ void BtnTimedTurnsTogglesCallback(GUI_BUTTON *btn,INT32 reason);
   */
 
     // Reset the exit screen
-    gubGIOExitScreen = Enum26.GAME_INIT_OPTIONS_SCREEN;
+    gubGIOExitScreen = ScreenIds.GAME_INIT_OPTIONS_SCREEN;
 
     // REnder the screen once so we can blt ot to ths save buffer
     RenderGIOScreen();
@@ -497,7 +497,7 @@ void BtnTimedTurnsTogglesCallback(GUI_BUTTON *btn,INT32 reason);
     if (gubGameOptionScreenHandler != Enum7.GIO_NOTHING) {
       switch (gubGameOptionScreenHandler) {
         case Enum7.GIO_CANCEL:
-          gubGIOExitScreen = Enum26.MAINMENU_SCREEN;
+          gubGIOExitScreen = ScreenIds.MAINMENU_SCREEN;
           gfGIOScreenExit = true;
           break;
 
@@ -1163,7 +1163,7 @@ UINT8	GetCurrentTimedTurnsButtonSetting()
     gGameOptions.fIronManMode = Boolean(GetCurrentGameSaveButtonSetting());
 
     //	gubGIOExitScreen = INIT_SCREEN;
-    gubGIOExitScreen = Enum26.INTRO_SCREEN;
+    gubGIOExitScreen = ScreenIds.INTRO_SCREEN;
 
     // set the fact that we should do the intro videos
     //	gbIntroScreenMode = INTRO_BEGINING;
@@ -1214,7 +1214,7 @@ UINT8	GetCurrentTimedTurnsButtonSetting()
         DoGioMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zGioDifConfirmText[Enum381.GIO_CFS_NOVICE],
-          Enum26.GAME_INIT_OPTIONS_SCREEN,
+          ScreenIds.GAME_INIT_OPTIONS_SCREEN,
           MSG_BOX_FLAG_YESNO,
           ConfirmGioDifSettingMessageBoxCallBack,
         );
@@ -1223,7 +1223,7 @@ UINT8	GetCurrentTimedTurnsButtonSetting()
         DoGioMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zGioDifConfirmText[Enum381.GIO_CFS_EXPERIENCED],
-          Enum26.GAME_INIT_OPTIONS_SCREEN,
+          ScreenIds.GAME_INIT_OPTIONS_SCREEN,
           MSG_BOX_FLAG_YESNO,
           ConfirmGioDifSettingMessageBoxCallBack,
         );
@@ -1232,7 +1232,7 @@ UINT8	GetCurrentTimedTurnsButtonSetting()
         DoGioMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zGioDifConfirmText[Enum381.GIO_CFS_EXPERT],
-          Enum26.GAME_INIT_OPTIONS_SCREEN,
+          ScreenIds.GAME_INIT_OPTIONS_SCREEN,
           MSG_BOX_FLAG_YESNO,
           ConfirmGioDifSettingMessageBoxCallBack,
         );
@@ -1254,7 +1254,7 @@ UINT8	GetCurrentTimedTurnsButtonSetting()
       DoGioMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         gzIronManModeWarningText[Enum321.IMM__IRON_MAN_MODE_WARNING_TEXT],
-        Enum26.GAME_INIT_OPTIONS_SCREEN,
+        ScreenIds.GAME_INIT_OPTIONS_SCREEN,
         MSG_BOX_FLAG_YESNO,
         ConfirmGioIronManMessageBoxCallBack,
       );

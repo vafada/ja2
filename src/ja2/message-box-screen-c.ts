@@ -256,7 +256,7 @@ namespace ja2 {
       Math.trunc((aRect.iBottom - aRect.iTop - usTextBoxHeight) / 2) +
       aRect.iTop;
 
-    if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
       gfStartedFromGameScreen = true;
     }
 
@@ -267,7 +267,7 @@ namespace ja2 {
     }
 
     // Set pending screen
-    SetPendingNewScreen(Enum26.MSG_BOX_SCREEN);
+    SetPendingNewScreen(ScreenIds.MSG_BOX_SCREEN);
 
     // Init save buffer
     vs_desc.fCreateFlags = VSURFACE_CREATE_DEFAULT | VSURFACE_SYSTEM_MEM_USAGE;
@@ -1155,7 +1155,7 @@ namespace ja2 {
 
     // if ur in a non gamescreen and DONT want the msg box to use the save buffer, unset gfDontOverRideSaveBuffer in ur callback
     if (
-      (gMsgBox.uiExitScreen != Enum26.GAME_SCREEN ||
+      (gMsgBox.uiExitScreen != ScreenIds.GAME_SCREEN ||
         fRestoreBackgroundForMessageBox == true) &&
       gfDontOverRideSaveBuffer
     ) {
@@ -1225,21 +1225,21 @@ namespace ja2 {
     DeleteVideoSurfaceFromIndex(gMsgBox.uiSaveBuffer);
 
     switch (gMsgBox.uiExitScreen) {
-      case Enum26.GAME_SCREEN:
+      case ScreenIds.GAME_SCREEN:
         if (InOverheadMap()) {
           gfOverheadMapDirty = true;
         } else {
           SetRenderFlags(RENDER_FLAG_FULL);
         }
         break;
-      case Enum26.MAP_SCREEN:
+      case ScreenIds.MAP_SCREEN:
         fMapPanelDirty = true;
         break;
     }
 
     if (gfFadeInitialized) {
-      SetPendingNewScreen(Enum26.FADE_SCREEN);
-      return Enum26.FADE_SCREEN;
+      SetPendingNewScreen(ScreenIds.FADE_SCREEN);
+      return ScreenIds.FADE_SCREEN;
     }
 
     return gMsgBox.uiExitScreen;
@@ -1284,7 +1284,7 @@ namespace ja2 {
 
       gfNewMessageBox = false;
 
-      return Enum26.MSG_BOX_SCREEN;
+      return ScreenIds.MSG_BOX_SCREEN;
     }
 
     UnmarkButtonsDirty();
@@ -1435,7 +1435,7 @@ namespace ja2 {
       return ExitMsgBox(gMsgBox.bHandled);
     }
 
-    return Enum26.MSG_BOX_SCREEN;
+    return ScreenIds.MSG_BOX_SCREEN;
   }
 
   export function MessageBoxScreenShutdown(): boolean {
@@ -1513,11 +1513,11 @@ namespace ja2 {
     // Map Screen (excluding AI Viewer)
     if (guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN) {
       // auto resolve is a special case
-      if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN) {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zString,
-          Enum26.AUTORESOLVE_SCREEN,
+          ScreenIds.AUTORESOLVE_SCREEN,
           usFlags,
           ReturnCallback,
           pCenteringRect,
@@ -1527,7 +1527,7 @@ namespace ja2 {
         DoMapMessageBoxWithRect(
           Enum24.MSG_BOX_BASIC_STYLE,
           zString,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           usFlags,
           ReturnCallback,
           pCenteringRect,
@@ -1536,12 +1536,12 @@ namespace ja2 {
     }
 
     // Laptop
-    else if (guiCurrentScreen == Enum26.LAPTOP_SCREEN) {
+    else if (guiCurrentScreen == ScreenIds.LAPTOP_SCREEN) {
       // set up for laptop
       DoLapTopSystemMessageBoxWithRect(
         Enum24.MSG_BOX_LAPTOP_DEFAULT,
         zString,
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         usFlags,
         ReturnCallback,
         pCenteringRect,
@@ -1549,11 +1549,11 @@ namespace ja2 {
     }
 
     // Save Load Screen
-    else if (guiCurrentScreen == Enum26.SAVE_LOAD_SCREEN) {
+    else if (guiCurrentScreen == ScreenIds.SAVE_LOAD_SCREEN) {
       DoSaveLoadMessageBoxWithRect(
         Enum24.MSG_BOX_BASIC_STYLE,
         zString,
-        Enum26.SAVE_LOAD_SCREEN,
+        ScreenIds.SAVE_LOAD_SCREEN,
         usFlags,
         ReturnCallback,
         pCenteringRect,
@@ -1561,11 +1561,11 @@ namespace ja2 {
     }
 
     // Options Screen
-    else if (guiCurrentScreen == Enum26.OPTIONS_SCREEN) {
+    else if (guiCurrentScreen == ScreenIds.OPTIONS_SCREEN) {
       DoOptionsMessageBoxWithRect(
         Enum24.MSG_BOX_BASIC_STYLE,
         zString,
-        Enum26.OPTIONS_SCREEN,
+        ScreenIds.OPTIONS_SCREEN,
         usFlags,
         ReturnCallback,
         pCenteringRect,
@@ -1573,7 +1573,7 @@ namespace ja2 {
     }
 
     // Tactical
-    else if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+    else if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zString,

@@ -120,7 +120,7 @@ namespace ja2 {
       fEnteringLoadSaveScreen = true;
       RemoveFileDialog();
       MarkWorldDirty();
-      return gfMessageBoxResult ? Enum26.LOADSAVE_SCREEN : Enum26.EDIT_SCREEN;
+      return gfMessageBoxResult ? ScreenIds.LOADSAVE_SCREEN : ScreenIds.EDIT_SCREEN;
     }
     if (gfDeleteFile) {
       if (gfMessageBoxResult) {
@@ -171,31 +171,31 @@ namespace ja2 {
       RenderWorld();
       gfDeleteFile = false;
       iFDlgState = Enum50.DIALOG_NONE;
-      return Enum26.LOADSAVE_SCREEN;
+      return ScreenIds.LOADSAVE_SCREEN;
     }
     if (gfLoadError) {
       fEnteringLoadSaveScreen = true;
-      return gfMessageBoxResult ? Enum26.LOADSAVE_SCREEN : Enum26.EDIT_SCREEN;
+      return gfMessageBoxResult ? ScreenIds.LOADSAVE_SCREEN : ScreenIds.EDIT_SCREEN;
     }
     if (gfReadOnly) {
       // file is readonly.  Result will determine if the file dialog stays up.
       fEnteringLoadSaveScreen = true;
       RemoveFileDialog();
-      return gfMessageBoxResult ? Enum26.LOADSAVE_SCREEN : Enum26.EDIT_SCREEN;
+      return gfMessageBoxResult ? ScreenIds.LOADSAVE_SCREEN : ScreenIds.EDIT_SCREEN;
     }
     if (gfFileExists) {
       if (gfMessageBoxResult) {
         // okay to overwrite file
         RemoveFileDialog();
         gbCurrentFileIOStatus = Enum51.INITIATE_MAP_SAVE;
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
       }
       fEnteringLoadSaveScreen = true;
       RemoveFileDialog();
-      return Enum26.EDIT_SCREEN;
+      return ScreenIds.EDIT_SCREEN;
     }
     Assert(0);
-    return Enum26.LOADSAVE_SCREEN;
+    return ScreenIds.LOADSAVE_SCREEN;
   }
 
   export function LoadSaveScreenHandle(): UINT32 {
@@ -212,7 +212,7 @@ namespace ja2 {
       let uiScreen: UINT32;
       uiScreen = ProcessFileIO();
       if (
-        uiScreen == Enum26.EDIT_SCREEN &&
+        uiScreen == ScreenIds.EDIT_SCREEN &&
         gbCurrentFileIOStatus == Enum51.LOADING_MAP
       )
         RemoveProgressBar(0);
@@ -221,7 +221,7 @@ namespace ja2 {
 
     if (gubMessageBoxStatus) {
       if (MessageBoxHandled()) return ProcessLoadSaveScreenMessageBoxResult();
-      return Enum26.LOADSAVE_SCREEN;
+      return ScreenIds.LOADSAVE_SCREEN;
     }
 
     // handle all key input.
@@ -285,7 +285,7 @@ namespace ja2 {
       case Enum50.DIALOG_CANCEL:
         RemoveFileDialog();
         fEnteringLoadSaveScreen = true;
-        return Enum26.EDIT_SCREEN;
+        return ScreenIds.EDIT_SCREEN;
       case Enum50.DIALOG_DELETE:
         gszCurrFilename = path.join("MAPS", gzFilename);
         {
@@ -294,13 +294,13 @@ namespace ja2 {
           gfDeleteFile = true;
           CreateMessageBox(str);
         }
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
       case Enum50.DIALOG_SAVE:
         if (!ExtractFilenameFromFields()) {
           CreateMessageBox(" Illegal filename.  Try another filename? ");
           gfIllegalName = true;
           iFDlgState = Enum50.DIALOG_NONE;
-          return Enum26.LOADSAVE_SCREEN;
+          return ScreenIds.LOADSAVE_SCREEN;
         }
         gszCurrFilename = path.join("MAPS", gzFilename);
         if (FileExists(gszCurrFilename)) {
@@ -309,17 +309,17 @@ namespace ja2 {
           if (gfReadOnly)
             CreateMessageBox(" File is read only!  Choose a different name? ");
           else CreateMessageBox(" File exists, Overwrite? ");
-          return Enum26.LOADSAVE_SCREEN;
+          return ScreenIds.LOADSAVE_SCREEN;
         }
         RemoveFileDialog();
         gbCurrentFileIOStatus = Enum51.INITIATE_MAP_SAVE;
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
       case Enum50.DIALOG_LOAD:
         if (!ExtractFilenameFromFields()) {
           CreateMessageBox(" Illegal filename.  Try another filename? ");
           gfIllegalName = true;
           iFDlgState = Enum50.DIALOG_NONE;
-          return Enum26.LOADSAVE_SCREEN;
+          return ScreenIds.LOADSAVE_SCREEN;
         }
         RemoveFileDialog();
         CreateProgressBar(0, 118, 183, 522, 202);
@@ -333,12 +333,12 @@ namespace ja2 {
           FONT_NEARBLACK,
         );
         gbCurrentFileIOStatus = Enum51.INITIATE_MAP_LOAD;
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
       default:
         iFDlgState = Enum50.DIALOG_NONE;
     }
     iFDlgState = Enum50.DIALOG_NONE;
-    return Enum26.LOADSAVE_SCREEN;
+    return ScreenIds.LOADSAVE_SCREEN;
   }
 
   function CreateFileDialog(zTitle: string /* Pointer<UINT16> */): void {
@@ -875,7 +875,7 @@ namespace ja2 {
     giErrorCatchMessageBox = DoMessageBox(
       Enum24.MSG_BOX_BASIC_STYLE,
       gzErrorCatchString,
-      Enum26.EDIT_SCREEN,
+      ScreenIds.EDIT_SCREEN,
       MSG_BOX_FLAG_OK,
       null,
       CenteringRect,
@@ -908,7 +908,7 @@ namespace ja2 {
         InvalidateScreen();
         EndFrameBufferRender();
         gbCurrentFileIOStatus = Enum51.SAVING_MAP;
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
       case Enum51.SAVING_MAP: // save map
         ubNewFilename = sprintf("%s", gzFilename);
         RaiseWorldLand();
@@ -917,9 +917,9 @@ namespace ja2 {
         if (!SaveWorld(ubNewFilename)) {
           if (gfErrorCatch) {
             InitErrorCatchDialog();
-            return Enum26.EDIT_SCREEN;
+            return ScreenIds.EDIT_SCREEN;
           }
-          return Enum26.ERROR_SCREEN;
+          return ScreenIds.ERROR_SCREEN;
         }
         if (gfShowPits) AddAllPits();
 
@@ -936,7 +936,7 @@ namespace ja2 {
         RestoreFontSettings();
         if (gfErrorCatch) {
           InitErrorCatchDialog();
-          return Enum26.EDIT_SCREEN;
+          return ScreenIds.EDIT_SCREEN;
         }
         if (gMapInformation.ubMapVersion != gubMinorMapVersion)
           ScreenMsg(
@@ -944,14 +944,14 @@ namespace ja2 {
             MSG_ERROR,
             "Map data has just been corrupted!!!  What did you just do?  KM : 0",
           );
-        return Enum26.EDIT_SCREEN;
+        return ScreenIds.EDIT_SCREEN;
       case Enum51.INITIATE_MAP_LOAD: // draw load message
         SaveFontSettings();
         gbCurrentFileIOStatus = Enum51.LOADING_MAP;
         if (gfEditMode && iCurrentTaskbar == Enum36.TASK_MERCS)
           IndicateSelectedMerc(Enum43.SELECT_NO_MERC);
         SpecifyItemToEdit(null, -1);
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
       case Enum51.LOADING_MAP: // load map
         DisableUndo();
         ubNewFilename = sprintf("%s", gzFilename);
@@ -961,13 +961,13 @@ namespace ja2 {
         if (!LoadWorld(ubNewFilename)) {
           // Want to override crash, so user can do something else.
           EnableUndo();
-          SetPendingNewScreen(Enum26.LOADSAVE_SCREEN);
+          SetPendingNewScreen(ScreenIds.LOADSAVE_SCREEN);
           gbCurrentFileIOStatus = Enum51.IOSTATUS_NONE;
           gfGlobalError = false;
           gfLoadError = true;
           // RemoveButton( iTempButton );
           CreateMessageBox(" Error loading file.  Try another filename?");
-          return Enum26.LOADSAVE_SCREEN;
+          return ScreenIds.LOADSAVE_SCREEN;
         }
         SetGlobalSectorValues(gzFilename);
 
@@ -1023,10 +1023,10 @@ namespace ja2 {
           UpdateMapInfoFields();
           RestoreSavedTextInputMode();
         }
-        return Enum26.EDIT_SCREEN;
+        return ScreenIds.EDIT_SCREEN;
     }
     gbCurrentFileIOStatus = Enum51.IOSTATUS_NONE;
-    return Enum26.LOADSAVE_SCREEN;
+    return ScreenIds.LOADSAVE_SCREEN;
   }
 
   // LOADSCREEN
@@ -1121,7 +1121,7 @@ namespace ja2 {
     ExecuteBaseDirtyRectQueue();
     EndFrameBufferRender();
     RefreshScreen();
-    if (ProcessFileIO() == Enum26.EDIT_SCREEN) return true;
+    if (ProcessFileIO() == ScreenIds.EDIT_SCREEN) return true;
     return false;
   }
 
@@ -1133,11 +1133,11 @@ namespace ja2 {
     gzFilename = szFilename;
     if (!ValidFilename()) return false;
     gbCurrentFileIOStatus = Enum51.INITIATE_MAP_SAVE;
-    if (ProcessFileIO() == Enum26.ERROR_SCREEN) return false;
+    if (ProcessFileIO() == ScreenIds.ERROR_SCREEN) return false;
     ExecuteBaseDirtyRectQueue();
     EndFrameBufferRender();
     RefreshScreen();
-    if (ProcessFileIO() == Enum26.EDIT_SCREEN) return true;
+    if (ProcessFileIO() == ScreenIds.EDIT_SCREEN) return true;
     return false;
   }
 }

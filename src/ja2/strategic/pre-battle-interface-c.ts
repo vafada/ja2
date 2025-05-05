@@ -141,7 +141,7 @@ SOLDIERTYPE* UninvolvedSoldier( INT32 index );
       // fixing a bug
       // if( guiCurrentScreen == GAME_SCREEN && pBattleGroup )
       if (
-        guiCurrentScreen == Enum26.GAME_SCREEN &&
+        guiCurrentScreen == ScreenIds.GAME_SCREEN &&
         (pBattleGroup || fPersistantPBI)
       ) {
         gpBattleGroup = pBattleGroup;
@@ -225,7 +225,7 @@ SOLDIERTYPE* UninvolvedSoldier( INT32 index );
     RenderMapScreenInterfaceBottom();
 
     // If we are currently in tactical, then set the flag to automatically bring up the mapscreen.
-    if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
       gfEnteringMapScreen = 1;
     }
 

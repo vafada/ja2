@@ -207,7 +207,7 @@ namespace ja2 {
               SpecialCharacterDialogueEvent(
                 DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
                 1,
-                Enum26.MAP_SCREEN,
+                ScreenIds.MAP_SCREEN,
                 0,
                 0,
                 0,
@@ -216,7 +216,7 @@ namespace ja2 {
               SpecialCharacterDialogueEvent(
                 DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
                 0,
-                Enum26.MAP_SCREEN,
+                ScreenIds.MAP_SCREEN,
                 0,
                 0,
                 0,
@@ -230,7 +230,7 @@ namespace ja2 {
               SpecialCharacterDialogueEvent(
                 DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
                 1,
-                Enum26.MAP_SCREEN,
+                ScreenIds.MAP_SCREEN,
                 0,
                 0,
                 0,
@@ -242,7 +242,7 @@ namespace ja2 {
               SpecialCharacterDialogueEvent(
                 DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
                 0,
-                Enum26.MAP_SCREEN,
+                ScreenIds.MAP_SCREEN,
                 0,
                 0,
                 0,
@@ -285,7 +285,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       1,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -309,7 +309,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       0,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -323,7 +323,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       1,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -345,7 +345,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       0,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -427,7 +427,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       1,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -487,7 +487,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       0,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -551,7 +551,7 @@ namespace ja2 {
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           1,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -563,7 +563,7 @@ namespace ja2 {
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           0,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -723,7 +723,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       1,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -739,7 +739,7 @@ namespace ja2 {
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       0,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -753,7 +753,7 @@ namespace ja2 {
           SpecialCharacterDialogueEvent(
             DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
             1,
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             0,
             0,
             0,
@@ -762,7 +762,7 @@ namespace ja2 {
           SpecialCharacterDialogueEvent(
             DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
             0,
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             0,
             0,
             0,
@@ -775,7 +775,7 @@ namespace ja2 {
           SpecialCharacterDialogueEvent(
             DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
             1,
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             0,
             0,
             0,
@@ -796,7 +796,7 @@ namespace ja2 {
           SpecialCharacterDialogueEvent(
             DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
             0,
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             0,
             0,
             0,
@@ -1253,7 +1253,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           sString,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           fAddRehireButton
             ? MSG_BOX_FLAG_GENERICCONTRACT
             : MSG_BOX_FLAG_GENERIC,
@@ -1263,7 +1263,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           sString,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           fAddRehireButton ? MSG_BOX_FLAG_OKCONTRACT : MSG_BOX_FLAG_OK,
           MercDepartEquipmentBoxCallBack,
         );
@@ -1364,7 +1364,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
 
       fEnterMapDueToContract = true;
       pContractReHireSoldier = pSoldier;
-      LeaveTacticalScreen(Enum26.MAP_SCREEN);
+      LeaveTacticalScreen(ScreenIds.MAP_SCREEN);
       uiContractTimeMode = Enum130.TIME_COMPRESS_5MINS;
     } else {
       FindAndSetThisContractSoldier(pSoldier);
@@ -1378,7 +1378,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       1,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -1389,7 +1389,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
     SpecialCharacterDialogueEvent(
       DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
       0,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       0,
       0,
       0,
@@ -1490,7 +1490,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           1,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -1502,7 +1502,7 @@ BOOLEAN SoldierWantsToDelayRenewalOfContract( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           0,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,

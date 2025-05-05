@@ -16,7 +16,7 @@ namespace ja2 {
   ): boolean {
     gubErrorText = sprintf(String);
 
-    SetPendingNewScreen(Enum26.ERROR_SCREEN);
+    SetPendingNewScreen(ScreenIds.ERROR_SCREEN);
 
     gfGlobalError = true;
 

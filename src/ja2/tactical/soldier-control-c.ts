@@ -6581,7 +6581,7 @@ savedPts = MAX_AP_CARRIED;
     // Calculate bandage
     bBandage = pSoldier.bLifeMax - pSoldier.bLife - pSoldier.bBleeding;
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       fReDrawFace = true;
     }
 
@@ -7072,7 +7072,7 @@ savedPts = MAX_AP_CARRIED;
     }
 
     if (fDoSub) {
-      if (guiCurrentScreen != Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen != ScreenIds.GAME_SCREEN) {
         PlayJA2Sample(uiSubSoundID, RATE_11025, HIGHVOLUME, 1, MIDDLEPAN);
       } else {
         PlayJA2Sample(
@@ -9894,15 +9894,15 @@ savedPts = MAX_AP_CARRIED;
 
     // ATE: Do this ONLY if buddy is in sector.....
     if (
-      (pSoldier.bInSector && guiCurrentScreen == Enum26.GAME_SCREEN) ||
-      guiCurrentScreen != Enum26.GAME_SCREEN
+      (pSoldier.bInSector && guiCurrentScreen == ScreenIds.GAME_SCREEN) ||
+      guiCurrentScreen != ScreenIds.GAME_SCREEN
     ) {
       pSoldier.fFlashPortrait = 1;
       pSoldier.bFlashPortraitFrame = FLASH_PORTRAIT_STARTSHADE;
       pSoldier.PortraitFlashCounter = RESETTIMECOUNTER(FLASH_PORTRAIT_DELAY);
 
       // If we are in mapscreen, set this person as selected
-      if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         SetInfoChar(pSoldier.ubID);
       }
     }

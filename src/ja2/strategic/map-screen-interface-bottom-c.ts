@@ -1543,7 +1543,7 @@ void CheckForAndHandleAutoMessageScroll( void )
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             zNewTacticalMessages[Enum320.TCTL_MSG__IRON_MAN_CANT_SAVE_NOW],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );
@@ -1665,7 +1665,7 @@ void CheckForAndHandleAutoMessageScroll( void )
         switch (gbExitingMapScreenToWhere) {
           case Enum144.MAP_EXIT_TO_LAPTOP:
             fLapTop = true;
-            SetPendingNewScreen(Enum26.LAPTOP_SCREEN);
+            SetPendingNewScreen(ScreenIds.LAPTOP_SCREEN);
 
             if (gfExtraBuffer) {
               // Then initiate the transition animation from the mapscreen to laptop...
@@ -1681,14 +1681,14 @@ void CheckForAndHandleAutoMessageScroll( void )
 
           case Enum144.MAP_EXIT_TO_OPTIONS:
             guiPreviousOptionScreen = guiCurrentScreen;
-            SetPendingNewScreen(Enum26.OPTIONS_SCREEN);
+            SetPendingNewScreen(ScreenIds.OPTIONS_SCREEN);
             break;
 
           case Enum144.MAP_EXIT_TO_SAVE:
           case Enum144.MAP_EXIT_TO_LOAD:
             gfCameDirectlyFromGame = true;
             guiPreviousOptionScreen = guiCurrentScreen;
-            SetPendingNewScreen(Enum26.SAVE_LOAD_SCREEN);
+            SetPendingNewScreen(ScreenIds.SAVE_LOAD_SCREEN);
             break;
 
           default:

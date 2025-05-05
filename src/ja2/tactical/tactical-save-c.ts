@@ -3116,7 +3116,7 @@ namespace ja2 {
     giErrorMessageBox = DoMessageBox(
       Enum24.MSG_BOX_BASIC_STYLE,
       pAntiHackerString[Enum332.ANTIHACKERSTR_EXITGAME],
-      Enum26.GAME_SCREEN,
+      ScreenIds.GAME_SCREEN,
       MSG_BOX_FLAG_OK,
       TempFileLoadErrorMessageReturnCallback,
       CenteringRect,

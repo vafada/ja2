@@ -362,8 +362,8 @@ namespace ja2 {
         );
       }
 
-      SetLaptopExitScreen(Enum26.INIT_SCREEN);
-      SetPendingNewScreen(Enum26.LAPTOP_SCREEN);
+      SetLaptopExitScreen(ScreenIds.INIT_SCREEN);
+      SetPendingNewScreen(ScreenIds.LAPTOP_SCREEN);
       gubScreenCount = 1;
 
       // Set the fact the game is in progress

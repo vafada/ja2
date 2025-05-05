@@ -337,8 +337,8 @@ namespace ja2 {
 
       guiOldScreen = guiCurrentScreen;
 
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
-        LeaveTacticalScreen(Enum26.GAME_SCREEN);
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
+        LeaveTacticalScreen(ScreenIds.GAME_SCREEN);
       }
 
       // We need to make sure we have no item - at least in tactical
@@ -772,12 +772,12 @@ namespace ja2 {
 
     // OK, based on screen we were in....
     switch (guiOldScreen) {
-      case Enum26.MAP_SCREEN:
-        InternalLeaveTacticalScreen(Enum26.MAP_SCREEN);
+      case ScreenIds.MAP_SCREEN:
+        InternalLeaveTacticalScreen(ScreenIds.MAP_SCREEN);
         // gfEnteringMapScreen = 1;
         break;
 
-      case Enum26.GAME_SCREEN:
+      case ScreenIds.GAME_SCREEN:
         // restore old interface panel flag
         SetCurrentInterfacePanel(Enum215.TEAM_PANEL);
         break;

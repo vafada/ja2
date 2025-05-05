@@ -3720,7 +3720,7 @@ namespace ja2 {
       // We are above ground.
       gfBasement = false;
       gfCaves = false;
-      if (!gfEditMode && guiCurrentScreen != Enum26.MAPUTILITY_SCREEN) {
+      if (!gfEditMode && guiCurrentScreen != ScreenIds.MAPUTILITY_SCREEN) {
         ubAmbientLightLevel = GetTimeOfDayAmbientLightLevel();
       } else {
         ubAmbientLightLevel = 4;
@@ -4704,7 +4704,7 @@ namespace ja2 {
       iLSprite = LightSpriteCreate(str, TmpLight.uiLightType);
       // if this fails, then we will ignore the light.
       // ATE: Don't add ANY lights of mapscreen util is on
-      if (iLSprite != -1 && guiCurrentScreen != Enum26.MAPUTILITY_SCREEN) {
+      if (iLSprite != -1 && guiCurrentScreen != ScreenIds.MAPUTILITY_SCREEN) {
         if (!gfCaves || gfEditMode) {
           if (
             gfEditMode ||

@@ -107,7 +107,7 @@ namespace ja2 {
       vs_desc.ubBitDepth = ubBitDepth;
 
       if ((giMiniMap = AddVideoSurface(vs_desc)) === -1) {
-        return Enum26.ERROR_SCREEN;
+        return ScreenIds.ERROR_SCREEN;
       }
 
       // USING BRET's STUFF FOR LOOPING FILES/CREATING LIST, hence AddToFDlgList.....
@@ -139,7 +139,7 @@ namespace ja2 {
       vs_desc.ubBitDepth = 8;
 
       if ((gi8BitMiniMap = AddVideoSurface(vs_desc)) === -1) {
-        return Enum26.ERROR_SCREEN;
+        return ScreenIds.ERROR_SCREEN;
       }
       ghvSurface = GetVideoSurface(gi8BitMiniMap);
     }
@@ -150,7 +150,7 @@ namespace ja2 {
       MapUtilScreenHandle__FListNode == null
     ) {
       gfProgramIsRunning = false;
-      return Enum26.MAPUTILITY_SCREEN;
+      return ScreenIds.MAPUTILITY_SCREEN;
     }
 
     zFilename = sprintf(
@@ -160,7 +160,7 @@ namespace ja2 {
 
     // OK, load maps and do overhead shrinkage of them...
     if (!LoadWorld(zFilename)) {
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     // Render small map
@@ -407,7 +407,7 @@ namespace ja2 {
     MapUtilScreenHandle__FListNode = MapUtilScreenHandle__FListNode.pNext;
     MapUtilScreenHandle__sCurFile++;
 
-    return Enum26.MAPUTILITY_SCREEN;
+    return ScreenIds.MAPUTILITY_SCREEN;
   }
 
   export function MapUtilScreenShutdown(): boolean {

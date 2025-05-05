@@ -219,7 +219,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           Message[Enum334.STR_SURRENDER],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           SurrenderMessageBoxCallBack,
           null,

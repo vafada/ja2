@@ -321,7 +321,7 @@ namespace ja2 {
     // might have pop up text timer
     HandleLastQuotePopUpTimer();
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       return;
     }
 
@@ -429,8 +429,8 @@ namespace ja2 {
         if (
           fOkToBeepNewMessage == true &&
           gpDisplayList[MAX_LINE_COUNT - 2] == null &&
-          (guiCurrentScreen == Enum26.GAME_SCREEN ||
-            guiCurrentScreen == Enum26.MAP_SCREEN) &&
+          (guiCurrentScreen == ScreenIds.GAME_SCREEN ||
+            guiCurrentScreen == ScreenIds.MAP_SCREEN) &&
           gfFacePanelActive == false
         ) {
           PlayNewMessageSound();
@@ -547,7 +547,7 @@ namespace ja2 {
       MapScreenMessage(usColor, ubPriority, DestString);
     }
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       PlayNewMessageSound();
     } else {
       fOkToBeepNewMessage = true;

@@ -638,22 +638,6 @@ namespace ja2 {
     let usHeight: UINT16;
     let usWidth: UINT16;
     let ubBitDepth: UINT8;
-    let fMemUsage: UINT32;
-
-    //#ifdef JA2
-    let uiRBitMask: UINT32;
-    let uiGBitMask: UINT32;
-    let uiBBitMask: UINT32;
-    //#endif
-
-    //
-    // The description structure contains memory usage flag
-    //
-    fMemUsage = VSurfaceDesc.fCreateFlags;
-
-    //
-    // Check creation options
-    //
 
     do {
       //
@@ -661,10 +645,6 @@ namespace ja2 {
       //
 
       if (VSurfaceDesc.fCreateFlags & VSURFACE_CREATE_FROMFILE) {
-        //
-        // Create himage object from file
-        //
-
         hImage = CreateImage(VSurfaceDesc.ImageFile, IMAGE_ALLIMAGEDATA);
 
         if (hImage == null) {

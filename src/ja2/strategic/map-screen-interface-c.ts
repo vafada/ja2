@@ -2016,7 +2016,7 @@ INT32 GetNumberOfCharactersOnPlayersTeam( void )
     // set the position of the pop up boxes
     let pPoint: SGPPoint = createSGPPoint();
 
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       return;
     }
 
@@ -2354,7 +2354,7 @@ INT32 GetNumberOfCharactersOnPlayersTeam( void )
   ): void {
     let fFromMapscreen: boolean = false;
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       fFromMapscreen = true;
     } else {
       // if transition to mapscreen is required
@@ -6305,7 +6305,7 @@ void DoneHandlePlayerFirstEntryToMapScreen(  UINT8 bExitValue )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         gsCustomErrorString,
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );
@@ -6313,7 +6313,7 @@ void DoneHandlePlayerFirstEntryToMapScreen(  UINT8 bExitValue )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         pMapErrorString[bErrorNumber],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );

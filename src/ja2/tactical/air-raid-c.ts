@@ -367,7 +367,7 @@ namespace ja2 {
       gAirRaidDef.sSectorX != gWorldSectorX ||
       gAirRaidDef.sSectorY != gWorldSectorY ||
       gAirRaidDef.sSectorZ != gbWorldSectorZ ||
-      guiCurrentScreen == Enum26.MAP_SCREEN
+      guiCurrentScreen == ScreenIds.MAP_SCREEN
     ) {
       // sector not loaded
       // Set flag for handling raid....

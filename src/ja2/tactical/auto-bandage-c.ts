@@ -49,7 +49,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         Message[Enum334.STR_SECTOR_NOT_CLEARED],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
         null,
@@ -93,7 +93,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         TacticalStr[Enum335.AUTOBANDAGE_NOT_NEEDED],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
         null,
@@ -102,7 +102,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         gzLateLocalizedString[9],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
         null,
@@ -112,7 +112,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           TacticalStr[Enum335.CANT_AUTOBANDAGE_PROMPT],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_OK,
           null,
           null,
@@ -122,7 +122,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           TacticalStr[Enum335.BEGIN_AUTOBANDAGE_PROMPT_STR],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           BeginAutoBandageCallBack,
           null,

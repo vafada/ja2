@@ -1477,7 +1477,7 @@ namespace ja2 {
             } else {
               if (DEBUG_CHEAT_LEVEL()) {
                 GetMouseMapPos(gsQdsEnteringGridNo__Pointer);
-                LeaveTacticalScreen(Enum26.QUEST_DEBUG_SCREEN);
+                LeaveTacticalScreen(ScreenIds.QUEST_DEBUG_SCREEN);
               }
             }
             break;
@@ -1997,7 +1997,7 @@ namespace ja2 {
           case "l".charCodeAt(0):
             if (fAlt) {
               if (!(gTacticalStatus.uiFlags & ENGAGED_IN_CONV)) {
-                LeaveTacticalScreen(Enum26.GAME_SCREEN);
+                LeaveTacticalScreen(ScreenIds.GAME_SCREEN);
 
                 DoQuickLoad();
               }
@@ -2006,8 +2006,8 @@ namespace ja2 {
                 gfSaveGame = false;
                 gfCameDirectlyFromGame = true;
 
-                guiPreviousOptionScreen = Enum26.GAME_SCREEN;
-                LeaveTacticalScreen(Enum26.SAVE_LOAD_SCREEN);
+                guiPreviousOptionScreen = ScreenIds.GAME_SCREEN;
+                LeaveTacticalScreen(ScreenIds.SAVE_LOAD_SCREEN);
               }
               /*
                                                             if ( INFORMATION_CHEAT_LEVEL( ) )
@@ -2064,7 +2064,7 @@ namespace ja2 {
               if (fCtrl) AttemptToChangeFloorLevel(+1); // try to enter a lower underground level
             }
 
-            if (guiCurrentScreen != Enum26.DEBUG_SCREEN) {
+            if (guiCurrentScreen != ScreenIds.DEBUG_SCREEN) {
               if (gusSelectedSoldier != NOBODY) {
                 // nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
                 if (gpItemPointer == null) {
@@ -2079,7 +2079,7 @@ namespace ja2 {
               if (fCtrl) AttemptToChangeFloorLevel(-1); // try to go up towards ground level
             }
 
-            if (guiCurrentScreen != Enum26.DEBUG_SCREEN) {
+            if (guiCurrentScreen != ScreenIds.DEBUG_SCREEN) {
               if (gusSelectedSoldier != NOBODY) {
                 // nothing in hand and either not in SM panel, or the matching button is enabled if we are in SM panel
                 if (gpItemPointer == null) {
@@ -2148,8 +2148,8 @@ namespace ja2 {
               ) {
                 if (!fDisableMapInterfaceDueToBattle) {
                   // go to Options screen
-                  guiPreviousOptionScreen = Enum26.GAME_SCREEN;
-                  LeaveTacticalScreen(Enum26.OPTIONS_SCREEN);
+                  guiPreviousOptionScreen = ScreenIds.GAME_SCREEN;
+                  LeaveTacticalScreen(ScreenIds.OPTIONS_SCREEN);
                 }
               }
             }
@@ -2208,8 +2208,8 @@ namespace ja2 {
                   gfSaveGame = true;
                   gfCameDirectlyFromGame = true;
 
-                  guiPreviousOptionScreen = Enum26.GAME_SCREEN;
-                  LeaveTacticalScreen(Enum26.SAVE_LOAD_SCREEN);
+                  guiPreviousOptionScreen = ScreenIds.GAME_SCREEN;
+                  LeaveTacticalScreen(ScreenIds.SAVE_LOAD_SCREEN);
                 } else {
                   // Display a message saying the player cant save now
                   DoMessageBox(
@@ -2217,7 +2217,7 @@ namespace ja2 {
                     zNewTacticalMessages[
                       Enum320.TCTL_MSG__IRON_MAN_CANT_SAVE_NOW
                     ],
-                    Enum26.GAME_SCREEN,
+                    ScreenIds.GAME_SCREEN,
                     MSG_BOX_FLAG_OK,
                     null,
                     null,
@@ -2231,7 +2231,7 @@ namespace ja2 {
               ) {
                 // if the game CAN be saved
                 if (CanGameBeSaved()) {
-                  guiPreviousOptionScreen = Enum26.GAME_SCREEN;
+                  guiPreviousOptionScreen = ScreenIds.GAME_SCREEN;
                   // guiPreviousOptionScreen = guiCurrentScreen;
                   DoQuickSave();
                 } else {
@@ -2241,7 +2241,7 @@ namespace ja2 {
                     zNewTacticalMessages[
                       Enum320.TCTL_MSG__IRON_MAN_CANT_SAVE_NOW
                     ],
-                    Enum26.GAME_SCREEN,
+                    ScreenIds.GAME_SCREEN,
                     MSG_BOX_FLAG_OK,
                     null,
                     null,

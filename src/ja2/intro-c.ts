@@ -3,7 +3,7 @@ namespace ja2 {
   let gfIntroScreenEntry: boolean;
   let gfIntroScreenExit: boolean;
 
-  let guiIntroExitScreen: UINT32 = Enum26.INTRO_SCREEN;
+  let guiIntroExitScreen: UINT32 = ScreenIds.INTRO_SCREEN;
 
   const SMKINTRO_FIRST_VIDEO = 255;
 
@@ -188,19 +188,19 @@ namespace ja2 {
     // if its the intro at the begining of the game
     if (gbIntroScreenMode == Enum21.INTRO_BEGINING) {
       // go to the init screen
-      guiIntroExitScreen = Enum26.INIT_SCREEN;
+      guiIntroExitScreen = ScreenIds.INIT_SCREEN;
     } else if (gbIntroScreenMode == Enum21.INTRO_SPLASH) {
       // display a logo when exiting
       DisplaySirtechSplashScreen();
 
       gfDoneWithSplashScreen = true;
-      guiIntroExitScreen = Enum26.INIT_SCREEN;
+      guiIntroExitScreen = ScreenIds.INIT_SCREEN;
     } else {
       // We want to reinitialize the game
       ReStartingGame();
 
       //		guiIntroExitScreen = MAINMENU_SCREEN;
-      guiIntroExitScreen = Enum26.CREDIT_SCREEN;
+      guiIntroExitScreen = ScreenIds.CREDIT_SCREEN;
     }
 
     gfIntroScreenExit = true;

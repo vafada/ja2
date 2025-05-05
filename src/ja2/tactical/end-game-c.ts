@@ -375,7 +375,7 @@ namespace ja2 {
     // For now, just quit the freaken game...
     //	InternalLeaveTacticalScreen( MAINMENU_SCREEN );
 
-    InternalLeaveTacticalScreen(Enum26.INTRO_SCREEN);
+    InternalLeaveTacticalScreen(ScreenIds.INTRO_SCREEN);
     //	guiCurrentScreen = INTRO_SCREEN;
 
     SetIntroType(Enum21.INTRO_ENDING);

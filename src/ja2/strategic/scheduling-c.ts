@@ -137,7 +137,7 @@ namespace ja2 {
     // Okay, now we have good pointers to the soldier and the schedule.
     // Now, determine which time in this schedule that we are processing.
     fAutoProcess = false;
-    if (guiCurrentScreen != Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.GAME_SCREEN) {
       fAutoProcess = true;
     } else {
       for (

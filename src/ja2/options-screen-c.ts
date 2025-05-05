@@ -108,8 +108,8 @@ namespace ja2 {
   let gzSavedGameName: string /* CHAR8[128] */;
   let gfEnteredFromMapScreen: boolean = false;
 
-  let guiOptionsScreen: UINT32 = Enum26.OPTIONS_SCREEN;
-  export let guiPreviousOptionScreen: UINT32 = Enum26.OPTIONS_SCREEN;
+  let guiOptionsScreen: UINT32 = ScreenIds.OPTIONS_SCREEN;
+  export let guiPreviousOptionScreen: UINT32 = ScreenIds.OPTIONS_SCREEN;
 
   let gfExitOptionsDueToMessageBox: boolean = false;
   let gfExitOptionsAfterMessageBox: boolean = false;
@@ -251,7 +251,7 @@ namespace ja2 {
     // Stop ambients...
     StopAmbients();
 
-    guiOptionsScreen = Enum26.OPTIONS_SCREEN;
+    guiOptionsScreen = ScreenIds.OPTIONS_SCREEN;
 
     // Init the slider bar;
     InitSlider();
@@ -308,7 +308,7 @@ namespace ja2 {
       Enum29.DISABLED_STYLE_HATCHED,
     );
     if (
-      guiPreviousOptionScreen == Enum26.MAINMENU_SCREEN ||
+      guiPreviousOptionScreen == ScreenIds.MAINMENU_SCREEN ||
       !CanGameBeSaved()
     ) {
       DisableButton(guiOptGotoSaveGameBtn);
@@ -676,7 +676,7 @@ namespace ja2 {
       CLOCK_REGION_START_Y,
     );
 
-    if (guiOptionsScreen == Enum26.GAME_SCREEN) EnterTacticalScreen();
+    if (guiOptionsScreen == ScreenIds.GAME_SCREEN) EnterTacticalScreen();
 
     RemoveButton(guiOptGotoSaveGameBtn);
     RemoveButton(guiOptGotoLoadGameBtn);
@@ -1002,7 +1002,7 @@ namespace ja2 {
           case "S".charCodeAt(0):
             // if the save game button isnt disabled
             if (ButtonList[guiOptGotoSaveGameBtn].uiFlags & BUTTON_ENABLED) {
-              SetOptionsExitScreen(Enum26.SAVE_LOAD_SCREEN);
+              SetOptionsExitScreen(ScreenIds.SAVE_LOAD_SCREEN);
               gfSaveGame = true;
             }
             break;
@@ -1010,7 +1010,7 @@ namespace ja2 {
           // Enter the Load game screen
           case "l".charCodeAt(0):
           case "L".charCodeAt(0):
-            SetOptionsExitScreen(Enum26.SAVE_LOAD_SCREEN);
+            SetOptionsExitScreen(ScreenIds.SAVE_LOAD_SCREEN);
             gfSaveGame = false;
             break;
         }
@@ -1036,7 +1036,7 @@ namespace ja2 {
     if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
       btn.uiFlags &= ~BUTTON_CLICKED_ON;
 
-      SetOptionsExitScreen(Enum26.SAVE_LOAD_SCREEN);
+      SetOptionsExitScreen(ScreenIds.SAVE_LOAD_SCREEN);
       gfSaveGame = true;
 
       InvalidateRegion(
@@ -1070,7 +1070,7 @@ namespace ja2 {
     if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
       btn.uiFlags &= ~BUTTON_CLICKED_ON;
 
-      SetOptionsExitScreen(Enum26.SAVE_LOAD_SCREEN);
+      SetOptionsExitScreen(ScreenIds.SAVE_LOAD_SCREEN);
       gfSaveGame = false;
 
       InvalidateRegion(
@@ -1108,7 +1108,7 @@ namespace ja2 {
       DoOptionsMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zOptionsText[Enum372.OPT_RETURN_TO_MAIN],
-        Enum26.OPTIONS_SCREEN,
+        ScreenIds.OPTIONS_SCREEN,
         MSG_BOX_FLAG_YESNO,
         ConfirmQuitToMainMenuMessageBoxCallBack,
       );
@@ -1244,7 +1244,7 @@ namespace ja2 {
               zOptionsText[
                 Enum372.OPT_NEED_AT_LEAST_SPEECH_OR_SUBTITLE_OPTION_ON
               ],
-              Enum26.OPTIONS_SCREEN,
+              ScreenIds.OPTIONS_SCREEN,
               MSG_BOX_FLAG_OK,
               null,
             );
@@ -1355,7 +1355,7 @@ namespace ja2 {
     if (bExitValue == MSG_BOX_RETURN_YES) {
       gfEnteredFromMapScreen = false;
       gfExitOptionsAfterMessageBox = true;
-      SetOptionsExitScreen(Enum26.MAINMENU_SCREEN);
+      SetOptionsExitScreen(ScreenIds.MAINMENU_SCREEN);
 
       // We want to reinitialize the game
       ReStartingGame();

@@ -147,7 +147,7 @@ namespace ja2 {
         pSoldier.bActive &&
         pSoldier.bInSector &&
         (gTacticalStatus.fEnemyInSector ||
-          guiCurrentScreen == Enum26.GAME_SCREEN)
+          guiCurrentScreen == ScreenIds.GAME_SCREEN)
       ) {
         return;
       }

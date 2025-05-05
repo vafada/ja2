@@ -109,7 +109,7 @@ namespace ja2 {
     SetPositionSndsActive();
 
     // Set pending screen
-    SetPendingNewScreen(Enum26.GAME_SCREEN);
+    SetPendingNewScreen(ScreenIds.GAME_SCREEN);
 
     // Set as active...
     gTacticalStatus.uiFlags |= ACTIVE;
@@ -234,12 +234,12 @@ namespace ja2 {
     // ATE: Disable messages....
     DisableScrollMessages();
 
-    if (uiNewScreen == Enum26.MAINMENU_SCREEN) {
+    if (uiNewScreen == ScreenIds.MAINMENU_SCREEN) {
       // We want to reinitialize the game
       ReStartingGame();
     }
 
-    if (uiNewScreen != Enum26.MAP_SCREEN) {
+    if (uiNewScreen != ScreenIds.MAP_SCREEN) {
       StopAnyCurrentlyTalkingSpeech();
     }
 
@@ -253,7 +253,7 @@ namespace ja2 {
   }
 
   export function MainGameScreenHandle(): UINT32 {
-    let uiNewScreen: UINT32 = Enum26.GAME_SCREEN;
+    let uiNewScreen: UINT32 = ScreenIds.GAME_SCREEN;
     let fEnterDemoMode: boolean = false;
 
     // DO NOT MOVE THIS FUNCTION CALL!!!
@@ -265,11 +265,11 @@ namespace ja2 {
     ) {
       // handle the help screen
       HelpScreenHandler();
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (HandleAutoBandage()) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (gfBeginEndTurn) {
@@ -320,13 +320,13 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zSaveLoadText[Enum371.SLG_SAVE_GAME_ERROR],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
         null,
       );
 
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     // Check if we are in bar animation...
@@ -335,7 +335,7 @@ namespace ja2 {
 
       EndFrameBufferRender();
 
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (gfTacticalIsModal) {
@@ -344,7 +344,7 @@ namespace ja2 {
       } else {
         HandleModalTactical();
 
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
     }
 
@@ -403,7 +403,7 @@ namespace ja2 {
 
     if (InOverheadMap()) {
       HandleOverheadMap();
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (!ARE_IN_FADE_IN()) {
@@ -436,12 +436,12 @@ namespace ja2 {
     }
 
     if (HandleFadeOutCallback()) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
-    if (guiCurrentScreen != Enum26.MSG_BOX_SCREEN) {
-      if (HandleBeginFadeOut(Enum26.GAME_SCREEN)) {
-        return Enum26.GAME_SCREEN;
+    if (guiCurrentScreen != ScreenIds.MSG_BOX_SCREEN) {
+      if (HandleBeginFadeOut(ScreenIds.GAME_SCREEN)) {
+        return ScreenIds.GAME_SCREEN;
       }
     }
 
@@ -486,12 +486,12 @@ namespace ja2 {
           "Aborting normal game mode and entering editor mode...\n",
         );
         SetPendingNewScreen(0xffff); // NO_SCREEN
-        return Enum26.EDIT_SCREEN;
+        return ScreenIds.EDIT_SCREEN;
       } else if (!gfEnteringMapScreen) {
         gfEnteringMapScreen = 1;
       }
 
-      if (uiNewScreen != Enum26.GAME_SCREEN) {
+      if (uiNewScreen != ScreenIds.GAME_SCREEN) {
         return uiNewScreen;
       }
 
@@ -592,8 +592,8 @@ namespace ja2 {
       fInterfacePanelDirty = DIRTYLEVEL2;
     }
 
-    if (HandleBeginFadeIn(Enum26.GAME_SCREEN)) {
-      guiTacticalLeaveScreenID = Enum26.FADE_SCREEN;
+    if (HandleBeginFadeIn(ScreenIds.GAME_SCREEN)) {
+      guiTacticalLeaveScreenID = ScreenIds.FADE_SCREEN;
     }
 
     if (guiTacticalLeaveScreen) {
@@ -613,7 +613,7 @@ namespace ja2 {
       gfEnteringMapScreen++;
     }
 
-    return Enum26.GAME_SCREEN;
+    return ScreenIds.GAME_SCREEN;
   }
 
   export function SetRenderHook(pRenderOverride: RENDER_HOOK | null): void {
@@ -671,7 +671,7 @@ namespace ja2 {
     // ATE: These flags well get set later on in mapscreen....
     // SetTacticalInterfaceFlags( INTERFACE_MAPSCREEN );
     // fInterfacePanelDirty = DIRTYLEVEL2;
-    LeaveTacticalScreen(Enum26.MAP_SCREEN);
+    LeaveTacticalScreen(ScreenIds.MAP_SCREEN);
   }
 
   export function UpdateTeamPanelAssignments(): void {

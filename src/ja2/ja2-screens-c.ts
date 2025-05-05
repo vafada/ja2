@@ -93,7 +93,7 @@ namespace ja2 {
     return true;
   }
   export function SavingScreenHandle(): UINT32 {
-    return Enum26.SAVING_SCREEN;
+    return ScreenIds.SAVING_SCREEN;
   }
   export function SavingScreenShutdown(): boolean {
     return true;
@@ -103,7 +103,7 @@ namespace ja2 {
     return true;
   }
   export function LoadingScreenHandle(): UINT32 {
-    return Enum26.LOADING_SCREEN;
+    return ScreenIds.LOADING_SCREEN;
   }
   export function LoadingScreenShutdown(): boolean {
     return true;
@@ -168,7 +168,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.ERROR_SCREEN;
+    return ScreenIds.ERROR_SCREEN;
   }
 
   export function ErrorScreenShutdown(): boolean {
@@ -189,7 +189,7 @@ namespace ja2 {
         InitScreenHandle__ubCurrentScreen = 0;
       } else {
         SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
-        return Enum26.INTRO_SCREEN;
+        return ScreenIds.INTRO_SCREEN;
       }
     }
 
@@ -244,7 +244,7 @@ namespace ja2 {
 
       SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
 
-      return Enum26.INIT_SCREEN;
+      return ScreenIds.INIT_SCREEN;
     }
 
     if (InitScreenHandle__ubCurrentScreen == 1) {
@@ -255,21 +255,21 @@ namespace ja2 {
     if (InitScreenHandle__ubCurrentScreen == 2) {
       InitMainMenu();
       InitScreenHandle__ubCurrentScreen = 3;
-      return Enum26.INIT_SCREEN;
+      return ScreenIds.INIT_SCREEN;
     }
 
     // Let one frame pass....
     if (InitScreenHandle__ubCurrentScreen == 3) {
       InitScreenHandle__ubCurrentScreen = 4;
       SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
-      return Enum26.INIT_SCREEN;
+      return ScreenIds.INIT_SCREEN;
     }
 
     if (InitScreenHandle__ubCurrentScreen == 4) {
       SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
       InitNewGame(false);
     }
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   export function InitScreenShutdown(): boolean {
@@ -288,7 +288,7 @@ namespace ja2 {
       FreeBackgroundRect(guiBackgroundRect);
       SetRenderHook(null);
       SetUIKeyboardHook(null);
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (PalEditScreenHandle__FirstTime) {
@@ -306,10 +306,10 @@ namespace ja2 {
         400,
       );
     } else {
-      GameScreens[Enum26.GAME_SCREEN].HandleScreen();
+      GameScreens[ScreenIds.GAME_SCREEN].HandleScreen();
     }
 
-    return Enum26.PALEDIT_SCREEN;
+    return ScreenIds.PALEDIT_SCREEN;
   }
 
   export function PalEditScreenShutdown(): boolean {
@@ -498,7 +498,7 @@ namespace ja2 {
   }
 
   function ExitDebugScreen(): void {
-    if (guiCurrentScreen == Enum26.DEBUG_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.DEBUG_SCREEN) {
       gfExitDebugScreen = true;
     }
 
@@ -507,7 +507,7 @@ namespace ja2 {
 
   export function DebugScreenHandle(): UINT32 {
     if (CheckForAndExitTacticalDebug()) {
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
     if (gfInitRect) {
@@ -528,10 +528,10 @@ namespace ja2 {
       SetRenderHook(DebugRenderHook);
       SetUIKeyboardHook(DebugKeyboardHook);
     } else {
-      GameScreens[Enum26.GAME_SCREEN].HandleScreen();
+      GameScreens[ScreenIds.GAME_SCREEN].HandleScreen();
     }
 
-    return Enum26.DEBUG_SCREEN;
+    return ScreenIds.DEBUG_SCREEN;
   }
 
   export function DebugScreenShutdown(): boolean {
@@ -651,7 +651,7 @@ namespace ja2 {
 
       SexScreenHandle__uiTimeOfLastUpdate = GetJA2Clock();
 
-      return Enum26.SEX_SCREEN;
+      return ScreenIds.SEX_SCREEN;
     }
 
     // Update frame
@@ -703,7 +703,7 @@ namespace ja2 {
           Enum131.WARPTIME_NO_PROCESSING_OF_EVENTS,
         );
 
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
     }
 
@@ -738,7 +738,7 @@ namespace ja2 {
 
     InvalidateRegion(sX, sY, sX + pTrav.usWidth, sY + pTrav.usHeight);
 
-    return Enum26.SEX_SCREEN;
+    return ScreenIds.SEX_SCREEN;
   }
 
   export function SexScreenShutdown(): boolean {
@@ -791,7 +791,7 @@ namespace ja2 {
 
   export function DemoExitScreenHandle(): UINT32 {
     gfProgramIsRunning = false;
-    return Enum26.DEMO_EXIT_SCREEN;
+    return ScreenIds.DEMO_EXIT_SCREEN;
   }
 
   export function DemoExitScreenShutdown(): boolean {

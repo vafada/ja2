@@ -397,7 +397,7 @@ namespace ja2 {
           DoLapTopMessageBox(
             Enum24.MSG_BOX_IMP_STYLE,
             pImpPopUpStrings[1],
-            Enum26.LAPTOP_SCREEN,
+            ScreenIds.LAPTOP_SCREEN,
             MSG_BOX_FLAG_YESNO,
             BeginMessageBoxCallBack,
           );
@@ -406,7 +406,7 @@ namespace ja2 {
             DoLapTopMessageBox(
               Enum24.MSG_BOX_IMP_STYLE,
               pImpPopUpStrings[3],
-              Enum26.LAPTOP_SCREEN,
+              ScreenIds.LAPTOP_SCREEN,
               MSG_BOX_FLAG_OK,
               BeginMessageBoxCallBack,
             );
@@ -414,7 +414,7 @@ namespace ja2 {
             DoLapTopMessageBox(
               Enum24.MSG_BOX_IMP_STYLE,
               pImpPopUpStrings[5],
-              Enum26.LAPTOP_SCREEN,
+              ScreenIds.LAPTOP_SCREEN,
               MSG_BOX_FLAG_OK,
               BeginMessageBoxCallBack,
             );
@@ -723,7 +723,7 @@ namespace ja2 {
       DoLapTopMessageBox(
         Enum24.MSG_BOX_IMP_STYLE,
         pImpPopUpStrings[4],
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         MSG_BOX_FLAG_OK,
         BeginMessageBoxCallBack,
       );

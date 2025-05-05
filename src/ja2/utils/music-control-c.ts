@@ -274,7 +274,7 @@ namespace ja2 {
 
         // If we were in victory mode, change!
         if (gbVictorySongCount == 1 || gbDeathSongCount == 1) {
-          if (gbDeathSongCount == 1 && guiCurrentScreen == Enum26.GAME_SCREEN) {
+          if (gbDeathSongCount == 1 && guiCurrentScreen == ScreenIds.GAME_SCREEN) {
             CheckAndHandleUnloadingOfCurrentWorld();
           }
 
@@ -467,7 +467,7 @@ namespace ja2 {
 
   function DoneFadeOutDueToEndMusic(): void {
     // Quit game....
-    InternalLeaveTacticalScreen(Enum26.MAINMENU_SCREEN);
+    InternalLeaveTacticalScreen(ScreenIds.MAINMENU_SCREEN);
     // SetPendingNewScreen( MAINMENU_SCREEN );
   }
 }

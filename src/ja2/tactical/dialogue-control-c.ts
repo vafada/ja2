@@ -406,8 +406,8 @@ namespace ja2 {
       if (!gfInTalkPanel) {
         // ATE: NOT if we have a message box pending....
         if (
-          guiPendingScreen != Enum26.MSG_BOX_SCREEN &&
-          guiCurrentScreen != Enum26.MSG_BOX_SCREEN
+          guiPendingScreen != ScreenIds.MSG_BOX_SCREEN &&
+          guiCurrentScreen != ScreenIds.MSG_BOX_SCREEN
         ) {
           // No, so we should lock the UI!
           guiPendingOverrideEvent = Enum207.LU_BEGINUILOCK;
@@ -428,8 +428,8 @@ namespace ja2 {
 
         // Where are we and where did this face once exist?
         if (
-          guiScreenIDUsedWhenUICreated == Enum26.GAME_SCREEN &&
-          guiCurrentScreen == Enum26.MAP_SCREEN
+          guiScreenIDUsedWhenUICreated == ScreenIds.GAME_SCREEN &&
+          guiCurrentScreen == ScreenIds.MAP_SCREEN
         ) {
           // GO FROM GAMESCREEN TO MAPSCREEN
           // REMOVE OLD UI
@@ -468,8 +468,8 @@ namespace ja2 {
 
           guiScreenIDUsedWhenUICreated = guiCurrentScreen;
         } else if (
-          guiScreenIDUsedWhenUICreated == Enum26.MAP_SCREEN &&
-          guiCurrentScreen == Enum26.GAME_SCREEN
+          guiScreenIDUsedWhenUICreated == ScreenIds.MAP_SCREEN &&
+          guiCurrentScreen == ScreenIds.GAME_SCREEN
         ) {
           HandleTacticalSpeechUI(gubCurrentTalkingID, gpCurrentTalkingFace.iID);
           guiScreenIDUsedWhenUICreated = guiCurrentScreen;
@@ -674,13 +674,13 @@ namespace ja2 {
       // locking or unlocking?
       if (QItem.uiSpecialEventData) {
         switch (QItem.uiSpecialEventData2) {
-          case Enum26.MAP_SCREEN:
+          case ScreenIds.MAP_SCREEN:
             fLockOutMapScreenInterface = true;
             break;
         }
       } else {
         switch (QItem.uiSpecialEventData2) {
-          case Enum26.MAP_SCREEN:
+          case ScreenIds.MAP_SCREEN:
             fLockOutMapScreenInterface = false;
             break;
         }
@@ -859,7 +859,7 @@ namespace ja2 {
             DoSkiMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               zText,
-              Enum26.SHOPKEEPER_SCREEN,
+              ScreenIds.SHOPKEEPER_SCREEN,
               MSG_BOX_FLAG_OK,
               ConfirmDontHaveEnoughForTheDealerMessageBoxCallBack,
             );
@@ -878,7 +878,7 @@ namespace ja2 {
             DoSkiMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               zText,
-              Enum26.SHOPKEEPER_SCREEN,
+              ScreenIds.SHOPKEEPER_SCREEN,
               MSG_BOX_FLAG_YESNO,
               ConfirmToDeductMoneyFromPlayersAccountMessageBoxCallBack,
             );
@@ -897,7 +897,7 @@ namespace ja2 {
             DoSkiMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               zText,
-              Enum26.SHOPKEEPER_SCREEN,
+              ScreenIds.SHOPKEEPER_SCREEN,
               MSG_BOX_FLAG_YESNO,
               ConfirmToDeductMoneyFromPlayersAccountMessageBoxCallBack,
             );
@@ -916,12 +916,12 @@ namespace ja2 {
             break;
 
           case 6:
-            if (guiCurrentScreen == Enum26.SHOPKEEPER_SCREEN) {
+            if (guiCurrentScreen == ScreenIds.SHOPKEEPER_SCREEN) {
               DisableButton(guiSKI_TransactionButton);
             }
             break;
           case 7:
-            if (guiCurrentScreen == Enum26.SHOPKEEPER_SCREEN) {
+            if (guiCurrentScreen == ScreenIds.SHOPKEEPER_SCREEN) {
               EnableButton(guiSKI_TransactionButton);
             }
             break;
@@ -1936,7 +1936,7 @@ namespace ja2 {
     let zText: string /* INT16[QUOTE_MESSAGE_SIZE] */;
 
     // Setup dialogue text box
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       gTalkPanel.fRenderSubTitlesNow = true;
       gTalkPanel.fSetupSubTitles = true;
     }
@@ -1960,7 +1960,7 @@ namespace ja2 {
     let sLeft: INT16;
 
     // Setup dialogue text box
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       gTalkPanel.fRenderSubTitlesNow = true;
       gTalkPanel.fSetupSubTitles = true;
     }
@@ -1974,7 +1974,7 @@ namespace ja2 {
     );
     MapScreenMessage(FONT_MCOLOR_WHITE, MSG_DIALOG, "%s", zText);
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       sLeft = gsExternPanelXPosition + 97;
       gsTopPosition = gsExternPanelYPosition;
     } else {
@@ -2108,7 +2108,7 @@ namespace ja2 {
     // Set flag to say WE control when to set inactive!
     gFacesData[iFaceIndex].uiFlags |= FACE_INACTIVE_HANDLED_ELSEWHERE;
 
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       // Setup video overlay!
       VideoOverlayDesc.sLeft = 10;
       VideoOverlayDesc.sTop = 20;
@@ -2179,7 +2179,7 @@ namespace ja2 {
       fDoExternPanel = true;
     } else {
       // If we are not an active face!
-      if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+      if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
         fDoExternPanel = true;
       }
     }
@@ -2200,7 +2200,7 @@ namespace ja2 {
 
       // IF we are in tactical and this soldier is on the current squad
       if (
-        guiCurrentScreen == Enum26.GAME_SCREEN &&
+        guiCurrentScreen == ScreenIds.GAME_SCREEN &&
         pSoldier != null &&
         pSoldier.bAssignment == iCurrentTacticalSquad
       ) {
@@ -2244,7 +2244,7 @@ namespace ja2 {
       }
 
       gfFacePanelActive = true;
-    } else if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    } else if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       // Are we in mapscreen?
       // If so, set current guy active to talk.....
       if (pSoldier != null) {

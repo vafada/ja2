@@ -4127,19 +4127,19 @@ INT8 GetRegainDueToSleepNeeded( SOLDIERTYPE *pSoldier, INT32 iRateOfReGain )
   ): void {
     if (pSoldier.bInSector && gfWorldLoaded) {
       if (pSoldier.bAssignment == Enum117.DOCTOR) {
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           ChangeSoldierState(pSoldier, Enum193.END_DOCTOR, 1, true);
         } else {
           ChangeSoldierState(pSoldier, Enum193.STANDING, 1, true);
         }
       } else if (pSoldier.bAssignment == Enum117.REPAIR) {
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           ChangeSoldierState(pSoldier, Enum193.END_REPAIRMAN, 1, true);
         } else {
           ChangeSoldierState(pSoldier, Enum193.STANDING, 1, true);
         }
       } else if (pSoldier.bAssignment == Enum117.PATIENT) {
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           ChangeSoldierStance(pSoldier, ANIM_CROUCH);
         } else {
           ChangeSoldierState(pSoldier, Enum193.STANDING, 1, true);
@@ -4448,7 +4448,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
     ) {
       gfIgnoreScrolling = false;
 
-      if (fShowAssignmentMenu && guiCurrentScreen == Enum26.MAP_SCREEN) {
+      if (fShowAssignmentMenu && guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         SetBoxPosition(ghAssignmentBox, AssignmentPosition);
       }
 
@@ -4997,7 +4997,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
     ) {
       CheckAndUpdateTacticalAssignmentPopUpPositions();
 
-      if (fShowRepairMenu && guiCurrentScreen == Enum26.MAP_SCREEN) {
+      if (fShowRepairMenu && guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         // SetBoxPosition( ghRepairBox ,RepairPosition);
       }
 
@@ -6142,7 +6142,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
       fShowTrainingMenu == true &&
       CreateDestroyMouseRegionsForTrainingMenu__fCreated == false
     ) {
-      if (fShowTrainingMenu && guiCurrentScreen == Enum26.MAP_SCREEN) {
+      if (fShowTrainingMenu && guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         SetBoxPosition(ghTrainingBox, TrainPosition);
       }
 
@@ -6257,7 +6257,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
       fShowAttributeMenu == true &&
       CreateDestroyMouseRegionsForAttributeMenu__fCreated == false
     ) {
-      if (fShowAssignmentMenu && guiCurrentScreen == Enum26.MAP_SCREEN) {
+      if (fShowAssignmentMenu && guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         SetBoxPosition(ghAssignmentBox, AssignmentPosition);
       }
 
@@ -6822,7 +6822,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           0,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -6842,7 +6842,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           1,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -6860,7 +6860,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           0,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -6876,7 +6876,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           1,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -6902,7 +6902,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
         SpecialCharacterDialogueEvent(
           DIALOGUE_SPECIAL_EVENT_LOCK_INTERFACE,
           0,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           0,
           0,
           0,
@@ -7017,7 +7017,7 @@ BOOLEAN AutoSleepMerc( SOLDIERTYPE *pSoldier )
             DoMapMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               gzLateLocalizedString[48],
-              Enum26.MAP_SCREEN,
+              ScreenIds.MAP_SCREEN,
               MSG_BOX_FLAG_YESNO,
               MercDismissConfirmCallBack,
             );
@@ -10044,7 +10044,7 @@ BOOLEAN HandleShowingOfUpBox( void )
   function PutMercInAsleepState(pSoldier: SOLDIERTYPE): boolean {
     if (pSoldier.fMercAsleep == false) {
       if (gfWorldLoaded && pSoldier.bInSector) {
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           ChangeSoldierState(pSoldier, Enum193.GOTO_SLEEP, 1, true);
         } else {
           ChangeSoldierState(pSoldier, Enum193.SLEEPING, 1, true);
@@ -10081,7 +10081,7 @@ BOOLEAN HandleShowingOfUpBox( void )
   export function PutMercInAwakeState(pSoldier: SOLDIERTYPE): boolean {
     if (pSoldier.fMercAsleep) {
       if (gfWorldLoaded && pSoldier.bInSector) {
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           ChangeSoldierState(pSoldier, Enum193.WKAEUP_FROM_SLEEP, 1, true);
         } else {
           ChangeSoldierState(pSoldier, Enum193.STANDING, 1, true);
@@ -10268,7 +10268,7 @@ BOOLEAN HandleShowingOfUpBox( void )
 
   function NotifyPlayerOfAssignmentAttemptFailure(bAssignment: INT8): void {
     // notify player
-    if (guiCurrentScreen != Enum26.MSG_BOX_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MSG_BOX_SCREEN) {
       DoScreenIndependantMessageBox(pMapErrorString[18], MSG_BOX_FLAG_OK, null);
     } else {
       // use screen msg instead!

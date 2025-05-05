@@ -388,7 +388,7 @@ namespace ja2 {
 
       // in map screen, we wanna have to skip over x1 compression and go straight to 5x
       if (
-        guiCurrentScreen == Enum26.MAP_SCREEN &&
+        guiCurrentScreen == ScreenIds.MAP_SCREEN &&
         giTimeCompressMode == Enum130.TIME_COMPRESS_X1
       ) {
         giTimeCompressMode++;
@@ -412,7 +412,7 @@ namespace ja2 {
 
       // in map screen, we wanna have to skip over x1 compression and go straight to 5x
       if (
-        guiCurrentScreen == Enum26.MAP_SCREEN &&
+        guiCurrentScreen == ScreenIds.MAP_SCREEN &&
         giTimeCompressMode == Enum130.TIME_COMPRESS_X1
       ) {
         giTimeCompressMode--;
@@ -425,13 +425,13 @@ namespace ja2 {
   export function SetGameTimeCompressionLevel(uiCompressionRate: UINT32): void {
     Assert(uiCompressionRate < Enum130.NUM_TIME_COMPRESS_SPEEDS);
 
-    if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
       if (uiCompressionRate != Enum130.TIME_COMPRESS_X1) {
         uiCompressionRate = Enum130.TIME_COMPRESS_X1;
       }
     }
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       if (uiCompressionRate == Enum130.TIME_COMPRESS_X1) {
         uiCompressionRate = Enum130.TIME_COMPRESS_X0;
       }
@@ -613,9 +613,9 @@ namespace ja2 {
     CreateDestroyScreenMaskForPauseGame();
 
     if (
-      guiCurrentScreen != Enum26.GAME_SCREEN &&
-      guiCurrentScreen != Enum26.MAP_SCREEN &&
-      guiCurrentScreen != Enum26.GAME_SCREEN
+      guiCurrentScreen != ScreenIds.GAME_SCREEN &&
+      guiCurrentScreen != ScreenIds.MAP_SCREEN &&
+      guiCurrentScreen != ScreenIds.GAME_SCREEN
     ) {
       UpdateClock__uiLastSecondTime = GetJA2Clock();
       gfTimeInterruptPause = false;
@@ -980,7 +980,7 @@ namespace ja2 {
     // check if the game is paused BY THE PLAYER or not and reverse
     if (gfGamePaused && gfPauseDueToPlayerGamePause) {
       // If in game screen...
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         if (giTimeCompressMode == Enum130.TIME_COMPRESS_X0) {
           giTimeCompressMode++;
         }

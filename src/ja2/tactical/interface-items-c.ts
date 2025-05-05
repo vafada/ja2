@@ -1301,7 +1301,7 @@ namespace ja2 {
 
       if (KeyExistsInKeyRing(pSoldier, ANYKEY, null)) {
         // blit gold key here?
-        if (guiCurrentItemDescriptionScreen != Enum26.MAP_SCREEN) {
+        if (guiCurrentItemDescriptionScreen != ScreenIds.MAP_SCREEN) {
           BltVideoObjectFromIndex(
             guiSAVEBUFFER,
             guiGoldKeyVO,
@@ -1396,7 +1396,7 @@ namespace ja2 {
         Item[pSoldier.inv[Enum261.HANDPOS].usItem].fFlags & ITEM_TWO_HANDED
       ) {
         //			if( guiCurrentScreen != MAP_SCREEN )
-        if (guiCurrentItemDescriptionScreen != Enum26.MAP_SCREEN) {
+        if (guiCurrentItemDescriptionScreen != ScreenIds.MAP_SCREEN) {
           BltVideoObjectFromIndex(
             guiSAVEBUFFER,
             guiSecItemHiddenVO,
@@ -1472,7 +1472,7 @@ namespace ja2 {
 
     if (fHatchItOut) {
       let uiWhichBuffer: UINT32 =
-        guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN
+        guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN
           ? guiSAVEBUFFER
           : guiRENDERBUFFER;
       DrawHatchOnInventory(
@@ -2518,7 +2518,7 @@ namespace ja2 {
 
     // DEF:
     // if we are in the shopkeeper screen, and we are to use the
-    if (guiCurrentScreen == Enum26.SHOPKEEPER_SCREEN && ubPosition == 255) {
+    if (guiCurrentScreen == ScreenIds.SHOPKEEPER_SCREEN && ubPosition == 255) {
       pObject = <OBJECTTYPE>pShopKeeperItemDescObject;
     }
 
@@ -2590,7 +2590,7 @@ namespace ja2 {
     fItemDescDelete = false;
 
     // Build a mouse region here that is over any others.....
-    if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
       // return( FALSE );
 
       MSYS_DefineRegion(
@@ -2695,7 +2695,7 @@ namespace ja2 {
           break;
       }
 
-      if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+      if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
         // in mapscreen, move over a bit
         giItemDescAmmoButton = CreateIconAndTextButton(
           giItemDescAmmoButtonImages,
@@ -2768,7 +2768,7 @@ namespace ja2 {
     }
 
     if (ITEM_PROS_AND_CONS(gpItemDescObject.usItem)) {
-      if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+      if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
         sProsConsIndent =
           Math.max(
             StringPixLength(gzProsLabel, ITEMDESC_FONT()),
@@ -2878,7 +2878,7 @@ namespace ja2 {
       for (cnt = 0; cnt < MAX_ATTACHMENTS; cnt++) {
         // Build a mouse region here that is over any others.....
         //			if (guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN )
-        if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN)
+        if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN)
           MSYS_DefineRegion(
             gItemDescAttachmentRegions[cnt],
             gsInvDescX + gMapItemDescAttachmentsXY[cnt].sX,
@@ -2950,7 +2950,7 @@ namespace ja2 {
 
       // Create buttons for the money
       //		if (guiCurrentScreen ==  MAP_SCREEN )
-      if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+      if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
         guiMoneyButtonImage = LoadButtonImage(
           "INTERFACE\\Info_bil.sti",
           -1,
@@ -3216,7 +3216,7 @@ namespace ja2 {
       ItemDescAmmoCallback__fRightDown = false;
       gfItemAmmoDown = false;
 
-      if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+      if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
         if (
           gpItemPointer == null &&
           EmptyWeaponMagazine(gpItemDescObject, gItemPointer)
@@ -3379,7 +3379,7 @@ namespace ja2 {
             gpItemPointerSoldier = gpItemDescSoldier;
 
             //				if( guiCurrentScreen == MAP_SCREEN )
-            if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+            if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
               // Set mouse
               guiExternVo = GetInterfaceGraphicForItem(
                 Item[gpItemPointer.usItem],
@@ -3476,7 +3476,7 @@ namespace ja2 {
     let sProsConsIndent: INT16;
 
     if (
-      guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN &&
+      guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN &&
       gfInItemDescBox
     ) {
       // TAKE A LOOK AT THE VIDEO OBJECT SIZE ( ONE OF TWO SIZES ) AND CENTER!
@@ -3573,7 +3573,7 @@ namespace ja2 {
       for (cnt = 0; cnt < MAX_ATTACHMENTS; cnt++) {
         if (gpItemDescObject.usAttachItem[cnt] != NOTHING) {
           //        if (guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN )
-          if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+          if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
             sCenX = gsInvDescX + gMapItemDescAttachmentsXY[cnt].sX + 5;
             sCenY = gsInvDescY + gMapItemDescAttachmentsXY[cnt].sY - 1;
 
@@ -5343,7 +5343,7 @@ namespace ja2 {
     gfInItemDescBox = false;
 
     //	if( guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN  )
-    if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
       UnloadButtonImage(giMapInvDescButtonImage);
       RemoveButton(giMapInvDescButton);
     }
@@ -5377,7 +5377,7 @@ namespace ja2 {
       RemoveButton(giItemDescAmmoButton);
     }
     //	if(guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN )
-    if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
       fCharacterInfoPanelDirty = true;
       fMapPanelDirty = true;
       fTeamPanelDirty = true;
@@ -6529,7 +6529,7 @@ namespace ja2 {
       return false;
     }
 
-    if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
       if (ubLimit > 6) {
         ubLimit = 6;
       }
@@ -6630,7 +6630,7 @@ namespace ja2 {
     gfInItemStackPopup = true;
 
     //	if ( !(guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN ) )
-    if (guiCurrentItemDescriptionScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen != ScreenIds.MAP_SCREEN) {
       EnableSMPanelButtons(false, false);
     }
 
@@ -6761,7 +6761,7 @@ namespace ja2 {
     // guiTacticalInterfaceFlags &= (~INTERFACE_NORENDERBUTTONS);
 
     //	if ( !(guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN ) )
-    if (guiCurrentItemDescriptionScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen != ScreenIds.MAP_SCREEN) {
       EnableSMPanelButtons(true, false);
     }
 
@@ -6787,7 +6787,7 @@ namespace ja2 {
     let sOffSetY: INT16 = 0;
     let sOffSetX: INT16 = 0;
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       gsKeyRingPopupInvX = 0;
       sKeyRingItemWidth = MAP_KEY_RING_ROW_WIDTH;
       sOffSetX = 40;
@@ -6872,7 +6872,7 @@ namespace ja2 {
     // guiTacticalInterfaceFlags |= INTERFACE_NORENDERBUTTONS;
 
     //	if ( !(guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN ) )
-    if (guiCurrentItemDescriptionScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen != ScreenIds.MAP_SCREEN) {
       EnableSMPanelButtons(false, false);
     }
 
@@ -6900,7 +6900,7 @@ namespace ja2 {
     let sOffSetY: INT16 = 0;
     let sOffSetX: INT16 = 0;
 
-    if (guiCurrentScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.MAP_SCREEN) {
       sOffSetY = 8;
     } else {
       sOffSetX = 40;
@@ -6934,7 +6934,7 @@ namespace ja2 {
     usHeight = pTrav.usHeight;
     usWidth = pTrav.usWidth;
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       sKeyRingItemWidth = MAP_KEY_RING_ROW_WIDTH;
     } else {
       // Set some globals
@@ -7044,7 +7044,7 @@ namespace ja2 {
     // guiTacticalInterfaceFlags &= (~INTERFACE_NORENDERBUTTONS);
 
     //	if ( !(guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN ) )
-    if (guiCurrentItemDescriptionScreen != Enum26.MAP_SCREEN) {
+    if (guiCurrentItemDescriptionScreen != ScreenIds.MAP_SCREEN) {
       EnableSMPanelButtons(true, false);
     }
 
@@ -7297,7 +7297,7 @@ namespace ja2 {
           gsItemPopupInvWidth,
           gsItemPopupInvHeight,
         );
-        if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+        if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
           MAPInternalInitItemDescriptionBox(
             gpItemPopupObject,
             uiItemPos,
@@ -8588,13 +8588,13 @@ namespace ja2 {
               gfAddingMoneyToMercFromPlayersAccount &&
               gRemoveMoney.uiMoneyRemoving + 1000 > MAX_MONEY_PER_SLOT
             ) {
-              if (guiCurrentScreen == Enum26.SHOPKEEPER_SCREEN)
+              if (guiCurrentScreen == ScreenIds.SHOPKEEPER_SCREEN)
                 DoMessageBox(
                   Enum24.MSG_BOX_BASIC_STYLE,
                   gzMoneyWithdrawMessageText[
                     Enum374.MONEY_TEXT_WITHDRAW_MORE_THEN_MAXIMUM
                   ],
-                  Enum26.SHOPKEEPER_SCREEN,
+                  ScreenIds.SHOPKEEPER_SCREEN,
                   MSG_BOX_FLAG_OK,
                   null,
                   null,
@@ -8605,7 +8605,7 @@ namespace ja2 {
                   gzMoneyWithdrawMessageText[
                     Enum374.MONEY_TEXT_WITHDRAW_MORE_THEN_MAXIMUM
                   ],
-                  Enum26.GAME_SCREEN,
+                  ScreenIds.GAME_SCREEN,
                   MSG_BOX_FLAG_OK,
                   null,
                   null,
@@ -8629,7 +8629,7 @@ namespace ja2 {
                 gzMoneyWithdrawMessageText[
                   Enum374.MONEY_TEXT_WITHDRAW_MORE_THEN_MAXIMUM
                 ],
-                Enum26.GAME_SCREEN,
+                ScreenIds.GAME_SCREEN,
                 MSG_BOX_FLAG_OK,
                 null,
                 null,
@@ -8653,7 +8653,7 @@ namespace ja2 {
                 gzMoneyWithdrawMessageText[
                   Enum374.MONEY_TEXT_WITHDRAW_MORE_THEN_MAXIMUM
                 ],
-                Enum26.GAME_SCREEN,
+                ScreenIds.GAME_SCREEN,
                 MSG_BOX_FLAG_OK,
                 null,
                 null,
@@ -8792,7 +8792,7 @@ namespace ja2 {
           );
         } else gpItemDescObject.uiMoneyAmount = gRemoveMoney.uiMoneyRemaining;
 
-        if (guiCurrentItemDescriptionScreen == Enum26.MAP_SCREEN) {
+        if (guiCurrentItemDescriptionScreen == ScreenIds.MAP_SCREEN) {
           // Set mouse
           guiExternVo = GetInterfaceGraphicForItem(Item[gpItemPointer.usItem]);
           gusExternVoSubIndex = Item[gpItemPointer.usItem].ubGraphicNum;

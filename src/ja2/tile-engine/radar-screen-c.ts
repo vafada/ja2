@@ -274,8 +274,8 @@ namespace ja2 {
       // If night time and on surface, darken the radarmap.
       if (NightTime()) {
         if (
-          (guiCurrentScreen == Enum26.MAP_SCREEN && !iCurrentMapSectorZ) ||
-          (guiCurrentScreen == Enum26.GAME_SCREEN && !gbWorldSectorZ)
+          (guiCurrentScreen == ScreenIds.MAP_SCREEN && !iCurrentMapSectorZ) ||
+          (guiCurrentScreen == ScreenIds.GAME_SCREEN && !gbWorldSectorZ)
         ) {
           SetObjectHandleShade(gusRadarImage, 1);
         }
@@ -739,7 +739,7 @@ namespace ja2 {
       // set fact regions are destroyed
       CreateDestroyMouseRegionsForSquadList__fCreated = false;
 
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         // dirty region
         fInterfacePanelDirty = DIRTYLEVEL2;
 

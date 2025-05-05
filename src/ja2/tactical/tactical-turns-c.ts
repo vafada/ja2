@@ -12,7 +12,7 @@ namespace ja2 {
     }
 
     // ATE: postpone if we are not in tactical
-    if (guiCurrentScreen != Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.GAME_SCREEN) {
       return;
     }
 

@@ -456,7 +456,7 @@ namespace ja2 {
         DoLapTopMessageBox(
           Enum24.MSG_BOX_RED_ON_WHITE,
           sText,
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_OK,
           InsContractNoMercsPopupCallBack,
         );
@@ -466,7 +466,7 @@ namespace ja2 {
         DoLapTopMessageBox(
           Enum24.MSG_BOX_RED_ON_WHITE,
           sText,
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_OK,
           InsContractNoMercsPopupCallBack,
         );
@@ -1964,11 +1964,11 @@ UINT32	GetContractLengthForFormNumber( UINT8 ubFormID )
         let sText: string /* wchar_t[800] */;
 
         sText = GetInsuranceText(Enum90.INS_MLTI_NOT_ENOUGH_FUNDS);
-        if (guiCurrentScreen == Enum26.LAPTOP_SCREEN)
+        if (guiCurrentScreen == ScreenIds.LAPTOP_SCREEN)
           DoLapTopMessageBox(
             Enum24.MSG_BOX_RED_ON_WHITE,
             sText,
-            Enum26.LAPTOP_SCREEN,
+            ScreenIds.LAPTOP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );
@@ -1976,7 +1976,7 @@ UINT32	GetContractLengthForFormNumber( UINT8 ubFormID )
           DoMapMessageBox(
             Enum24.MSG_BOX_RED_ON_WHITE,
             sText,
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );

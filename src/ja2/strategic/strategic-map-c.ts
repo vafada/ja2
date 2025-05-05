@@ -200,7 +200,7 @@ namespace ja2 {
     SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
 
     if (
-      guiCurrentScreen == Enum26.MAP_SCREEN &&
+      guiCurrentScreen == ScreenIds.MAP_SCREEN &&
       !(gTacticalStatus.uiFlags & LOADING_SAVED_GAME) &&
       !AreInMeanwhile()
     ) {
@@ -612,7 +612,7 @@ namespace ja2 {
       // Note, the flag will return TRUE only if enemies were added.  The game may wish to
       // do something else in a case where no enemies are present.
 
-      SetPendingNewScreen(Enum26.GAME_SCREEN);
+      SetPendingNewScreen(ScreenIds.GAME_SCREEN);
       if (!NumEnemyInSector()) {
         PrepareEnemyForSectorBattle();
       }
@@ -879,7 +879,7 @@ namespace ja2 {
     // if we are loading a 'pristine' map ( ie, not loading a saved game )
     if (!(gTacticalStatus.uiFlags & LOADING_SAVED_GAME)) {
       if (!AreReloadingFromMeanwhile()) {
-        SetPendingNewScreen(Enum26.GAME_SCREEN);
+        SetPendingNewScreen(ScreenIds.GAME_SCREEN);
 
         // Make interface the team panel always...
         SetCurrentInterfacePanel(Enum215.TEAM_PANEL);
@@ -1290,7 +1290,7 @@ namespace ja2 {
     // RemoveProgressBar( 0 );
 
     if (gfEnterTacticalPlacementGUI) {
-      SetPendingNewScreen(Enum26.GAME_SCREEN);
+      SetPendingNewScreen(ScreenIds.GAME_SCREEN);
       InitTacticalPlacementGUI();
     } else {
       PrepareLoadedSector();
@@ -1392,7 +1392,7 @@ namespace ja2 {
                     DoMessageBox(
                       Enum24.MSG_BOX_BASIC_STYLE,
                       TacticalStr[Enum335.POW_MERCS_ARE_HERE],
-                      Enum26.GAME_SCREEN,
+                      ScreenIds.GAME_SCREEN,
                       MSG_BOX_FLAG_OK,
                       null,
                       null,
@@ -4603,7 +4603,7 @@ void AllMercsHaveWalkedOffSector( )
       sSectorZ: sBattleSectorZ,
     } = GetCurrentBattleSectorXYZ());
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN) {
       // The user has decided to let the game autoresolve the current battle.
       if (
         gWorldSectorX == sBattleSectorX &&
@@ -4683,7 +4683,7 @@ void AllMercsHaveWalkedOffSector( )
     // JA2Gold: Leaving sector, so get rid of ambients!
     DeleteAllAmbients();
 
-    if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
       if (!gfTacticalTraversal) {
         // if we are in tactical and don't intend on going to another sector immediately, then
         gfEnteringMapScreen = 1;
@@ -4698,7 +4698,7 @@ void AllMercsHaveWalkedOffSector( )
       return false;
     }
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN) {
       if (
         gWorldSectorX == sBattleSectorX &&
         gWorldSectorY == sBattleSectorY &&
@@ -4711,9 +4711,9 @@ void AllMercsHaveWalkedOffSector( )
         // screen, it'll delete the soldiers in the loaded world properly, then later on, once autoresolve is
         // complete, it'll delete the autoresolve soldiers properly.  As you can now see, the above if conditions
         // don't change throughout this whole process which makes it necessary to do it this way.
-        guiCurrentScreen = Enum26.MAP_SCREEN;
+        guiCurrentScreen = ScreenIds.MAP_SCREEN;
         TrashWorld();
-        guiCurrentScreen = Enum26.AUTORESOLVE_SCREEN;
+        guiCurrentScreen = ScreenIds.AUTORESOLVE_SCREEN;
       }
     } else {
       TrashWorld();

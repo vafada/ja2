@@ -607,7 +607,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           gzLateLocalizedString[33],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           WarpToSurfaceCallback,
           null,
@@ -986,7 +986,7 @@ namespace ja2 {
           DoMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             Str,
-            Enum26.GAME_SCREEN,
+            ScreenIds.GAME_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
             null,

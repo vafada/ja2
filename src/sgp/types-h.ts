@@ -82,13 +82,6 @@ namespace ja2 {
     cy: number;
   }
 
-  export function createSize(): SIZE {
-    return {
-      cx: 0,
-      cy: 0,
-    };
-  }
-
   export interface SGPRect {
     iLeft: INT32;
     iTop: INT32;
@@ -126,13 +119,6 @@ namespace ja2 {
     destination.iBottom = source.iBottom;
   }
 
-  export function resetSGPRect(o: SGPRect) {
-    o.iLeft = 0;
-    o.iTop = 0;
-    o.iRight = 0;
-    o.iBottom = 0;
-  }
-
   export function SGPRectToRect(o: SGPRect) {
     return {
       left: o.iLeft,
@@ -160,30 +146,6 @@ namespace ja2 {
       iY,
     };
   }
-
-  export function resetSGPPoint(o: SGPPoint) {
-    o.iX = 0;
-    o.iY = 0;
-  }
-
-  interface SGPRange {
-    Min: INT32;
-    Max: INT32;
-  }
-
-  type VECTOR2 = FLOAT[] /* [2] */; // 2d vector (2x1 matrix)
-  type VECTOR3 = FLOAT[] /* [3] */; // 3d vector (3x1 matrix)
-  type VECTOR4 = FLOAT[] /* [4] */; // 4d vector (4x1 matrix)
-
-  type IVECTOR2 = INT32[] /* [2] */; // 2d vector (2x1 matrix)
-  type IVECTOR3 = INT32[] /* [3] */; // 3d vector (3x1 matrix)
-  type IVECTOR4 = INT32[] /* [4] */; // 4d vector (4x1 matrix)
-
-  type MATRIX3 = VECTOR3[] /* [3] */; // 3x3 matrix
-  type MATRIX4 = VECTOR4[] /* [4] */; // 4x4 matrix
-
-  export type ANGLE = VECTOR3; // angle return array
-  type COLOR = VECTOR4; // rgba color array
 
   export function createArray<T>(arrayLength: number, value: T): T[] {
     const arr = new Array(arrayLength);

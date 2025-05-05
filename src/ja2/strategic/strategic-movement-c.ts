@@ -4771,7 +4771,7 @@ namespace ja2 {
       str = pMapErrorString[13];
     }
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       // Force render mapscreen (need to update the position of the group before the dialog appears.
       fMapPanelDirty = true;
       MapScreenHandle();

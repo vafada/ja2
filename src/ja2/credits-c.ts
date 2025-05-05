@@ -412,7 +412,7 @@ STR16	gzCreditNameFunny[]=
     // Initialize the root credit node
     InitCreditNode();
 
-    guiCreditsExitScreen = Enum26.CREDIT_SCREEN;
+    guiCreditsExitScreen = ScreenIds.CREDIT_SCREEN;
     gfCrdtHaveRenderedFirstFrameToSaveBuffer = false;
 
     guiCreditScreenActiveFont = FONT12ARIAL();
@@ -525,7 +525,7 @@ STR16	gzCreditNameFunny[]=
     ) {
       // if there are no more credits in the file
       if (!GetNextCreditFromTextFile() && gCrdtLastAddedNode == null) {
-        SetCreditsExitScreen(Enum26.MAINMENU_SCREEN);
+        SetCreditsExitScreen(ScreenIds.MAINMENU_SCREEN);
       }
     }
 
@@ -614,7 +614,7 @@ STR16	gzCreditNameFunny[]=
         switch (Event.usParam) {
           case ESC:
             // Exit out of the screen
-            SetCreditsExitScreen(Enum26.MAINMENU_SCREEN);
+            SetCreditsExitScreen(ScreenIds.MAINMENU_SCREEN);
             break;
         }
       }

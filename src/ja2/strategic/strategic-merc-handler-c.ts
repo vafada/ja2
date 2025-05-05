@@ -51,7 +51,7 @@ namespace ja2 {
       }
     }
 
-    if (guiCurrentScreen != Enum26.GAME_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.GAME_SCREEN) {
       ScreenMsg(FONT_RED, MSG_INTERFACE, pMercDeadString[0], pSoldier.name);
     }
 
@@ -72,7 +72,7 @@ namespace ja2 {
     // if the merc had life insurance
     if (pSoldier.usLifeInsurance) {
       // if he didn't die during auto-resolve
-      if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+      if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
         // check whether this was obviously a suspicious death
         // if killed within an hour of being insured
         if (

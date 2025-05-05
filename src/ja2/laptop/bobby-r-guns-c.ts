@@ -681,7 +681,7 @@ namespace ja2 {
       DoLapTopMessageBox(
         Enum24.MSG_BOX_LAPTOP_DEFAULT,
         BobbyRText[Enum350.BOBBYR_NO_MORE_STOCK],
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         MSG_BOX_FLAG_OK,
         OutOfStockMessageBoxCallBack,
       );
@@ -1859,7 +1859,7 @@ void CalculateFirstAndLastIndexs()
             DoLapTopMessageBox(
               Enum24.MSG_BOX_LAPTOP_DEFAULT,
               BobbyRText[Enum350.BOBBYR_MORE_THEN_10_PURCHASES],
-              Enum26.LAPTOP_SCREEN,
+              ScreenIds.LAPTOP_SCREEN,
               MSG_BOX_FLAG_OK,
               null,
             );
@@ -1877,7 +1877,7 @@ void CalculateFirstAndLastIndexs()
         DoLapTopMessageBox(
           Enum24.MSG_BOX_LAPTOP_DEFAULT,
           BobbyRText[Enum350.BOBBYR_MORE_NO_MORE_IN_STOCK],
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_OK,
           null,
         );
@@ -1907,7 +1907,7 @@ void CalculateFirstAndLastIndexs()
             DoLapTopMessageBox(
               Enum24.MSG_BOX_LAPTOP_DEFAULT,
               BobbyRText[Enum350.BOBBYR_MORE_THEN_10_PURCHASES],
-              Enum26.LAPTOP_SCREEN,
+              ScreenIds.LAPTOP_SCREEN,
               MSG_BOX_FLAG_OK,
               null,
             );
@@ -1925,7 +1925,7 @@ void CalculateFirstAndLastIndexs()
         DoLapTopMessageBox(
           Enum24.MSG_BOX_LAPTOP_DEFAULT,
           BobbyRText[Enum350.BOBBYR_MORE_NO_MORE_IN_STOCK],
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_OK,
           null,
         );

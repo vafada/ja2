@@ -753,13 +753,13 @@ namespace ja2 {
       //
 
       // if we are in the game screen
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         SetRenderFlags(RENDER_FLAG_FULL);
-      } else if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+      } else if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         fMapPanelDirty = true;
         fTeamPanelDirty = true;
         fCharacterInfoPanelDirty = true;
-      } else if (guiCurrentScreen == Enum26.SAVE_LOAD_SCREEN) {
+      } else if (guiCurrentScreen == ScreenIds.SAVE_LOAD_SCREEN) {
         gfRedrawSaveLoadScreen = true;
       }
 
@@ -2359,7 +2359,7 @@ namespace ja2 {
     giRTAILastUpdateTime = 0;
 
     // if we are in tactical
-    if (guiScreenToGotoAfterLoadingSavedGame == Enum26.GAME_SCREEN) {
+    if (guiScreenToGotoAfterLoadingSavedGame == ScreenIds.GAME_SCREEN) {
       // Initialize the current panel
       InitializeCurrentPanel();
 
@@ -4525,7 +4525,7 @@ BOOLEAN LoadPtrInfo( PTR *pData, UINT32 uiSizeOfObject, HWFILE hFile )
 
   function PauseBeforeSaveGame(): void {
     // if we are not in the save load screen
-    if (guiCurrentScreen != Enum26.SAVE_LOAD_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.SAVE_LOAD_SCREEN) {
       // Pause the game
       PauseGame();
     }
@@ -4533,7 +4533,7 @@ BOOLEAN LoadPtrInfo( PTR *pData, UINT32 uiSizeOfObject, HWFILE hFile )
 
   function UnPauseAfterSaveGame(): void {
     // if we are not in the save load screen
-    if (guiCurrentScreen != Enum26.SAVE_LOAD_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.SAVE_LOAD_SCREEN) {
       // UnPause time compression
       UnPauseGame();
     }

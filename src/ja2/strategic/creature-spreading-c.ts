@@ -840,7 +840,7 @@ namespace ja2 {
       ) {
         // This is the currently loaded sector.  All we have to do is change the music and insert
         // the creatures tactically.
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           gubCreatureBattleCode = Enum129.CREATURE_BATTLE_CODE_TACTICALLYADD;
         } else {
           gubCreatureBattleCode =

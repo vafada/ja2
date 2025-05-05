@@ -156,7 +156,7 @@ namespace ja2 {
 
       // Given team, get an ID for this guy!
 
-      if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+      if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
         cnt = gTacticalStatus.Team[Soldier.bTeam].bFirstID;
 
         // ATE: If we are a vehicle, and a player, start at a different slot ( 2 - max )
@@ -320,7 +320,7 @@ namespace ja2 {
           }
         }
 
-        if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+        if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
           // also, if an army guy has camouflage, roll to determine whether they start camouflaged
           if (Soldier.bTeam == ENEMY_TEAM) {
             i = FindObj(Soldier, Enum225.CAMOUFLAGEKIT);
@@ -438,7 +438,7 @@ namespace ja2 {
           break;
       }
 
-      if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+      if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
         // Copy into merc struct
         copySoldierType(MercPtrs[Soldier.ubID], Soldier);
         // Alrighty then, we are set to create the merc, stuff after here can fail!
@@ -500,7 +500,7 @@ namespace ja2 {
       //		Menptr[ Soldier.ubID ].usAniFrame = Soldier.usAniFrame;
     }
 
-    if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
       if (
         pCreateStruct.fOnRoof &&
         FlatRoofAboveGridNo(pCreateStruct.sInsertionGridNo)
@@ -1133,7 +1133,7 @@ namespace ja2 {
       HandleCrowLeave(pSoldier);
     }
 
-    if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+    if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
       // remove character from squad list.. if they are on one
       RemoveCharacterFromSquads(pSoldier);
 
@@ -1919,7 +1919,7 @@ namespace ja2 {
     let ubID: UINT8 = 0;
     let pSoldier: SOLDIERTYPE | null;
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
       return ReserveTacticalSoldierForAutoresolve(
         Enum262.SOLDIER_CLASS_ADMINISTRATOR,
       );
@@ -1964,7 +1964,7 @@ namespace ja2 {
     let ubID: UINT8 = 0;
     let pSoldier: SOLDIERTYPE | null;
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
       return ReserveTacticalSoldierForAutoresolve(Enum262.SOLDIER_CLASS_ARMY);
     }
 
@@ -2007,7 +2007,7 @@ namespace ja2 {
     let ubID: UINT8 = 0;
     let pSoldier: SOLDIERTYPE | null;
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
       return ReserveTacticalSoldierForAutoresolve(Enum262.SOLDIER_CLASS_ELITE);
     }
 
@@ -2089,7 +2089,7 @@ namespace ja2 {
     let pp: SOLDIERCREATE_STRUCT = createSoldierCreateStruct();
     let ubID: UINT8 = 0;
 
-    if (guiCurrentScreen == Enum26.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
+    if (guiCurrentScreen == ScreenIds.AUTORESOLVE_SCREEN && !gfPersistantPBI) {
       return ReserveTacticalSoldierForAutoresolve(
         Enum262.SOLDIER_CLASS_CREATURE,
       );

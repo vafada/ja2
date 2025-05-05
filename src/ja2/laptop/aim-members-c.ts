@@ -2526,7 +2526,7 @@ namespace ja2 {
       DoLapTopMessageBox(
         Enum24.MSG_BOX_LAPTOP_DEFAULT,
         AimPopUpText[Enum357.AIM_MEMBER_ALREADY_HAVE_20_MERCS],
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );
@@ -5302,7 +5302,7 @@ BOOLEAN DisplayShadedStretchedMercFace( UINT8 ubMercID, UINT16 usPosX, UINT16 us
     DoLapTopMessageBox(
       Enum24.MSG_BOX_LAPTOP_DEFAULT,
       szLocAndTime,
-      Enum26.LAPTOP_SCREEN,
+      ScreenIds.LAPTOP_SCREEN,
       MSG_BOX_FLAG_OK,
       DisplayPopUpBoxExplainingMercArrivalLocationAndTimeCallBack,
     );

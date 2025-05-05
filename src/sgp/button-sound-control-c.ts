@@ -6,29 +6,29 @@ namespace ja2 {
     ButtonList[iButtonID].ubSoundSchemeID = bSoundScheme;
     if (bSoundScheme == Enum27.BUTTON_SOUND_SCHEME_GENERIC) {
       switch (guiCurrentScreen) {
-        case Enum26.MAINMENU_SCREEN:
-        case Enum26.OPTIONS_SCREEN:
-        case Enum26.LOADSAVE_SCREEN:
-        case Enum26.SAVE_LOAD_SCREEN:
-        case Enum26.INIT_SCREEN:
+        case ScreenIds.MAINMENU_SCREEN:
+        case ScreenIds.OPTIONS_SCREEN:
+        case ScreenIds.LOADSAVE_SCREEN:
+        case ScreenIds.SAVE_LOAD_SCREEN:
+        case ScreenIds.INIT_SCREEN:
           ButtonList[iButtonID].ubSoundSchemeID =
             Enum27.BUTTON_SOUND_SCHEME_BIGSWITCH3;
           break;
 
-        case Enum26.LAPTOP_SCREEN:
+        case ScreenIds.LAPTOP_SCREEN:
           ButtonList[iButtonID].ubSoundSchemeID =
             Enum27.BUTTON_SOUND_SCHEME_COMPUTERBEEP2;
           break;
 
-        case Enum26.AUTORESOLVE_SCREEN:
-        case Enum26.MAP_SCREEN:
-        case Enum26.GAME_SCREEN:
-        case Enum26.SHOPKEEPER_SCREEN:
+        case ScreenIds.AUTORESOLVE_SCREEN:
+        case ScreenIds.MAP_SCREEN:
+        case ScreenIds.GAME_SCREEN:
+        case ScreenIds.SHOPKEEPER_SCREEN:
           ButtonList[iButtonID].ubSoundSchemeID =
             Enum27.BUTTON_SOUND_SCHEME_SMALLSWITCH2;
           break;
 
-        case Enum26.GAME_INIT_OPTIONS_SCREEN:
+        case ScreenIds.GAME_INIT_OPTIONS_SCREEN:
           ButtonList[iButtonID].ubSoundSchemeID =
             Enum27.BUTTON_SOUND_SCHEME_VERYSMALLSWITCH2;
           break;

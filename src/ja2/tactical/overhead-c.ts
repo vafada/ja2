@@ -2696,8 +2696,8 @@ namespace ja2 {
     // ARM: can't call SelectSoldier() in mapscreen, that will initialize interface panels!!!
     // ATE: Adjusted conditions a bit ( sometimes were not getting selected )
     if (
-      guiCurrentScreen == Enum26.LAPTOP_SCREEN ||
-      guiCurrentScreen == Enum26.MAP_SCREEN
+      guiCurrentScreen == ScreenIds.LAPTOP_SCREEN ||
+      guiCurrentScreen == ScreenIds.MAP_SCREEN
     ) {
       return;
     }
@@ -4254,7 +4254,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
 
     gTacticalStatus.fGoingToEnterDemo = false;
 
-    return Enum26.INIT_SCREEN;
+    return ScreenIds.INIT_SCREEN;
   }
 
   function GetSceneFilename(): string /* Pointer<CHAR8> */ {
@@ -6886,7 +6886,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
     if (bNumDead + bNumNotOK == bNumInBattle || fOnlyEPCsLeft) {
       // Are there militia in sector?
       if (fMilitiaInSector) {
-        if (guiCurrentScreen != Enum26.AUTORESOLVE_SCREEN) {
+        if (guiCurrentScreen != ScreenIds.AUTORESOLVE_SCREEN) {
           // if here, check if we should autoresolve.
           // if we have at least one guy unconscious, call below function...
           if (HandlePotentialBringUpAutoresolveToFinishBattle()) {
@@ -8066,7 +8066,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
 
     // Select next avialiable guy....
     if (fAdjustSelected) {
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         if (gusSelectedSoldier == pSoldier.ubID) {
           ubID = FindNextActiveAndAliveMerc(pSoldier, false, false);
 
@@ -8089,7 +8089,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
       } else {
         gusSelectedSoldier = NOBODY;
 
-        if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
           // otherwise, make sure interface is team panel...
           UpdateTeamPanelAssignments();
           SetCurrentInterfacePanel(Enum215.TEAM_PANEL);
@@ -8100,7 +8100,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
 
   function DoneFadeOutDueToDeath(): void {
     // Quit game....
-    InternalLeaveTacticalScreen(Enum26.MAINMENU_SCREEN);
+    InternalLeaveTacticalScreen(ScreenIds.MAINMENU_SCREEN);
     // SetPendingNewScreen( MAINMENU_SCREEN );
   }
 
@@ -8172,7 +8172,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
         LargeTacticalStr[
           Enum337.LARGESTR_NOONE_LEFT_CAPABLE_OF_BATTLE_AGAINST_CREATURES_STR
         ],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         EndBattleWithUnconsciousGuysCallback,
         null,
@@ -8181,7 +8181,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         LargeTacticalStr[Enum337.LARGESTR_NOONE_LEFT_CAPABLE_OF_BATTLE_STR],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         EndBattleWithUnconsciousGuysCallback,
         null,
@@ -8194,7 +8194,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         LargeTacticalStr[3],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         EndBattleWithUnconsciousGuysCallback,
         null,
@@ -8203,7 +8203,7 @@ void MakePotentiallyHostileCivGroupsHostile( void )
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         LargeTacticalStr[Enum337.LARGESTR_HAVE_BEEN_CAPTURED],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_OK,
         EndBattleWithUnconsciousGuysCallback,
         null,

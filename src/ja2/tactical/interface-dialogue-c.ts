@@ -2525,7 +2525,7 @@ namespace ja2 {
           // DeleteTalkingMenu( );
           // gFadeOutDoneCallback = DoneFadeOutActionSex;
           // FadeOutGameScreen( );
-          SetPendingNewScreen(Enum26.SEX_SCREEN);
+          SetPendingNewScreen(ScreenIds.SEX_SCREEN);
           break;
 
         case Enum213.NPC_ACTION_KYLE_GETS_MONEY:
@@ -4775,7 +4775,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4794,7 +4794,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4805,7 +4805,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           TacticalStr[Enum335.BOXING_PROMPT],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4822,7 +4822,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4832,7 +4832,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           TacticalStr[Enum335.YESNOLIE_STR],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNOLIE,
           DialogueMessageBoxCallBack,
           null,
@@ -4843,7 +4843,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4863,7 +4863,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4877,7 +4877,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4888,7 +4888,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -4899,7 +4899,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zTemp,
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           DialogueMessageBoxCallBack,
           null,
@@ -5173,7 +5173,7 @@ namespace ja2 {
   }
 
   function DoneFadeOutActionSex(): void {
-    SetPendingNewScreen(Enum26.SEX_SCREEN);
+    SetPendingNewScreen(ScreenIds.SEX_SCREEN);
   }
 
   function DoneFadeInActionBasement(): void {

@@ -473,7 +473,7 @@ INT32		guiSKI_EvaluateButtonImage;
         gfSKIScreenExit = true;
         EnterTacticalScreen();
 
-        return Enum26.SHOPKEEPER_SCREEN;
+        return ScreenIds.SHOPKEEPER_SCREEN;
       } else {
         gfSKIScreenEntry = false;
         gfSKIScreenExit = false;
@@ -536,7 +536,7 @@ INT32		guiSKI_EvaluateButtonImage;
       DoSkiMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         SKI_Text[Enum367.SKI_TEXT_NO_MORE_ROOM_IN_PLAYER_OFFER_AREA],
-        Enum26.SHOPKEEPER_SCREEN,
+        ScreenIds.SHOPKEEPER_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );
@@ -544,7 +544,7 @@ INT32		guiSKI_EvaluateButtonImage;
       gfDisplayNoRoomMsg = false;
     }
 
-    return Enum26.SHOPKEEPER_SCREEN;
+    return ScreenIds.SHOPKEEPER_SCREEN;
   }
 
   export function ShopKeeperScreenShutdown(): boolean {
@@ -2345,7 +2345,7 @@ void BtnSKI_EvaluateButtonCallback(GUI_BUTTON *btn,INT32 reason)
       gfSKIScreenExit = true;
     }
 
-    LeaveTacticalScreen(Enum26.SHOPKEEPER_SCREEN);
+    LeaveTacticalScreen(ScreenIds.SHOPKEEPER_SCREEN);
   }
 
   function InitializeShopKeeper(fResetPage: boolean): void {
@@ -4087,7 +4087,7 @@ void BtnSKI_EvaluateButtonCallback(GUI_BUTTON *btn,INT32 reason)
           DoSkiMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             SKI_Text[Enum367.SKI_TEXT_NO_MORE_ROOM_IN_PLAYER_OFFER_AREA],
-            Enum26.SHOPKEEPER_SCREEN,
+            ScreenIds.SHOPKEEPER_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );

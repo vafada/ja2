@@ -2746,7 +2746,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
     ) {
       // handle the help screen
       HelpScreenHandler();
-      return Enum26.MAP_SCREEN;
+      return ScreenIds.MAP_SCREEN;
     }
 
     // shaded screen, leave
@@ -2762,7 +2762,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
         // define our progress bar
         // CreateProgressBar( 0, 118, 183, 522, 202 );
       }
-      return Enum26.MAP_SCREEN;
+      return ScreenIds.MAP_SCREEN;
     }
 
     //	if ( (fInMapMode == FALSE ) && ( fMapExitDueToMessageBox == FALSE ) )
@@ -3292,7 +3292,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           pMapErrorString[4],
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           MSG_BOX_FLAG_OK,
           MapScreenDefaultOkBoxCallback,
         );
@@ -3332,11 +3332,11 @@ void RemoveCharacter(UINT16 uiCharPosition)
       if (HandleFadeOutCallback()) {
         // force mapscreen to be reinitialized even though we're already in it
         EndMapScreen(true);
-        return Enum26.MAP_SCREEN;
+        return ScreenIds.MAP_SCREEN;
       }
 
-      if (HandleBeginFadeOut(Enum26.MAP_SCREEN)) {
-        return Enum26.MAP_SCREEN;
+      if (HandleBeginFadeOut(ScreenIds.MAP_SCREEN)) {
+        return ScreenIds.MAP_SCREEN;
       }
     }
 
@@ -3367,8 +3367,8 @@ void RemoveCharacter(UINT16 uiCharPosition)
     if (gfFirstMapscreenFrame == false) {
       // Handle Interface
       uiNewScreen = HandleMapUI();
-      if (uiNewScreen != Enum26.MAP_SCREEN) {
-        return Enum26.MAP_SCREEN;
+      if (uiNewScreen != ScreenIds.MAP_SCREEN) {
+        return ScreenIds.MAP_SCREEN;
       }
     }
 
@@ -3479,7 +3479,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
     BlitBackgroundToSaveBuffer();
 
     if (fLeavingMapScreen == true) {
-      return Enum26.MAP_SCREEN;
+      return ScreenIds.MAP_SCREEN;
     }
 
     if (fDisableDueToBattleRoster == false) {
@@ -3796,7 +3796,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
         EndMapScreen(true);
       }
 
-      if (HandleBeginFadeIn(Enum26.MAP_SCREEN)) {
+      if (HandleBeginFadeIn(ScreenIds.MAP_SCREEN)) {
       }
     }
 
@@ -3820,7 +3820,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
       HandleExitsFromMapScreen();
     }
 
-    return Enum26.MAP_SCREEN;
+    return ScreenIds.MAP_SCREEN;
   }
 
   function DrawString(
@@ -4327,7 +4327,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
     let pNode: PathSt | null = null;
     let fVehicle: boolean = false;
     let MousePos: POINT = createPoint();
-    let uiNewScreen: UINT32 = Enum26.MAP_SCREEN;
+    let uiNewScreen: UINT32 = ScreenIds.MAP_SCREEN;
     let fWasAlreadySelected: boolean;
 
     // Get Input from keyboard
@@ -4484,7 +4484,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
           // not zoomed out, make sure this is a valid sector
           if (IsTheCursorAllowedToHighLightThisSector(sMapX, sMapY) == false) {
             // do nothing, return
-            return Enum26.MAP_SCREEN;
+            return ScreenIds.MAP_SCREEN;
           }
 
           // while item in hand
@@ -4518,7 +4518,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
               CreateDestroyMapInventoryPoolButtons(true);
             }
 
-            return Enum26.MAP_SCREEN;
+            return ScreenIds.MAP_SCREEN;
           }
 
           // don't permit other click handling while item is in cursor (entering PBI would permit item teleports, etc.)
@@ -4574,7 +4574,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
               }
             }
 
-            return Enum26.MAP_SCREEN;
+            return ScreenIds.MAP_SCREEN;
           } // not already changing arrival sector
           else {
             if (CanMoveBullseyeAndClickedOnIt(sMapX, sMapY)) {
@@ -4586,7 +4586,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
                 StartChangeSectorArrivalMode();
               }
 
-              return Enum26.MAP_SCREEN;
+              return ScreenIds.MAP_SCREEN;
             }
           }
 
@@ -4608,7 +4608,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
             fShowMapInventoryPool = true;
             CreateDestroyMapInventoryPoolButtons(true);
 
-            return Enum26.MAP_SCREEN;
+            return ScreenIds.MAP_SCREEN;
           }
 
           if (
@@ -4620,7 +4620,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
             // Bring up a non-persistant version of mapscreen if the user clicks on the sector where a
             // battle is taking place.
             InitPreBattleInterface(null, false);
-            return Enum26.MAP_SCREEN;
+            return ScreenIds.MAP_SCREEN;
           }
 
           // if we're in airspace mode
@@ -4634,7 +4634,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
                 CheckForClickOverHelicopterIcon(sMapX, sMapY) == true
               ) {
                 RequestGiveSkyriderNewDestination();
-                return Enum26.MAP_SCREEN;
+                return ScreenIds.MAP_SCREEN;
               }
             }
           } // not in airspace mode
@@ -4665,11 +4665,11 @@ void RemoveCharacter(UINT16 uiCharPosition)
                   DoMapMessageBox(
                     Enum24.MSG_BOX_BASIC_STYLE,
                     pMapErrorString[1],
-                    Enum26.MAP_SCREEN,
+                    ScreenIds.MAP_SCREEN,
                     MSG_BOX_FLAG_OK,
                     MapScreenDefaultOkBoxCallback,
                   );
-                  return Enum26.MAP_SCREEN;
+                  return ScreenIds.MAP_SCREEN;
                 }
               }
             }
@@ -5244,7 +5244,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
                     zNewTacticalMessages[
                       Enum320.TCTL_MSG__IRON_MAN_CANT_SAVE_NOW
                     ],
-                    Enum26.MAP_SCREEN,
+                    ScreenIds.MAP_SCREEN,
                     MSG_BOX_FLAG_OK,
                     null,
                   );
@@ -5643,9 +5643,9 @@ void RemoveCharacter(UINT16 uiCharPosition)
     SetAllAutoFacesInactive();
     if (fLapTop) {
       StopAnyCurrentlyTalkingSpeech();
-      guiCurrentScreen = Enum26.LAPTOP_SCREEN;
+      guiCurrentScreen = ScreenIds.LAPTOP_SCREEN;
     } else {
-      guiCurrentScreen = Enum26.GAME_SCREEN;
+      guiCurrentScreen = ScreenIds.GAME_SCREEN;
 
       // remove the progress bar
       RemoveProgressBar(0);
@@ -5655,7 +5655,7 @@ void RemoveCharacter(UINT16 uiCharPosition)
     }
 
     // if going to tactical next
-    if (guiPendingScreen == Enum26.GAME_SCREEN) {
+    if (guiPendingScreen == ScreenIds.GAME_SCREEN) {
       // set compressed mode to Normal (X1)
       SetGameTimeCompressionLevel(Enum130.TIME_COMPRESS_X1);
     } // going to another screen (options, laptop, save/load)
@@ -9120,7 +9120,7 @@ void BtnINVCallback(GUI_BUTTON *btn,INT32 reason)
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             pTrashItemText[1],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_YESNO,
             TrashItemMessageBoxCallBack,
           );
@@ -9128,7 +9128,7 @@ void BtnINVCallback(GUI_BUTTON *btn,INT32 reason)
           DoMapMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             pTrashItemText[0],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_YESNO,
             TrashItemMessageBoxCallBack,
           );
@@ -9148,7 +9148,7 @@ void BtnINVCallback(GUI_BUTTON *btn,INT32 reason)
   }
 
   function MapInvDoneButtonfastHelpCall(): void {
-    SetPendingNewScreen(Enum26.LAPTOP_SCREEN);
+    SetPendingNewScreen(ScreenIds.LAPTOP_SCREEN);
   }
 
   /* static */ let UpdateStatusOfMapSortButtons__fShownLastTime: boolean =
@@ -10028,7 +10028,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         pMapScreenJustStartedHelpText[0],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );
@@ -10037,7 +10037,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         pMapErrorString[39],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );
@@ -10046,7 +10046,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         gzLateLocalizedString[2],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );
@@ -10058,7 +10058,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         gzLateLocalizedString[55],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );
@@ -10082,7 +10082,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           str,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           MSG_BOX_FLAG_OK,
           MapScreenDefaultOkBoxCallback,
         );
@@ -10094,7 +10094,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         gzLateLocalizedString[28],
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_OK,
         MapScreenDefaultOkBoxCallback,
       );
@@ -11304,7 +11304,7 @@ INT8 GetNextValidCharacterInTeamPanelList( INT8 bCurrentIndex )
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           pSkyriderText[6],
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           MSG_BOX_FLAG_OK,
           MapScreenDefaultOkBoxCallback,
         );

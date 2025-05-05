@@ -213,7 +213,7 @@ namespace ja2 {
     gsFadeCount = 0;
     gbFadeType = bType;
 
-    SetPendingNewScreen(Enum26.FADE_SCREEN);
+    SetPendingNewScreen(ScreenIds.FADE_SCREEN);
   }
 
   export function FadeScreenInit(): boolean {
@@ -225,7 +225,7 @@ namespace ja2 {
 
     if (!gfFadeInitialized) {
       SET_ERROR("Fade Screen called but not intialized ");
-      return Enum26.ERROR_SCREEN;
+      return ScreenIds.ERROR_SCREEN;
     }
 
     // ATE: Remove cursor
@@ -280,7 +280,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.FADE_SCREEN;
+    return ScreenIds.FADE_SCREEN;
   }
 
   export function FadeScreenShutdown(): boolean {

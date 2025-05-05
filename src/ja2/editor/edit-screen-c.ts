@@ -1808,7 +1808,7 @@ namespace ja2 {
   function PerformSelectedAction(): UINT32 {
     let uiRetVal: UINT32;
 
-    uiRetVal = Enum26.EDIT_SCREEN;
+    uiRetVal = ScreenIds.EDIT_SCREEN;
 
     switch (iCurrentAction) {
       case Enum37.ACTION_DENSITY_DOWN:
@@ -1859,9 +1859,9 @@ namespace ja2 {
           PrevCurrentPaste = CurrentPaste;
           gPrevCurrentBackground = gCurrentBackground;
           fFirstTimeInGameScreen = true;
-          return Enum26.GAME_SCREEN;
+          return ScreenIds.GAME_SCREEN;
         }
-        return Enum26.EDIT_SCREEN;
+        return ScreenIds.EDIT_SCREEN;
       case Enum37.ACTION_GET_WALL:
       case Enum37.ACTION_GET_DOOR:
       case Enum37.ACTION_GET_WINDOW:
@@ -2140,11 +2140,11 @@ namespace ja2 {
 
       case Enum37.ACTION_SAVE_MAP:
         UpdateLastActionBeforeLeaving();
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
 
       case Enum37.ACTION_LOAD_MAP:
         UpdateLastActionBeforeLeaving();
-        return Enum26.LOADSAVE_SCREEN;
+        return ScreenIds.LOADSAVE_SCREEN;
 
       case Enum37.ACTION_UNDO:
         ExecuteUndoList();
@@ -2282,9 +2282,9 @@ namespace ja2 {
         gfConfirmExitFirst = false;
         iEditorToolbarState = Enum35.TBAR_MODE_EXIT_EDIT;
       }
-      return Enum26.EDIT_SCREEN;
+      return ScreenIds.EDIT_SCREEN;
     }
-    if (!gfMessageBoxResult) return Enum26.EDIT_SCREEN;
+    if (!gfMessageBoxResult) return ScreenIds.EDIT_SCREEN;
     if (gfRemoveLightsPending) {
       let i: INT32;
       LightReset();
@@ -2306,14 +2306,14 @@ namespace ja2 {
     }
     if (fNewMap) {
       CreateNewMap();
-      return Enum26.EDIT_SCREEN;
+      return ScreenIds.EDIT_SCREEN;
     } else if (iDrawMode == Enum38.DRAW_MODE_NEW_GROUND) {
       gCurrentBackground = TerrainBackgroundTile;
       SetBackgroundTexture();
       SetEditorTerrainTaskbarMode(Enum32.TERRAIN_FGROUND_TEXTURES);
-      return Enum26.EDIT_SCREEN;
+      return ScreenIds.EDIT_SCREEN;
     }
-    return Enum26.EDIT_SCREEN;
+    return ScreenIds.EDIT_SCREEN;
   }
 
   //----------------------------------------------------------------------------------------------
@@ -2442,7 +2442,7 @@ namespace ja2 {
     ExecuteBaseDirtyRectQueue();
     EndFrameBufferRender();
 
-    return Enum26.EDIT_SCREEN;
+    return ScreenIds.EDIT_SCREEN;
   }
 
   //----------------------------------------------------------------------------------------------
@@ -2501,7 +2501,7 @@ namespace ja2 {
       EndFrameBufferRender();
     }
 
-    return Enum26.EDIT_SCREEN;
+    return ScreenIds.EDIT_SCREEN;
   }
 
   //----------------------------------------------------------------------------------------------
@@ -3579,7 +3579,7 @@ namespace ja2 {
 
     fBeenWarned = false;
 
-    uiRetVal = Enum26.EDIT_SCREEN;
+    uiRetVal = ScreenIds.EDIT_SCREEN;
 
     // Handle the bottom task bar menu.
     DoTaskbar();
@@ -3588,10 +3588,10 @@ namespace ja2 {
 
     if (gubMessageBoxStatus) {
       if (MessageBoxHandled()) return ProcessEditscreenMessageBoxResponse();
-      return Enum26.EDIT_SCREEN;
+      return ScreenIds.EDIT_SCREEN;
     }
 
-    if (ProcessPopupMenuIfActive()) return Enum26.EDIT_SCREEN;
+    if (ProcessPopupMenuIfActive()) return ScreenIds.EDIT_SCREEN;
     if (fHelpScreen) return WaitForHelpScreenResponse();
     if (fSelectionWindow) return WaitForSelectionWindowResponse();
 
@@ -3658,7 +3658,7 @@ namespace ja2 {
     HandleKeyboardShortcuts();
 
     // Perform action based on current selection
-    if ((uiRetVal = PerformSelectedAction()) != Enum26.EDIT_SCREEN)
+    if ((uiRetVal = PerformSelectedAction()) != ScreenIds.EDIT_SCREEN)
       return uiRetVal;
 
     // Display Framerate

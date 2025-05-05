@@ -25,7 +25,7 @@ namespace ja2 {
       // if the game is paused, or we're in mapscreen and time is not being compressed
       if (
         GamePaused() == true ||
-        (guiCurrentScreen == Enum26.MAP_SCREEN && !IsTimeBeingCompressed())
+        (guiCurrentScreen == ScreenIds.MAP_SCREEN && !IsTimeBeingCompressed())
       ) {
         // don't do any of this
         return;

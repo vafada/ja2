@@ -707,7 +707,7 @@ namespace ja2 {
         // IF we are in tactical
         if (
           pSoldier.bAssignment == iCurrentTacticalSquad &&
-          guiCurrentScreen == Enum26.GAME_SCREEN
+          guiCurrentScreen == ScreenIds.GAME_SCREEN
         ) {
           // Make the interfac panel dirty..
           // This will dirty the panel next frame...
@@ -901,7 +901,7 @@ namespace ja2 {
     if (!gFacesData[iFaceIndex].fDisabled) {
       if (
         pFace.uiAutoDisplayBuffer == FRAME_BUFFER &&
-        guiCurrentScreen == Enum26.GAME_SCREEN
+        guiCurrentScreen == ScreenIds.GAME_SCREEN
       ) {
         // If we are highlighted, do this now!
         if (pFace.uiFlags & FACE_SHOW_WHITE_HILIGHT) {
@@ -2276,7 +2276,7 @@ namespace ja2 {
 
           if (
             fInterfacePanelDirty == DIRTYLEVEL2 &&
-            guiCurrentScreen == Enum26.GAME_SCREEN
+            guiCurrentScreen == ScreenIds.GAME_SCREEN
           ) {
             fRerender = true;
           }

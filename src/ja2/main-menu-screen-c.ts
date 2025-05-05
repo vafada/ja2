@@ -45,7 +45,7 @@ namespace ja2 {
   let gfMainMenuScreenEntry: boolean = false;
   let gfMainMenuScreenExit: boolean = false;
 
-  let guiMainMenuExitScreen: UINT32 = Enum26.MAINMENU_SCREEN;
+  let guiMainMenuExitScreen: UINT32 = ScreenIds.MAINMENU_SCREEN;
 
   export function MainMenuScreenInit(): boolean {
     DebugMsg(
@@ -73,7 +73,7 @@ namespace ja2 {
     if (guiSplashStartTime + 4000 > GetJA2Clock()) {
       SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
       SetMusicMode(Enum328.MUSIC_NONE);
-      return Enum26.MAINMENU_SCREEN; // The splash screen hasn't been up long enough yet.
+      return ScreenIds.MAINMENU_SCREEN; // The splash screen hasn't been up long enough yet.
     }
 
     if (guiSplashFrameFade) {
@@ -101,7 +101,7 @@ namespace ja2 {
 
       SetCurrentCursorFromDatabase(VIDEO_NO_CURSOR);
 
-      return Enum26.MAINMENU_SCREEN;
+      return ScreenIds.MAINMENU_SCREEN;
     }
 
     SetCurrentCursorFromDatabase(Enum317.CURSOR_NORMAL);
@@ -110,7 +110,7 @@ namespace ja2 {
       InitMainMenu();
       gfMainMenuScreenEntry = false;
       gfMainMenuScreenExit = false;
-      guiMainMenuExitScreen = Enum26.MAINMENU_SCREEN;
+      guiMainMenuExitScreen = ScreenIds.MAINMENU_SCREEN;
       SetMusicMode(Enum328.MUSIC_MAIN_MENU);
     }
 
@@ -145,7 +145,7 @@ namespace ja2 {
       gfMainMenuScreenEntry = true;
     }
 
-    if (guiMainMenuExitScreen != Enum26.MAINMENU_SCREEN)
+    if (guiMainMenuExitScreen != ScreenIds.MAINMENU_SCREEN)
       gfMainMenuScreenEntry = true;
 
     return guiMainMenuExitScreen;
@@ -175,7 +175,7 @@ namespace ja2 {
         case Enum23.LOAD_GAME:
           // Select the game which is to be restored
           guiPreviousOptionScreen = guiCurrentScreen;
-          guiMainMenuExitScreen = Enum26.SAVE_LOAD_SCREEN;
+          guiMainMenuExitScreen = ScreenIds.SAVE_LOAD_SCREEN;
           gbHandledMainMenu = 0;
           gfSaveGame = false;
           gfMainMenuScreenExit = true;
@@ -184,13 +184,13 @@ namespace ja2 {
 
         case Enum23.PREFERENCES:
           guiPreviousOptionScreen = guiCurrentScreen;
-          guiMainMenuExitScreen = Enum26.OPTIONS_SCREEN;
+          guiMainMenuExitScreen = ScreenIds.OPTIONS_SCREEN;
           gbHandledMainMenu = 0;
           gfMainMenuScreenExit = true;
           break;
 
         case Enum23.CREDITS:
-          guiMainMenuExitScreen = Enum26.CREDIT_SCREEN;
+          guiMainMenuExitScreen = ScreenIds.CREDIT_SCREEN;
           gbHandledMainMenu = 0;
           gfMainMenuScreenExit = true;
           break;
@@ -249,8 +249,8 @@ namespace ja2 {
     gbHandledMainMenu = 0;
     fInitialRender = true;
 
-    SetPendingNewScreen(Enum26.MAINMENU_SCREEN);
-    guiMainMenuExitScreen = Enum26.MAINMENU_SCREEN;
+    SetPendingNewScreen(ScreenIds.MAINMENU_SCREEN);
+    guiMainMenuExitScreen = ScreenIds.MAINMENU_SCREEN;
 
     InitGameOptions();
 
@@ -273,7 +273,7 @@ namespace ja2 {
     DeleteVideoObjectFromIndex(guiMainMenuBackGroundImage);
     DeleteVideoObjectFromIndex(guiJa2LogoImage);
 
-    gMsgBox.uiExitScreen = Enum26.MAINMENU_SCREEN;
+    gMsgBox.uiExitScreen = ScreenIds.MAINMENU_SCREEN;
     /*
           // CLEAR THE FRAME BUFFER
           pDestBuf = LockVideoSurface( FRAME_BUFFER, &uiDestPitchBYTES );
@@ -296,7 +296,7 @@ namespace ja2 {
       RenderMainMenu();
 
       if (gbHandledMainMenu == Enum23.NEW_GAME) {
-        SetMainMenuExitScreen(Enum26.GAME_INIT_OPTIONS_SCREEN);
+        SetMainMenuExitScreen(ScreenIds.GAME_INIT_OPTIONS_SCREEN);
       } else if (gbHandledMainMenu == Enum23.LOAD_GAME) {
         if (gfKeyState[ALT]) gfLoadGameUponEntry = true;
       }
@@ -371,7 +371,7 @@ namespace ja2 {
     while (DequeueEvent(InputEvent) == true) {
       switch (InputEvent.usEvent) {
         case KEY_UP:
-          SetMainMenuExitScreen(Enum26.INIT_SCREEN);
+          SetMainMenuExitScreen(ScreenIds.INIT_SCREEN);
           break;
       }
     }

@@ -1055,7 +1055,7 @@ namespace ja2 {
       DoLapTopMessageBox(
         Enum24.MSG_BOX_LAPTOP_DEFAULT,
         MercInfo[Enum341.MERC_FILES_HIRE_TO_MANY_PEOPLE_WARNING],
-        Enum26.LAPTOP_SCREEN,
+        ScreenIds.LAPTOP_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );

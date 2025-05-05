@@ -531,11 +531,11 @@ namespace ja2 {
     }
 
     // if we are in mapscreen, make a pop up
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       DoMapMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         sString,
-        Enum26.MAP_SCREEN,
+        ScreenIds.MAP_SCREEN,
         MSG_BOX_FLAG_YESNO,
         PayMilitiaTrainingYesNoBoxCallback,
       );
@@ -543,7 +543,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         sString,
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_YESNO,
         PayMilitiaTrainingYesNoBoxCallback,
         pCenteringRect,
@@ -669,7 +669,7 @@ namespace ja2 {
     DoMapMessageBox(
       Enum24.MSG_BOX_BASIC_STYLE,
       sString,
-      Enum26.MAP_SCREEN,
+      ScreenIds.MAP_SCREEN,
       MSG_BOX_FLAG_YESNO,
       PayMilitiaTrainingYesNoBoxCallback,
     );
@@ -702,7 +702,7 @@ namespace ja2 {
         DoMapMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           sString,
-          Enum26.MAP_SCREEN,
+          ScreenIds.MAP_SCREEN,
           MSG_BOX_FLAG_OK,
           CantTrainMilitiaOkBoxCallback,
         );
@@ -1015,7 +1015,7 @@ namespace ja2 {
 
     if (fContinueEventPosted) {
       // ATE: If this event happens in tactical mode we will be switching at some time to mapscreen...
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         gfEnteringMapScreen = 1;
       }
 

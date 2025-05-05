@@ -268,7 +268,7 @@ namespace ja2 {
         gfTacticalDoHeliRun = true;
 
         // OK, If we are in mapscreen, get out...
-        if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+        if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
           // ATE: Make sure the current one is selected!
           ChangeSelectedMapSector(gWorldSectorX, gWorldSectorY, 0);
 

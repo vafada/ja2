@@ -158,7 +158,7 @@ namespace ja2 {
 
         fOKFiles = false;
 
-        return Enum26.GAME_SCREEN;
+        return ScreenIds.GAME_SCREEN;
       }
 
       if (InputEvent.usEvent == KEY_UP && InputEvent.usParam == SPACE) {
@@ -281,7 +281,7 @@ namespace ja2 {
       }
     }
 
-    return Enum26.ANIEDIT_SCREEN;
+    return ScreenIds.ANIEDIT_SCREEN;
   }
 
   function GetAnimStateFromName(zName: string /* Pointer<INT8> */): UINT16 {
@@ -334,7 +334,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           zError,
-          Enum26.ANIEDIT_SCREEN,
+          ScreenIds.ANIEDIT_SCREEN,
           MSG_BOX_FLAG_YESNO,
           null,
           null,

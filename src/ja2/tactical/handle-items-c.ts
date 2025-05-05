@@ -1793,7 +1793,7 @@ namespace ja2 {
                 DoMessageBox(
                   Enum24.MSG_BOX_BASIC_STYLE,
                   TacticalStr[Enum335.ACTIVATE_SWITCH_PROMPT],
-                  Enum26.GAME_SCREEN,
+                  ScreenIds.GAME_SCREEN,
                   MSG_BOX_FLAG_YESNO,
                   SwitchMessageBoxCallBack,
                   null,
@@ -1896,7 +1896,7 @@ namespace ja2 {
             DoMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               TacticalStr[Enum335.ACTIVATE_SWITCH_PROMPT],
-              Enum26.GAME_SCREEN,
+              ScreenIds.GAME_SCREEN,
               MSG_BOX_FLAG_YESNO,
               SwitchMessageBoxCallBack,
               null,
@@ -2022,7 +2022,7 @@ namespace ja2 {
           DoMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             TacticalStr[Enum335.DISARM_TRAP_PROMPT],
-            Enum26.GAME_SCREEN,
+            ScreenIds.GAME_SCREEN,
             MSG_BOX_FLAG_YESNO,
             BoobyTrapMessageBoxCallBack,
             null,
@@ -4184,7 +4184,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_SMALL_BUTTONS,
         TacticalStr[Enum335.CHOOSE_BOMB_FREQUENCY_STR],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_FOUR_NUMBERED_BUTTONS,
         BombMessageBoxCallBack,
         null,
@@ -4232,7 +4232,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_SMALL_BUTTONS,
         TacticalStr[Enum335.CHOOSE_TIMER_STR],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_FOUR_NUMBERED_BUTTONS,
         BombMessageBoxCallBack,
         null,
@@ -4244,7 +4244,7 @@ namespace ja2 {
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_SMALL_BUTTONS,
         TacticalStr[Enum335.CHOOSE_REMOTE_FREQUENCY_STR],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_FOUR_NUMBERED_BUTTONS,
         BombMessageBoxCallBack,
         null,
@@ -4519,7 +4519,7 @@ namespace ja2 {
             DoMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               TacticalStr[Enum335.DISARM_BOOBYTRAP_PROMPT],
-              Enum26.MAP_SCREEN,
+              ScreenIds.MAP_SCREEN,
               MSG_BOX_FLAG_YESNO,
               BoobyTrapInMapScreenMessageBoxCallBack,
               null,
@@ -4528,7 +4528,7 @@ namespace ja2 {
             DoMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               TacticalStr[Enum335.DISARM_BOOBYTRAP_PROMPT],
-              Enum26.GAME_SCREEN,
+              ScreenIds.GAME_SCREEN,
               MSG_BOX_FLAG_YESNO,
               BoobyTrapMessageBoxCallBack,
               null,
@@ -4697,7 +4697,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           TacticalStr[Enum335.REMOVE_BLUE_FLAG_PROMPT],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           RemoveBlueFlagDialogueCallBack,
           null,
@@ -4807,7 +4807,7 @@ namespace ja2 {
         DoMessageBox(
           Enum24.MSG_BOX_BASIC_STYLE,
           TacticalStr[Enum335.REMOVE_BLUE_FLAG_PROMPT],
-          Enum26.GAME_SCREEN,
+          ScreenIds.GAME_SCREEN,
           MSG_BOX_FLAG_YESNO,
           RemoveBlueFlagDialogueCallBack,
           null,
@@ -5023,7 +5023,7 @@ namespace ja2 {
     DoMessageBox(
       Enum24.MSG_BOX_BASIC_STYLE,
       TacticalStr[Enum335.PLACE_BLUE_FLAG_PROMPT],
-      Enum26.GAME_SCREEN,
+      ScreenIds.GAME_SCREEN,
       MSG_BOX_FLAG_YESNO,
       MineSpottedMessageBoxCallBack,
       null,
@@ -5279,7 +5279,7 @@ namespace ja2 {
           DoMessageBox(
             Enum24.MSG_BOX_BASIC_STYLE,
             TacticalStr[Enum335.DISARM_BOOBYTRAP_PROMPT],
-            Enum26.MAP_SCREEN,
+            ScreenIds.MAP_SCREEN,
             MSG_BOX_FLAG_YESNO,
             BoobyTrapInMapScreenMessageBoxCallBack,
             null,

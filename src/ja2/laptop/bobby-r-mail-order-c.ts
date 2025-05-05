@@ -1090,7 +1090,7 @@ namespace ja2 {
           DoLapTopMessageBox(
             Enum24.MSG_BOX_LAPTOP_DEFAULT,
             BobbyROrderFormText[Enum349.BOBBYR_CANT_AFFORD_PURCHASE],
-            Enum26.LAPTOP_SCREEN,
+            ScreenIds.LAPTOP_SCREEN,
             MSG_BOX_FLAG_OK,
             null,
           );
@@ -1114,7 +1114,7 @@ namespace ja2 {
             DoLapTopMessageBox(
               Enum24.MSG_BOX_LAPTOP_DEFAULT,
               zTemp,
-              Enum26.LAPTOP_SCREEN,
+              ScreenIds.LAPTOP_SCREEN,
               MSG_BOX_FLAG_YESNO,
               ConfirmBobbyRPurchaseMessageBoxCallBack,
             );

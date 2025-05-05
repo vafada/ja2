@@ -20,7 +20,9 @@ namespace ja2 {
     console.log(a);
   };
 
-  export const DbgMessage = (a: number, b: number, c: string) => {};
+  export const DbgMessage = (a: number, b: number, c: string) => {
+    console.log(a, b, c);
+  };
 
   export const DebugMsg = (a: number, b: number, c: string) => {
     console.log(a, b, c);

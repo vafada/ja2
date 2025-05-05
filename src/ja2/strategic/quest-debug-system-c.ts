@@ -685,10 +685,10 @@ namespace ja2 {
       gfQuestDebugEntry = true;
 
       UnPauseGame();
-      return Enum26.GAME_SCREEN;
+      return ScreenIds.GAME_SCREEN;
     }
 
-    return Enum26.QUEST_DEBUG_SCREEN;
+    return ScreenIds.QUEST_DEBUG_SCREEN;
   }
 
   export function QuestDebugScreenShutdown(): boolean {
@@ -1449,7 +1449,7 @@ namespace ja2 {
               DoQDSMessageBox(
                 Enum24.MSG_BOX_BASIC_STYLE,
                 zTemp,
-                Enum26.QUEST_DEBUG_SCREEN,
+                ScreenIds.QUEST_DEBUG_SCREEN,
                 MSG_BOX_FLAG_OK,
                 null,
               );
@@ -3343,7 +3343,7 @@ namespace ja2 {
       DoQDSMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zTemp,
-        Enum26.QUEST_DEBUG_SCREEN,
+        ScreenIds.QUEST_DEBUG_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );
@@ -4615,7 +4615,7 @@ namespace ja2 {
       DoQDSMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         zTemp,
-        Enum26.QUEST_DEBUG_SCREEN,
+        ScreenIds.QUEST_DEBUG_SCREEN,
         MSG_BOX_FLAG_OK,
         null,
       );

@@ -3023,7 +3023,7 @@ namespace ja2 {
                 DoMessageBox(
                   Enum24.MSG_BOX_BASIC_STYLE,
                   Message[Enum334.STR_MERGE_ITEMS],
-                  Enum26.SHOPKEEPER_SCREEN,
+                  ScreenIds.SHOPKEEPER_SCREEN,
                   MSG_BOX_FLAG_YESNO,
                   MergeMessageBoxCallBack,
                   null,
@@ -3032,7 +3032,7 @@ namespace ja2 {
                 DoMessageBox(
                   Enum24.MSG_BOX_BASIC_STYLE,
                   Message[Enum334.STR_MERGE_ITEMS],
-                  Enum26.GAME_SCREEN,
+                  ScreenIds.GAME_SCREEN,
                   MSG_BOX_FLAG_YESNO,
                   MergeMessageBoxCallBack,
                   null,
@@ -3154,7 +3154,7 @@ namespace ja2 {
       if (
         gpSMCurrentMerc.inv[uiHandPos].ubNumberOfObjects > 1 &&
         ItemSlotLimit(gpSMCurrentMerc.inv[uiHandPos].usItem, uiHandPos) > 0 &&
-        guiCurrentScreen != Enum26.MAP_SCREEN
+        guiCurrentScreen != ScreenIds.MAP_SCREEN
       ) {
         if (!InItemStackPopup()) {
           // InitItemStackPopup( gpSMCurrentMerc, (UINT8)uiHandPos, SM_ITEMDESC_START_X, SM_ITEMDESC_START_Y, SM_ITEMDESC_WIDTH, SM_ITEMDESC_HEIGHT );
@@ -3609,7 +3609,7 @@ namespace ja2 {
       btn.uiFlags &= ~BUTTON_CLICKED_ON;
 
       guiPreviousOptionScreen = guiCurrentScreen;
-      LeaveTacticalScreen(Enum26.OPTIONS_SCREEN);
+      LeaveTacticalScreen(ScreenIds.OPTIONS_SCREEN);
     } else if (reason & MSYS_CALLBACK_REASON_LOST_MOUSE) {
       btn.uiFlags &= ~BUTTON_CLICKED_ON;
     }
@@ -4469,7 +4469,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
     } else if (reason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
       btn.uiFlags &= ~BUTTON_CLICKED_ON;
 
-      if (guiCurrentScreen == Enum26.GAME_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.GAME_SCREEN) {
         GoToMapScreenFromTactical();
         //			EnableRadarScreenRender( );
       }
@@ -5700,7 +5700,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
     let sWidth: INT16 = 0;
     let sHeight: INT16 = 0;
 
-    if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+    if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
       if (bSelectedInfoChar == -1) {
         return;
       }
@@ -5732,7 +5732,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
     }
 
     if (iReason & MSYS_CALLBACK_REASON_LBUTTON_UP) {
-      if (guiCurrentScreen == Enum26.MAP_SCREEN) {
+      if (guiCurrentScreen == ScreenIds.MAP_SCREEN) {
         // want the inv done button shutdown and the region behind the keyring shaded
         // ForceButtonUnDirty( giMapInvDoneButton );
         // shade the background
@@ -6130,7 +6130,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
             zMoney,
           );
 
-          if (guiCurrentScreen == Enum26.SHOPKEEPER_SCREEN) {
+          if (guiCurrentScreen == ScreenIds.SHOPKEEPER_SCREEN) {
             // if we are in the shop keeper interface, free the cursor
             if (guiTacticalInterfaceFlags & INTERFACE_SHOPKEEP_INTERFACE) {
               FreeMouseCursor();
@@ -6139,7 +6139,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
             DoMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               zText,
-              Enum26.SHOPKEEPER_SCREEN,
+              ScreenIds.SHOPKEEPER_SCREEN,
               MSG_BOX_FLAG_YESNO,
               ConfirmationToDepositMoneyToPlayersAccount,
               null,
@@ -6148,7 +6148,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
             DoMessageBox(
               Enum24.MSG_BOX_BASIC_STYLE,
               zText,
-              Enum26.GAME_SCREEN,
+              ScreenIds.GAME_SCREEN,
               MSG_BOX_FLAG_YESNO,
               ConfirmationToDepositMoneyToPlayersAccount,
               null,
@@ -6229,7 +6229,7 @@ void CycleCallback( GUI_BUTTON *btn, INT32 reason )
       DoMessageBox(
         Enum24.MSG_BOX_BASIC_STYLE,
         Message[Enum334.STR_ABANDON_FIGHT],
-        Enum26.GAME_SCREEN,
+        ScreenIds.GAME_SCREEN,
         MSG_BOX_FLAG_YESNO,
         AbandonBoxingCallback,
         null,

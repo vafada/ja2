@@ -648,7 +648,7 @@ namespace ja2 {
     ubSectorY: UINT8,
   ): void {
     // Set up mapscreen for removal
-    SetPendingNewScreen(Enum26.AUTORESOLVE_SCREEN);
+    SetPendingNewScreen(ScreenIds.AUTORESOLVE_SCREEN);
     CreateDestroyMapInvButton();
     RenderButtons();
 
@@ -710,7 +710,7 @@ namespace ja2 {
 
     if (!gpAR) {
       gfEnteringMapScreen = 1;
-      return Enum26.MAP_SCREEN;
+      return ScreenIds.MAP_SCREEN;
     }
     if (gpAR.fEnteringAutoResolve) {
       let pDestBuf: Uint8ClampedArray;
@@ -746,7 +746,7 @@ namespace ja2 {
     if (gpAR.fExitAutoResolve) {
       gfEnteringMapScreen = 1;
       RemoveAutoResolveInterface(true);
-      return Enum26.MAP_SCREEN;
+      return ScreenIds.MAP_SCREEN;
     }
     if (gpAR.fPendingSurrender) {
       gpAR.uiPrevTime = gpAR.uiCurrTime = GetJA2Clock();
@@ -764,7 +764,7 @@ namespace ja2 {
     RenderButtonsFastHelp();
     ExecuteBaseDirtyRectQueue();
     EndFrameBufferRender();
-    return Enum26.AUTORESOLVE_SCREEN;
+    return ScreenIds.AUTORESOLVE_SCREEN;
   }
 
   function RefreshMerc(pSoldier: SOLDIERTYPE): void {

@@ -239,7 +239,7 @@ namespace ja2 {
   let gfTemporaryDisablingOfLoadPendingFlag: boolean = false;
 
   // GLOBAL FOR WHICH SCREEN TO EXIT TO FOR LAPTOP
-  export let guiExitScreen: UINT32 = Enum26.MAP_SCREEN;
+  export let guiExitScreen: UINT32 = ScreenIds.MAP_SCREEN;
 
   let gLaptopRegion: MOUSE_REGION = createMouseRegion();
   // Laptop screen graphic handle
@@ -1677,7 +1677,7 @@ namespace ja2 {
     if (ShouldTheHelpScreenComeUp(Enum17.HELP_SCREEN_LAPTOP, false)) {
       // handle the help screen
       HelpScreenHandler();
-      return Enum26.LAPTOP_SCREEN;
+      return ScreenIds.LAPTOP_SCREEN;
     }
 
     RestoreBackgroundRects();
@@ -1843,7 +1843,7 @@ namespace ja2 {
     ExecuteBaseDirtyRectQueue();
     ResetInterface();
     EndFrameBufferRender();
-    return Enum26.LAPTOP_SCREEN;
+    return ScreenIds.LAPTOP_SCREEN;
   }
 
   function RenderLaptopPanel(): UINT32 {
@@ -2246,7 +2246,7 @@ namespace ja2 {
       // set new screen
       // if( ( LaptopSaveInfo.gfNewGameLaptop != TRUE ) || !( AnyMercsHired() ) )
       //	{
-      SetLaptopExitScreen(Enum26.MAP_SCREEN);
+      SetLaptopExitScreen(ScreenIds.MAP_SCREEN);
       //}
       // if( ( LaptopSaveInfo.gfNewGameLaptop )&&( AnyMercsHired() ) )
       //{
@@ -3388,7 +3388,7 @@ ScrollDisplayText(BOOK_TOP_Y+2+((iCounter)*BOOK_HEIGHT)+6);
         DoLapTopMessageBox(
           Enum24.MSG_BOX_LAPTOP_DEFAULT,
           pErrorStrings[4],
-          Enum26.LAPTOP_SCREEN,
+          ScreenIds.LAPTOP_SCREEN,
           MSG_BOX_FLAG_OK,
           InternetRainDelayMessageBoxCallBack,
         );
