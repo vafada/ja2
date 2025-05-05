@@ -4,32 +4,8 @@ const path: typeof import('path') = require('path');
 
 const DATA_8_BIT_DIR = "8-Bit\\";
 
-//#define	TIME_LIMITED_VERSION
-
 export function FilenameForBPP(pFilename: string /* STR */): string {
-  let pDestination: string;
-
-  let Drive: string /* UINT8[128] */;
-  let Dir: string /* UINT8[128] */;
-  let Name: string /* UINT8[128] */;
-  let Ext: string /* UINT8[128] */;
-
-  if (GETPIXELDEPTH() == 16) {
-    // no processing for 16 bit names
-    pDestination = pFilename;
-  } else {
-    ({ root: Drive, dir: Dir, name: Name, ext: Ext } = path.parse(pFilename));
-
-    Name += "_8";
-
-    pDestination = Drive;
-    // strcat(pDestination, Dir);
-    pDestination += DATA_8_BIT_DIR;
-    pDestination += Name;
-    pDestination += Ext;
-  }
-
-  return pDestination;
+  return pFilename;
 }
 
 export function CreateSGPPaletteFromCOLFile(pPalette: SGPPaletteEntry[], ColFile: string /* SGPFILENAME */): boolean {

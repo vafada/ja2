@@ -3068,65 +3068,49 @@ function DrawGenericButton(b: GUI_BUTTON): void {
     else
       ImgNum = 1;
 
-    if (gbPixelDepth == 16) {
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, (b.XLoc + (q * iBorderWidth)), b.YLoc, ImgNum, ClipRect);
-    } else if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    }
+
 
     if (q == 0)
       ImgNum = 5;
     else
       ImgNum = 6;
 
-    if (gbPixelDepth == 16) {
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, (b.XLoc + (q * iBorderWidth)), cy, ImgNum, ClipRect);
-    } else if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    }
+
   }
   // Blit the right side corners
-  if (gbPixelDepth == 16) {
-    Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, cx, b.YLoc, 2, ClipRect);
-  } else if (gbPixelDepth == 8) {
-    throw new Error('Should be unreachable');
-  }
 
-  if (gbPixelDepth == 16) {
+    Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, cx, b.YLoc, 2, ClipRect);
+
+
+
     Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, cx, cy, 7, ClipRect);
-  } else if (gbPixelDepth == 8) {
-    throw new Error('Should be unreachable');
-  }
+
   // Draw the vertical members of the button's borders
   NumChunksHigh--;
 
   if (hremain != 0) {
     q = NumChunksHigh;
-    if (gbPixelDepth == 16) {
-      Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, b.XLoc, (b.YLoc + (q * iBorderHeight) - (iBorderHeight - hremain)), 3, ClipRect);
-    } else if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    }
 
-    if (gbPixelDepth == 16) {
+      Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, b.XLoc, (b.YLoc + (q * iBorderHeight) - (iBorderHeight - hremain)), 3, ClipRect);
+
+
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, cx, (b.YLoc + (q * iBorderHeight) - (iBorderHeight - hremain)), 4, ClipRect);
-    } else if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    }
+
   }
 
   for (q = 1; q < NumChunksHigh; q++) {
-    if (gbPixelDepth == 16) {
-      Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, b.XLoc, (b.YLoc + (q * iBorderHeight)), 3, ClipRect);
-    } else if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    }
 
-    if (gbPixelDepth == 16) {
+      Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, b.XLoc, (b.YLoc + (q * iBorderHeight)), 3, ClipRect);
+
+
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, BPic, cx, (b.YLoc + (q * iBorderHeight)), 4, ClipRect);
-    } else if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    }
+
   }
 
   // Unlock buffer

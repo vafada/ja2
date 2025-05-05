@@ -576,20 +576,14 @@ function UpdateSaveBufferWithBackbuffer(): boolean {
   let uiSrcPitchBYTES: UINT32 = 0;
   let pDestBuf: Uint8ClampedArray;
   let pSrcBuf: Uint8ClampedArray;
-  let usWidth: UINT16;
-  let usHeight: UINT16;
-  let ubBitDepth: UINT8;
 
-  // Update saved buffer - do for the viewport size ony!
-  ({ usWidth, usHeight, ubBitDepth } = GetCurrentVideoSettings());
+
 
   pSrcBuf = LockVideoSurface(FRAME_BUFFER, createPointer(() => uiSrcPitchBYTES, (v) => uiSrcPitchBYTES = v));
   pDestBuf = LockVideoSurface(guiSAVEBUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
 
-  if (gbPixelDepth == 16) {
-    // BLIT HERE
-    Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, 0, 0, 0, 0, 640, 480);
-  }
+  // BLIT HERE
+  Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, 0, 0, 0, 0, 640, 480);
 
   UnLockVideoSurface(FRAME_BUFFER);
   UnLockVideoSurface(guiSAVEBUFFER);

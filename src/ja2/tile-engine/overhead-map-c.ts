@@ -893,10 +893,10 @@ export function RenderOverheadMap(sStartPointX_M: INT16, sStartPointY_M: INT16, 
       pSrcBuf = LockVideoSurface(guiRENDERBUFFER, createPointer(() => uiSrcPitchBYTES, (v) => uiSrcPitchBYTES = v));
       pDestBuf = LockVideoSurface(guiSAVEBUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
 
-      if (gbPixelDepth == 16) {
+
         // BLIT HERE
         Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, 0, 0, 0, 0, usWidth, usHeight);
-      }
+
 
       UnLockVideoSurface(guiRENDERBUFFER);
       UnLockVideoSurface(guiSAVEBUFFER);

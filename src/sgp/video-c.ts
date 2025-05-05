@@ -217,7 +217,7 @@ export function InitializeVideoManager(hInstance: HTMLElement): boolean {
 
   gusScreenWidth = SCREEN_WIDTH;
   gusScreenHeight = SCREEN_HEIGHT;
-  gubScreenPixelDepth = gbPixelDepth;
+  gubScreenPixelDepth = PIXEL_DEPTH;
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   //

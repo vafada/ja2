@@ -420,13 +420,10 @@ export function UpdateSaveBuffer(): boolean {
   pSrcBuf = LockVideoSurface(guiRENDERBUFFER, createPointer(() => uiSrcPitchBYTES, (v) => uiSrcPitchBYTES = v));
   pDestBuf = LockVideoSurface(guiSAVEBUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
 
-  if (gbPixelDepth == 16) {
+
     // BLIT HERE
     Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, 0, gsVIEWPORT_WINDOW_START_Y, 0, gsVIEWPORT_WINDOW_START_Y, usWidth, (gsVIEWPORT_WINDOW_END_Y - gsVIEWPORT_WINDOW_START_Y));
-  } else if (gbPixelDepth == 8) {
-    // BLIT HERE
-    Blt8BPPTo8BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, 0, gsVIEWPORT_WINDOW_START_Y, 0, gsVIEWPORT_WINDOW_START_Y, usWidth, gsVIEWPORT_WINDOW_END_Y);
-  }
+
 
   UnLockVideoSurface(guiRENDERBUFFER);
   UnLockVideoSurface(guiSAVEBUFFER);
@@ -445,11 +442,9 @@ export function RestoreExternBackgroundRect(sLeft: INT16, sTop: INT16, sWidth: I
   pDestBuf = LockVideoSurface(guiRENDERBUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
   pSrcBuf = LockVideoSurface(guiSAVEBUFFER, createPointer(() => uiSrcPitchBYTES, (v) => uiSrcPitchBYTES = v));
 
-  if (gbPixelDepth == 16) {
+
     Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, sLeft, sTop, sLeft, sTop, sWidth, sHeight);
-  } else if (gbPixelDepth == 8) {
-    Blt8BPPTo8BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, sLeft, sTop, sLeft, sTop, sWidth, sHeight);
-  }
+
   UnLockVideoSurface(guiRENDERBUFFER);
   UnLockVideoSurface(guiSAVEBUFFER);
 
@@ -483,11 +478,9 @@ export function RestoreExternBackgroundRectGivenID(iBack: INT32): boolean {
   pDestBuf = LockVideoSurface(guiRENDERBUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
   pSrcBuf = LockVideoSurface(guiSAVEBUFFER, createPointer(() => uiSrcPitchBYTES, (v) => uiSrcPitchBYTES = v));
 
-  if (gbPixelDepth == 16) {
+
     Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, sLeft, sTop, sLeft, sTop, sWidth, sHeight);
-  } else if (gbPixelDepth == 8) {
-    Blt8BPPTo8BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, sLeft, sTop, sLeft, sTop, sWidth, sHeight);
-  }
+
   UnLockVideoSurface(guiRENDERBUFFER);
   UnLockVideoSurface(guiSAVEBUFFER);
 
@@ -508,11 +501,9 @@ function CopyExternBackgroundRect(sLeft: INT16, sTop: INT16, sWidth: INT16, sHei
   pDestBuf = LockVideoSurface(guiSAVEBUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
   pSrcBuf = LockVideoSurface(guiRENDERBUFFER, createPointer(() => uiSrcPitchBYTES, (v) => uiSrcPitchBYTES = v));
 
-  if (gbPixelDepth == 16) {
+
     Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, sLeft, sTop, sLeft, sTop, sWidth, sHeight);
-  } else if (gbPixelDepth == 8) {
-    Blt8BPPTo8BPP(pDestBuf, uiDestPitchBYTES, pSrcBuf, uiSrcPitchBYTES, sLeft, sTop, sLeft, sTop, sWidth, sHeight);
-  }
+
   UnLockVideoSurface(guiSAVEBUFFER);
   UnLockVideoSurface(guiRENDERBUFFER);
 
@@ -969,10 +960,9 @@ export function RestoreShiftedVideoOverlays(sShiftX: INT16, sShiftY: INT16): boo
         usHeight = sBottom - sTop;
         usWidth = sRight - sLeft;
 
-        if (gbPixelDepth == 16) {
+
           Blt16BPPTo16BPP(pDestBuf, uiDestPitchBYTES, <Uint8ClampedArray>gVideoOverlays[uiCount].pSaveArea, gBackSaves[iBackIndex].sWidth * 4, sLeft, sTop, uiLeftSkip, uiTopSkip, usWidth, usHeight);
-        } else if (gbPixelDepth == 8) {
-        }
+
 
         // Once done, check for pending deletion
         if (gVideoOverlays[uiCount].fDeletionPending) {

@@ -660,12 +660,8 @@ export function mprintf(x: INT32, y: INT32, pFontString: string /* Pointer<UINT1
       desty += GetHeight(FontObjs[FontDefault], transletter);
     }
 
-    // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
       Blt8BPPDataTo16BPPBufferMonoShadowClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion, FontForeground16, FontBackground16, FontShadow16);
-    }
+
     destx += GetWidth(FontObjs[FontDefault], transletter);
   }
 
@@ -750,12 +746,9 @@ export function gprintf(x: INT32, y: INT32, pFontString: string /* Pointer<UINT1
       desty += GetHeight(FontObjs[FontDefault], transletter);
     }
 
-    // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion);
-    }
+
     destx += GetWidth(FontObjs[FontDefault], transletter);
   }
 
@@ -794,12 +787,9 @@ function gprintfDirty(x: INT32, y: INT32, pFontString: string /* Pointer<UINT16>
       desty += GetHeight(FontObjs[FontDefault], transletter);
     }
 
-    // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion);
-    }
+
     destx += GetWidth(FontObjs[FontDefault], transletter);
   }
 
@@ -842,12 +832,9 @@ function gprintf_buffer(pDestBuf: Uint8ClampedArray, uiDestPitchBYTES: UINT32, F
       desty += GetHeight(FontObjs[FontType], transletter);
     }
 
-    // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
+
       Blt8BPPDataTo16BPPBufferTransparentClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion);
-    }
+
 
     destx += GetWidth(FontObjs[FontType], transletter);
   }
@@ -879,12 +866,9 @@ export function mprintf_buffer(pDestBuf: Uint8ClampedArray, uiDestPitchBYTES: UI
       desty += GetHeight(FontObjs[FontDefault], transletter);
     }
 
-    // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
+
       Blt8BPPDataTo16BPPBufferMonoShadowClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion, FontForeground16, FontBackground16, FontShadow16);
-    }
+
     destx += GetWidth(FontObjs[FontDefault], transletter);
   }
 
@@ -927,12 +911,9 @@ export function mprintf_buffer_coded(pDestBuf: Uint8ClampedArray, uiDestPitchBYT
       desty += GetHeight(FontObjs[FontDefault], transletter);
     }
 
-    // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
+
       Blt8BPPDataTo16BPPBufferMonoShadowClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion, FontForeground16, FontBackground16, FontShadow16);
-    }
+
     destx += GetWidth(FontObjs[FontDefault], transletter);
   }
 
@@ -981,11 +962,9 @@ export function mprintf_coded(x: INT32, y: INT32, pFontString: string /* Pointer
     }
 
     // Blit directly
-    if (gbPixelDepth == 8) {
-      throw new Error('Should be unreachable');
-    } else {
+
       Blt8BPPDataTo16BPPBufferMonoShadowClip(pDestBuf, uiDestPitchBYTES, FontObjs[FontDefault], destx, desty, transletter, FontDestRegion, FontForeground16, FontBackground16, FontShadow16);
-    }
+
     destx += GetWidth(FontObjs[FontDefault], transletter);
   }
 

@@ -1341,17 +1341,6 @@ export function RenderSMPanel(pfDirty: Pointer<UINT8>): void {
         }
       }
 
-      // Render faceplate
-      // BltVideoObjectFromIndex( guiSAVEBUFFER, guiSMObjects2, 1, SM_SELMERC_NAMEPLATE_X, SM_SELMERC_NAMEPLATE_Y, VO_BLT_SRCTRANSPARENCY, NULL );
-      // RestoreExternBackgroundRect( SM_SELMERC_NAMEPLATE_X, SM_SELMERC_NAMEPLATE_Y, SM_SELMERC_NAMEPLATE_WIDTH, SM_SELMERC_NAMEPLATE_HEIGHT );
-
-      // Blit position
-      // if(gbPixelDepth==16)
-      //{
-      // BltVideoObjectFromIndex( guiSAVEBUFFER, guiSMObjects, gbSMCurStanceObj, SM_POSITIONB_X, SM_POSITIONB_Y, VO_BLT_SRCTRANSPARENCY, NULL );
-      //}
-      // RestoreExternBackgroundRect( SM_POSITIONB_X, SM_POSITIONB_Y, SM_POSITIONB_WIDTH , SM_POSITIONB_HEIGHT );
-
       SetFont(BLOCKFONT2());
 
       // Render Values for stats!

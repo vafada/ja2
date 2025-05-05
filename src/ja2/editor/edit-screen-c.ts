@@ -843,10 +843,8 @@ export function ShowCurrentDrawingMode(): void {
   // Set the color for the window's border. Blueish color = Normal, Red = Fake lighting is turned on
   usFillColor = GenericButtonFillColors[0];
   pDestBuf = LockVideoSurface(FRAME_BUFFER, createPointer(() => uiDestPitchBYTES, (v) => uiDestPitchBYTES = v));
-  if (gbPixelDepth == 16)
-    RectangleDraw(false, 0, 400, 99, 458, usFillColor, pDestBuf);
-  else if (gbPixelDepth == 8)
-    RectangleDraw8(false, 0, 400, 99, 458, usFillColor, pDestBuf);
+
+  RectangleDraw(false, 0, 400, 99, 458, usFillColor, pDestBuf);
 
   UnLockVideoSurface(FRAME_BUFFER);
 

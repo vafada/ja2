@@ -4673,23 +4673,10 @@ function RenderMapHighlight(sMapX: INT16, sMapY: INT16, usLineColor: UINT16, fSt
   // clip to view region
   ClipBlitsToMapViewRegionForRectangleAndABit(uiDestPitchBYTES);
 
-  if (gbPixelDepth == 16) {
-    // DB Need to add a radar color for 8-bit
-    /*
-                    if (fZoomFlag)
-                    {
-                            // draw rectangle for zoom in
-                      RectangleDraw( TRUE, sScreenX-MAP_GRID_X,     sScreenY-MAP_GRID_Y - 1, sScreenX +  MAP_GRID_ZOOM_X - MAP_GRID_X, sScreenY +  MAP_GRID_ZOOM_Y - MAP_GRID_Y - 1, usLineColor, pDestBuf );
-                      InvalidateRegion(    sScreenX-MAP_GRID_X - 3, sScreenY-MAP_GRID_Y - 4, sScreenX + DMAP_GRID_ZOOM_X - MAP_GRID_X, sScreenY + DMAP_GRID_ZOOM_Y - MAP_GRID_Y - 1 );
-                    }
-              else
-    */
-    {
-      // draw rectangle for zoom out
-      RectangleDraw(true, sScreenX, sScreenY - 1, sScreenX + MAP_GRID_X, sScreenY + MAP_GRID_Y - 1, usLineColor, pDestBuf);
-      InvalidateRegion(sScreenX, sScreenY - 2, sScreenX + DMAP_GRID_X + 1, sScreenY + DMAP_GRID_Y - 1);
-    }
-  }
+  // draw rectangle for zoom out
+  RectangleDraw(true, sScreenX, sScreenY - 1, sScreenX + MAP_GRID_X, sScreenY + MAP_GRID_Y - 1, usLineColor, pDestBuf);
+  InvalidateRegion(sScreenX, sScreenY - 2, sScreenX + DMAP_GRID_X + 1, sScreenY + DMAP_GRID_Y - 1);
+
 
   RestoreClipRegionToFullScreenForRectangle(uiDestPitchBYTES);
   UnLockVideoSurface(FRAME_BUFFER);

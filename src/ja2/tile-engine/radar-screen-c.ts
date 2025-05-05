@@ -292,14 +292,8 @@ export function RenderRadarScreen(): void {
   SetClippingRegionAndImageWidth(uiDestPitchBYTES, RADAR_WINDOW_X, gsRadarY, (RADAR_WINDOW_X + RADAR_WINDOW_WIDTH - 1), (gsRadarY + RADAR_WINDOW_HEIGHT - 1));
 
   if (!(guiTacticalInterfaceFlags & INTERFACE_MAPSCREEN)) {
-    if (gbPixelDepth == 16) {
       usLineColor = Get16BPPColor(FROMRGB(0, 255, 0));
       RectangleDraw(true, sRadarTLX, sRadarTLY, sRadarBRX, sRadarBRY - 1, usLineColor, pDestBuf);
-    } else if (gbPixelDepth == 8) {
-      // DB Need to change this to a color from the 8-but standard palette
-      usLineColor = COLOR_GREEN;
-      RectangleDraw8(true, sRadarTLX + 1, sRadarTLY + 1, sRadarBRX + 1, sRadarBRY + 1, usLineColor, pDestBuf);
-    }
   }
 
   // Cycle fFlash variable
@@ -334,7 +328,7 @@ export function RenderRadarScreen(): void {
       sYSoldRadar += gsRadarY;
 
       // if we are in 16 bit mode....kind of redundant
-      if (gbPixelDepth == 16) {
+
         if ((fFlashHighLightInventoryItemOnradarMap)) {
           usLineColor = Get16BPPColor(FROMRGB(0, 255, 0));
         } else {
@@ -345,7 +339,7 @@ export function RenderRadarScreen(): void {
         if (iCurrentlyHighLightedItem == iCounter) {
           RectangleDraw(true, sXSoldRadar, sYSoldRadar, sXSoldRadar + 1, sYSoldRadar + 1, usLineColor, pDestBuf);
         }
-      }
+
     }
   }
 
@@ -386,7 +380,7 @@ export function RenderRadarScreen(): void {
         sXSoldRadar += RADAR_WINDOW_X;
         sYSoldRadar += gsRadarY;
 
-        if (gbPixelDepth == 16) {
+
           // DB Need to add a radar color for 8-bit
 
           // Are we a selected guy?
@@ -421,11 +415,7 @@ export function RenderRadarScreen(): void {
           }
 
           RectangleDraw(true, sXSoldRadar, sYSoldRadar, sXSoldRadar + 1, sYSoldRadar + 1, usLineColor, pDestBuf);
-        } else if (gbPixelDepth == 8) {
-          // DB Need to change this to a color from the 8-but standard palette
-          usLineColor = COLOR_BLUE;
-          RectangleDraw8(true, sXSoldRadar, sYSoldRadar, sXSoldRadar + 1, sYSoldRadar + 1, usLineColor, pDestBuf);
-        }
+
       }
     }
   }

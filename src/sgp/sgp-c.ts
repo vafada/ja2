@@ -11,9 +11,6 @@ export let gfDontUseDDBlits: boolean = false;
 
 export let gzCommandLine: string /* CHAR8[100] */; // Command line given
 
-// GLOBAL VARIABLE, SET TO DEFAULT BUT CAN BE CHANGED BY THE GAME IF INIT FILE READ
-export let gbPixelDepth: UINT8 = PIXEL_DEPTH;
-
 function InitializeStandardGamingPlatform(hInstance: HTMLElement): boolean {
   let pFontTable: FontTranslationTable;
 
