@@ -6,32 +6,23 @@ namespace ja2 {
   // *		Bytes of image data, possibly compressed
 
   export const STCI_ID_STRING = "STCI";
-  export const STCI_ID_LEN = 4;
 
   export const STCI_ETRLE_COMPRESSED = 0x0020;
   export const STCI_ZLIB_COMPRESSED = 0x0010;
   export const STCI_INDEXED = 0x0008;
   export const STCI_RGB = 0x0004;
-  const STCI_ALPHA = 0x0002;
-  const STCI_TRANSPARENT = 0x0001;
-
-  // ETRLE defines
-  export const COMPRESS_TRANSPARENT = 0x80;
-  export const COMPRESS_NON_TRANSPARENT = 0x00;
-  export const COMPRESS_RUN_LIMIT = 0x7f;
 
   // NB if you're going to change the header definition:
   // - make sure that everything in this header is nicely aligned
   // - don't exceed the 64-byte maximum
   export interface STCIHeader {
-    cID: string /* UINT8[STCI_ID_LEN] */;
+    cID: string;
     uiOriginalSize: UINT32;
     uiStoredSize: UINT32; // equal to uiOriginalSize if data uncompressed
     uiTransparentValue: UINT32;
     fFlags: UINT32;
     usHeight: UINT16;
     usWidth: UINT16;
-    /* union { */
     RGB: {
       uiRedMask: UINT32;
       uiGreenMask: UINT32;
@@ -51,7 +42,6 @@ namespace ja2 {
       ubBlueDepth: UINT8;
       cIndexedUnused: UINT8[] /* [11] */;
     };
-    /* } */
     ubDepth: UINT8; // size in bits of one pixel as stored in the file
     uiAppDataSize: UINT32;
     cUnused: UINT8[] /* [15] */;
@@ -82,11 +72,11 @@ namespace ja2 {
         ubRedDepth: 0,
         ubGreenDepth: 0,
         ubBlueDepth: 0,
-        cIndexedUnused: createArray(11, 0),
+        cIndexedUnused: Array(11).fill(0),
       },
       ubDepth: 0,
       uiAppDataSize: 0,
-      cUnused: createArray(15, 0),
+      cUnused: Array(15).fill(0),
     };
   }
 

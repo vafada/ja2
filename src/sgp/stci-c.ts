@@ -3,23 +3,21 @@ namespace ja2 {
     hImage: ImageType,
     fContents: UINT16,
   ): boolean {
-    let hFile: HWFILE;
     let Header: STCIHeader = createSTCIHeader();
     let uiBytesRead: UINT32;
-    let TempImage: ImageType;
     let buffer: Buffer;
 
     // Check that hImage is valid, and that the file in question exists
     Assert(hImage != null);
 
-    TempImage = hImage;
+    let TempImage = hImage;
 
     if (!FileExists(TempImage.ImageFile)) {
       return false;
     }
 
     // Open the file and read the header
-    hFile = FileOpen(TempImage.ImageFile, FILE_ACCESS_READ, false);
+    const hFile = FileOpen(TempImage.ImageFile, FILE_ACCESS_READ, false);
     if (!hFile) {
       return false;
     }
