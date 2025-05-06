@@ -26,9 +26,6 @@ namespace ja2 {
     "Intro.slf",
   ];
 
-  // used when doing the binary search of the libraries
-  let gsCurrentLibrary: INT16 = -1;
-
   //************************************************************************
   //
   //	 InitializeFileDatabase():  Call this function to initialize the file
@@ -320,21 +317,17 @@ namespace ja2 {
   //
   //************************************************************************
 
-  export function CheckIfFileExistInLibrary(pFileName: string): boolean {
-    let pFileHeader: FileHeaderStruct | null;
-
-    // get thelibrary that file is in
-    let sLibraryID = GetLibraryIDFromFileName(pFileName);
+  export function CheckIfFileExistInLibrary(fileName: string): boolean {
+    // get the library that file is in
+    let sLibraryID = GetLibraryIDFromFileName(fileName);
     if (sLibraryID == -1) {
       // not in any library
       return false;
     }
 
-    if (
-      (pFileHeader = GetFileHeaderFromLibrary(sLibraryID, pFileName)) !== null
-    )
-      return true;
-    else return false;
+    let pFileHeader = GetFileHeaderFromLibrary(sLibraryID, fileName);
+
+    return pFileHeader !== null;
   }
 
   //************************************************************************
@@ -344,8 +337,8 @@ namespace ja2 {
   //	( eg. File is  Laptop\Test.sti, if the Laptop\ library is open, it returns true
   //
   //************************************************************************
-  function GetLibraryIDFromFileName(pFileName: string): INT16 {
-    let sBestMatch: INT16 = -1;
+  function GetLibraryIDFromFileName(pFileName: string): number {
+    let sBestMatch = -1;
 
     // loop through all the libraries to check which library the file is in
     for (let sLoop1 = 0; sLoop1 < gFileDataBase.usNumberOfLibraries; sLoop1++) {
@@ -386,70 +379,27 @@ namespace ja2 {
     return sBestMatch;
   }
 
-  //************************************************************************
-  //
-  //	GetFileHeaderFromLibrary() performsperforms a binary search of the
-  //	library.  It adds the libraries path to the file in the
-  //	library and then string compared that to the name that we are
-  //	searching for.
-  //
-  //************************************************************************
-
   function GetFileHeaderFromLibrary(
     sLibraryID: INT16,
-    pstrFileName: string /* STR */,
+    filename: string,
   ): FileHeaderStruct | null {
-    let ppFileHeader: FileHeaderStruct | null = null;
-    let sFileNameWithPath: string /* CHAR8[FILENAME_SIZE] */;
-
-    // combine the library path to the file name (need it for the search of the library )
-    sFileNameWithPath = pstrFileName;
-
-    gsCurrentLibrary = sLibraryID;
-
-    /* try to find the filename using a binary search algorithm: */
     for (
       let i = 0;
       i < gFileDataBase.pLibraries[sLibraryID].pFileHeader.length;
       i++
     ) {
-      if (
-        CompareFileNames(
-          sFileNameWithPath,
-          gFileDataBase.pLibraries[sLibraryID].pFileHeader[i],
-        )
-      ) {
-        ppFileHeader = gFileDataBase.pLibraries[sLibraryID].pFileHeader[i];
+      const fileHeader = gFileDataBase.pLibraries[sLibraryID].pFileHeader[i];
+
+      let fileNameWithPath =
+        gFileDataBase.pLibraries[sLibraryID].sLibraryPath +
+        fileHeader.pFileName;
+
+      if (filename.toLowerCase() === fileNameWithPath.toLowerCase()) {
+        return fileHeader;
       }
     }
 
-    return ppFileHeader;
-  }
-
-  //************************************************************************
-  //
-  //	CompareFileNames() gets called by the binary search function.
-  //
-  //************************************************************************
-
-  function CompareFileNames(
-    arg1: string /* Pointer<CHAR8>[] */,
-    arg2: FileHeaderStruct,
-  ): boolean {
-    let sSearchKey: string /* CHAR8[FILENAME_SIZE] */;
-    let sFileNameWithPath: string /* CHAR8[FILENAME_SIZE] */;
-    let TempFileHeader: FileHeaderStruct;
-
-    TempFileHeader = arg2;
-
-    sSearchKey = arg1;
-
-    sFileNameWithPath =
-      gFileDataBase.pLibraries[gsCurrentLibrary].sLibraryPath +
-      TempFileHeader.pFileName;
-
-    /* Compare all of both strings: */
-    return sSearchKey.toLowerCase() == sFileNameWithPath.toLowerCase();
+    return null;
   }
 
   //************************************************************************
