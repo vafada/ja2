@@ -218,18 +218,6 @@ namespace ja2 {
       readDirEntry(DirEntry, buffer);
 
       if (DirEntry.ubState == FILE_OK) {
-        // Check to see if the file is not longer then it should be
-        if (DirEntry.sFileName.length + 1 >= FILENAME_SIZE)
-          FastDebugMsg(
-            FormatString(
-              "\n*******InitializeLibrary():  Warning!:  '%s' from the library '%s' has name whose size (%d) is bigger then it should be (%s)",
-              DirEntry.sFileName,
-              pLibHeader.sLibraryPath,
-              DirEntry.sFileName.length + 1,
-              FILENAME_SIZE,
-            ),
-          );
-
         // copy the file name, offset and length into the header
         pLibHeader.pFileHeader[uiCount].pFileName = DirEntry.sFileName;
         pLibHeader.pFileHeader[uiCount].uiFileOffset = DirEntry.uiOffset;
@@ -248,10 +236,12 @@ namespace ja2 {
     }
 
     // allocate space for the open files array
-    pLibHeader.pOpenFiles = createArrayFrom(
-      INITIAL_NUM_HANDLES,
-      createFileOpenStruct,
-    );
+    pLibHeader.pOpenFiles = Array.from({ length: INITIAL_NUM_HANDLES }, () => ({
+      uiFileID: 0,
+      uiFilePosInFile: 0,
+      uiActualPositionInLibrary: 0,
+      pFileHeader: <FileHeaderStruct>(<unknown>null),
+    }));
 
     pLibHeader.hLibraryHandle = hFile;
     pLibHeader.usNumberOfEntries = LibFileHeader.iEntries;
@@ -510,7 +500,12 @@ namespace ja2 {
 
           // reallocate more space for the array
           pOpenFiles = gFileDataBase.pLibraries[sLibraryID].pOpenFiles.concat(
-            createArrayFrom(NUM_FILES_TO_ADD_AT_A_TIME, createFileOpenStruct),
+            Array.from({ length: NUM_FILES_TO_ADD_AT_A_TIME }, () => ({
+              uiFileID: 0,
+              uiFilePosInFile: 0,
+              uiActualPositionInLibrary: 0,
+              pFileHeader: <FileHeaderStruct>(<unknown>null),
+            })),
           );
 
           // increment the number of open files that we can have open

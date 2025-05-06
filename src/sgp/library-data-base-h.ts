@@ -39,15 +39,6 @@ namespace ja2 {
     pFileHeader: FileHeaderStruct /* Pointer<FileHeaderStruct> */;
   }
 
-  export function createFileOpenStruct(): FileOpenStruct {
-    return {
-      uiFileID: 0,
-      uiFilePosInFile: 0,
-      uiActualPositionInLibrary: 0,
-      pFileHeader: <FileHeaderStruct>(<unknown>null),
-    };
-  }
-
   export interface LibraryHeaderStruct {
     sLibraryPath: string;
     hLibraryHandle: HANDLE;
