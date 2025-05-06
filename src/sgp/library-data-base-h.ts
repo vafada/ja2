@@ -107,19 +107,6 @@ namespace ja2 {
     iReserved: INT32;
   }
 
-  export function createLibHeader(): LIBHEADER {
-    return {
-      sLibName: "",
-      sPathToLibrary: "",
-      iEntries: 0,
-      iUsed: 0,
-      iSort: 0,
-      iVersion: 0,
-      fContainsSubDirectories: false,
-      iReserved: 0,
-    };
-  }
-
   export const LIBHEADER_SIZE = 532;
 
   export function readLibHeader(

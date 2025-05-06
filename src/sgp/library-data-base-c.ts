@@ -139,7 +139,16 @@ namespace ja2 {
     pLibraryName: string,
     pLibHeader: LibraryHeaderStruct,
   ): boolean {
-    let LibFileHeader: LIBHEADER = createLibHeader();
+    let LibFileHeader: LIBHEADER = {
+      sLibName: "",
+      sPathToLibrary: "",
+      iEntries: 0,
+      iUsed: 0,
+      iSort: 0,
+      iVersion: 0,
+      fContainsSubDirectories: false,
+      iReserved: 0,
+    };
     let uiCount: UINT32 = 0;
 
     // open the library for reading ( if it exists )
@@ -867,18 +876,11 @@ namespace ja2 {
     let usLoop1: UINT16 = 0;
 
     let sName: string /* CHAR8[60] */;
-    let sPath: string /* CHAR8[90] */;
-    let sDrive: string /* CHAR8[60] */;
     let sExt: string /* CHAR8[6] */;
 
     let sTempName: string /* CHAR8[70] */;
 
-    ({
-      root: sDrive,
-      dir: sPath,
-      name: sName,
-      ext: sExt,
-    } = path.parse(pFileName));
+    ({ name: sName, ext: sExt } = path.parse(pFileName));
 
     sTempName = sName;
     sTempName += sExt;
@@ -911,12 +913,19 @@ namespace ja2 {
     uiFileNum: UINT32,
     pLastWriteTime: SGP_FILETIME,
   ): boolean {
-    let usNumEntries: UINT16 = 0;
     let uiNumBytesRead: UINT32;
     let pDirEntry: DIRENTRY | undefined;
-    let LibFileHeader: LIBHEADER = createLibHeader();
-    let fDone: boolean = false;
-    //	UINT32	cnt;
+    let LibFileHeader: LIBHEADER = {
+      sLibName: "",
+      sPathToLibrary: "",
+      iEntries: 0,
+      iUsed: 0,
+      iSort: 0,
+      iVersion: 0,
+      fContainsSubDirectories: false,
+      iReserved: 0,
+    };
+
     let iFilePos: INT32 = 0;
 
     let ppDirEntry: DIRENTRY | undefined;
