@@ -196,10 +196,11 @@ namespace ja2 {
     }
 
     // Allocate enough memory for the library header
-    pLibHeader.pFileHeader = createArrayFrom(
-      usNumEntries,
-      createFileHeaderStruct,
-    );
+    pLibHeader.pFileHeader = Array.from({ length: usNumEntries }, () => ({
+      pFileName: "",
+      uiFileLength: 0,
+      uiFileOffset: 0,
+    }));
 
     // place the file pointer at the begining of the file headers ( they are at the end of the file )
     SetFilePointer(

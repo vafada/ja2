@@ -32,14 +32,6 @@ namespace ja2 {
     uiFileOffset: UINT32;
   }
 
-  export function createFileHeaderStruct(): FileHeaderStruct {
-    return {
-      pFileName: "",
-      uiFileLength: 0,
-      uiFileOffset: 0,
-    };
-  }
-
   export interface FileOpenStruct {
     uiFileID: UINT32; // id of the file ( they start at 1 )
     uiFilePosInFile: UINT32; // current position in the file
