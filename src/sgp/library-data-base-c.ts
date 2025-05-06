@@ -6,9 +6,6 @@ namespace ja2 {
   // used when doing the binary search of the libraries
   let gsCurrentLibrary: INT16 = -1;
 
-  // The location of the cdrom drive
-  export let gzCdDirectory: string /* CHAR8[SGPFILENAME_LEN] */;
-
   //************************************************************************
   //
   //	 InitializeFileDatabase():  Call this function to initialize the file
@@ -19,43 +16,49 @@ namespace ja2 {
   //
   //************************************************************************
   export function InitializeFileDatabase(): boolean {
-    let i: INT16;
-    let uiSize: UINT32;
     let fLibraryInited: boolean = false;
 
     // if all the libraries exist, set them up
     gFileDataBase.usNumberOfLibraries = Enum30.NUMBER_OF_LIBRARIES;
 
     // allocate memory for the each of the library headers
-    uiSize = Enum30.NUMBER_OF_LIBRARIES;
-    if (uiSize) {
-      gFileDataBase.pLibraries = createArrayFrom(
-        uiSize,
-        createLibraryHeaderStruct,
-      );
+    let uiSize = Enum30.NUMBER_OF_LIBRARIES;
 
-      // Load up each library
-      for (i = 0; i < Enum30.NUMBER_OF_LIBRARIES; i++) {
-        // if you want to init the library at the begining of the game
-        if (gGameLibaries[i].fInitOnStart) {
-          // if the library exists
-          if (OpenLibrary(i)) fLibraryInited = true;
-          // else the library doesnt exist
-          else {
-            FastDebugMsg(
-              FormatString(
-                "Warning in InitializeFileDatabase( ): Library Id #%d (%s) is to be loaded but cannot be found.\n",
-                i,
-                gGameLibaries[i].sLibraryName,
-              ),
-            );
-            gFileDataBase.pLibraries[i].fLibraryOpen = false;
-          }
+    gFileDataBase.pLibraries = Array.from({ length: uiSize }, () => ({
+      sLibraryPath: "",
+      hLibraryHandle: 0,
+      usNumberOfEntries: 0,
+      fLibraryOpen: false,
+      uiIdOfOtherFileAlreadyOpenedLibrary: 0,
+      iNumFilesOpen: 0,
+      iSizeOfOpenFileArray: 0,
+      pFileHeader: <FileHeaderStruct[]>(<unknown>null),
+      pOpenFiles: <FileOpenStruct[]>(<unknown>null),
+    }));
+
+    // Load up each library
+    for (let i = 0; i < Enum30.NUMBER_OF_LIBRARIES; i++) {
+      // if you want to init the library at the begining of the game
+      if (gGameLibaries[i].fInitOnStart) {
+        // if the library exists
+        if (OpenLibrary(i)) {
+          fLibraryInited = true;
+        }
+        // else the library doesnt exist
+        else {
+          FastDebugMsg(
+            FormatString(
+              "Warning in InitializeFileDatabase( ): Library Id #%d (%s) is to be loaded but cannot be found.\n",
+              i,
+              gGameLibaries[i].sLibraryName,
+            ),
+          );
+          gFileDataBase.pLibraries[i].fLibraryOpen = false;
         }
       }
-      // signify that the database has been initialized ( only if there was a library loaded )
-      gFileDataBase.fInitialized = fLibraryInited;
     }
+    // signify that the database has been initialized ( only if there was a library loaded )
+    gFileDataBase.fInitialized = fLibraryInited;
 
     // allocate memory for the handles of the 'real files' that will be open
     // This is needed because the the code wouldnt be able to tell the difference between a 'real' handle and a made up one
@@ -136,34 +139,9 @@ namespace ja2 {
     return true;
   }
 
-  function CheckForLibraryExistence(pLibraryName: string /* STR */): boolean {
-    let fRetVal: boolean = false;
-    let hFile: HANDLE;
-
-    // try to opent the file, if we canm the library exists
-    hFile = CreateFile(
-      pLibraryName,
-      GENERIC_READ,
-      OPEN_EXISTING,
-      FILE_FLAG_RANDOM_ACCESS,
-    );
-
-    // if the file was not opened
-    if (hFile == INVALID_HANDLE_VALUE) {
-      // the file wasnt opened
-      fRetVal = false;
-    } else {
-      CloseHandle(hFile);
-      fRetVal = true;
-    }
-
-    return fRetVal;
-  }
-
   function InitializeLibrary(
     pLibraryName: string /* STR */,
     pLibHeader: LibraryHeaderStruct,
-    fCanBeOnCDrom: boolean,
   ): boolean {
     let hFile: HANDLE;
     let usNumEntries: UINT16 = 0;
@@ -788,7 +766,6 @@ namespace ja2 {
       !InitializeLibrary(
         gGameLibaries[sLibraryID].sLibraryName,
         gFileDataBase.pLibraries[sLibraryID],
-        gGameLibaries[sLibraryID].fOnCDrom,
       )
     )
       return false;
