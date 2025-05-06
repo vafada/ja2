@@ -136,21 +136,14 @@ namespace ja2 {
   }
 
   function InitializeLibrary(
-    pLibraryName: string /* STR */,
+    pLibraryName: string,
     pLibHeader: LibraryHeaderStruct,
   ): boolean {
-    let hFile: HANDLE;
-    let usNumEntries: UINT16 = 0;
-    let uiNumBytesRead: UINT32;
-    let uiLoop: UINT32;
-    let DirEntry: DIRENTRY = createDirEntry();
     let LibFileHeader: LIBHEADER = createLibHeader();
     let uiCount: UINT32 = 0;
 
-    let buffer: Buffer;
-
     // open the library for reading ( if it exists )
-    hFile = CreateFile(
+    const hFile = CreateFile(
       pLibraryName,
       GENERIC_READ,
       OPEN_EXISTING,
@@ -162,7 +155,8 @@ namespace ja2 {
     }
 
     // Read in the library header ( at the begining of the library )
-    buffer = Buffer.allocUnsafe(LIBHEADER_SIZE);
+    let buffer = Buffer.allocUnsafe(LIBHEADER_SIZE);
+    let uiNumBytesRead: UINT32;
     if ((uiNumBytesRead = ReadFile(hFile, buffer, LIBHEADER_SIZE)) === -1)
       return false;
 
@@ -183,16 +177,29 @@ namespace ja2 {
 
     // loop through the library and determine the number of files that are FILE_OK
     // ie.  so we dont load the old or deleted files
-    usNumEntries = 0;
+    let usNumEntries = 0;
     buffer = Buffer.allocUnsafe(DIRENTRY_SIZE);
-    for (uiLoop = 0; uiLoop < LibFileHeader.iEntries; uiLoop++) {
+    for (let uiLoop = 0; uiLoop < LibFileHeader.iEntries; uiLoop++) {
       // read in the file header
-      if ((uiNumBytesRead = ReadFile(hFile, buffer, DIRENTRY_SIZE)) === -1)
+      if ((uiNumBytesRead = ReadFile(hFile, buffer, DIRENTRY_SIZE)) === -1) {
         return false;
+      }
+
+      const DirEntry: DIRENTRY = {
+        sFileName: "",
+        uiOffset: 0,
+        uiLength: 0,
+        ubState: 0,
+        ubReserved: 0,
+        sFileTime: createFileTime(),
+        usReserved2: 0,
+      };
 
       readDirEntry(DirEntry, buffer);
 
-      if (DirEntry.ubState == FILE_OK) usNumEntries++;
+      if (DirEntry.ubState == FILE_OK) {
+        usNumEntries++;
+      }
     }
 
     // Allocate enough memory for the library header
@@ -213,10 +220,21 @@ namespace ja2 {
     // loop through all the entries
     uiCount = 0;
     buffer = Buffer.allocUnsafe(DIRENTRY_SIZE);
-    for (uiLoop = 0; uiLoop < LibFileHeader.iEntries; uiLoop++) {
+    for (let uiLoop = 0; uiLoop < LibFileHeader.iEntries; uiLoop++) {
       // read in the file header
-      if ((uiNumBytesRead = ReadFile(hFile, buffer, DIRENTRY_SIZE)) === -1)
+      if ((uiNumBytesRead = ReadFile(hFile, buffer, DIRENTRY_SIZE)) === -1) {
         return false;
+      }
+
+      const DirEntry: DIRENTRY = {
+        sFileName: "",
+        uiOffset: 0,
+        uiLength: 0,
+        ubState: 0,
+        ubReserved: 0,
+        sFileTime: createFileTime(),
+        usReserved2: 0,
+      };
 
       readDirEntry(DirEntry, buffer);
 
@@ -243,13 +261,6 @@ namespace ja2 {
     }
 
     pLibHeader.usNumberOfEntries = usNumEntries;
-
-    // allocate memory for the library path
-    //	if( strlen( LibFileHeader.sPathToLibrary ) == 0 )
-    {
-      //		FastDebugMsg( String("The %s library file does not contain a path.  Use 'n' argument to name the library when you create it\n", LibFileHeader.sLibName ) );
-      //		Assert( 0 );
-    }
 
     // if the library has a path
     if (LibFileHeader.sPathToLibrary.length != 0) {
