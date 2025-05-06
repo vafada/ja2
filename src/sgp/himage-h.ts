@@ -12,7 +12,6 @@ namespace ja2 {
   export const PCX_FILE_READER = 0x1;
   export const TGA_FILE_READER = 0x2;
   export const STCI_FILE_READER = 0x4;
-  const TRLE_FILE_READER = 0x8;
   export const UNKNOWN_FILE_READER = 0x200;
 
   // Defines for buffer bit depth
@@ -291,70 +290,23 @@ namespace ja2 {
     usHeight: UINT16;
     ubBitDepth: UINT8;
     fFlags: UINT16;
-    ImageFile: string /* SGPFILENAME */;
+    ImageFile: string;
     iFileLoader: UINT32;
-    pPalette: SGPPaletteEntry[] /* Pointer<SGPPaletteEntry> */;
-    pui16BPPPalette: Uint16Array /* Pointer<UINT16> */;
-    pAppData: Buffer /* Pointer<UINT8> */;
+    pPalette: SGPPaletteEntry[];
+    pui16BPPPalette: Uint16Array;
+    pAppData: Buffer;
     uiAppDataSize: UINT32;
-    /* union { */
-    /*   struct { */
-    pImageData: Buffer /* PTR */;
-    /*   } */
-    /*   struct { */
-    pCompressedImageData: Buffer /* PTR */;
-    /*   } */
-    /*   struct { */
-    p8BPPData: Uint8Array /* Pointer<UINT8> */;
-    /*   } */
-    /*   struct { */
-    p16BPPData: Uint16Array /* Pointer<UINT16> */;
-    /*   } */
-    /*   struct { */
-    pPixData8: Uint8Array /* Pointer<UINT8> */;
+    pImageData: Buffer;
+    pCompressedImageData: Buffer;
+    p8BPPData: Uint8Array;
+    p16BPPData: Uint16Array;
+    pPixData8: Uint8Array;
     uiSizePixData: UINT32;
-    pETRLEObject: ETRLEObject[] /* Pointer<ETRLEObject> */;
+    pETRLEObject: ETRLEObject[];
     usNumberOfObjects: UINT16;
-    /*   } */
-    /* } */
   }
-
-  export function createImageType(): ImageType {
-    return {
-      usWidth: 0,
-      usHeight: 0,
-      ubBitDepth: 0,
-      fFlags: 0,
-      ImageFile: "",
-      iFileLoader: 0,
-      pPalette: <SGPPaletteEntry[]>(<unknown>null),
-      pui16BPPPalette: <Uint16Array>(<unknown>null),
-      pAppData: <Buffer>(<unknown>null),
-      uiAppDataSize: 0,
-      pImageData: <Buffer>(<unknown>null),
-      pCompressedImageData: <Buffer>(<unknown>null),
-      p8BPPData: <Uint8Array>(<unknown>null),
-      p16BPPData: <Uint16Array>(<unknown>null),
-      pPixData8: <Uint8Array>(<unknown>null),
-      uiSizePixData: 0,
-      pETRLEObject: <ETRLEObject[]>(<unknown>null),
-      usNumberOfObjects: 0,
-    };
-  }
-
-  export type HIMAGE = Pointer<ImageType>;
 
   export const SGPGetRValue = (rgb: number) => rgb & 0xff;
   export const SGPGetBValue = (rgb: number) => (rgb >> 16) & 0xff;
   export const SGPGetGValue = (rgb: number) => (rgb >> 8) & 0xff;
-
-  // *****************************************************************************
-  //
-  // Function prototypes
-  //
-  // *****************************************************************************
-
-  // The following blitters are used by the function above as well as clients
-
-  // UTILITY FUNCTIONS
 }

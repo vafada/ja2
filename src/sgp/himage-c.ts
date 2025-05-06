@@ -46,13 +46,8 @@ namespace ja2 {
     return new _SplitUINT32();
   }
 
-  export function CreateImage(
-    ImageFile: string /* SGPFILENAME */,
-    fContents: UINT16,
-  ): ImageType {
-    let hImage: ImageType;
+  export function CreateImage(ImageFile: string, fContents: UINT16): ImageType {
     let Extension: string;
-    let iFileLoader: UINT32;
 
     // Depending on extension of filename, use different image readers
     // Get extension
@@ -72,7 +67,7 @@ namespace ja2 {
     }
 
     // Determine type from Extension
-    iFileLoader = UNKNOWN_FILE_READER;
+    let iFileLoader = UNKNOWN_FILE_READER;
 
     if (Extension.toUpperCase() === "PCX") {
       iFileLoader = PCX_FILE_READER;
@@ -97,17 +92,26 @@ namespace ja2 {
     }
 
     // Create memory for image structure
-    hImage = createImageType();
-
-    // hImage->fFlags = 0;
-    // Set data pointers to NULL
-    // hImage->pImageData = NULL;
-    // hImage->pPalette   = NULL;
-    // hImage->pui16BPPPalette = NULL;
-
-    // Set filename and loader
-    hImage.ImageFile = ImageFile;
-    hImage.iFileLoader = iFileLoader;
+    const hImage = {
+      usWidth: 0,
+      usHeight: 0,
+      ubBitDepth: 0,
+      fFlags: 0,
+      ImageFile,
+      iFileLoader,
+      pPalette: <SGPPaletteEntry[]>(<unknown>null),
+      pui16BPPPalette: <Uint16Array>(<unknown>null),
+      pAppData: <Buffer>(<unknown>null),
+      uiAppDataSize: 0,
+      pImageData: <Buffer>(<unknown>null),
+      pCompressedImageData: <Buffer>(<unknown>null),
+      p8BPPData: <Uint8Array>(<unknown>null),
+      p16BPPData: <Uint16Array>(<unknown>null),
+      pPixData8: <Uint8Array>(<unknown>null),
+      uiSizePixData: 0,
+      pETRLEObject: <ETRLEObject[]>(<unknown>null),
+      usNumberOfObjects: 0,
+    };
 
     if (!LoadImageData(hImage, fContents)) {
       return <ImageType>(<unknown>null);

@@ -68,7 +68,26 @@ namespace ja2 {
 
     let Header: STCIHeader = createSTCIHeader();
     let uiLoop: UINT32;
-    let Image: ImageType = createImageType();
+    let Image: ImageType = {
+      usWidth: 0,
+      usHeight: 0,
+      ubBitDepth: 0,
+      fFlags: 0,
+      ImageFile: "",
+      iFileLoader: 0,
+      pPalette: <SGPPaletteEntry[]>(<unknown>null),
+      pui16BPPPalette: <Uint16Array>(<unknown>null),
+      pAppData: <Buffer>(<unknown>null),
+      uiAppDataSize: 0,
+      pImageData: <Buffer>(<unknown>null),
+      pCompressedImageData: <Buffer>(<unknown>null),
+      p8BPPData: <Uint8Array>(<unknown>null),
+      p16BPPData: <Uint16Array>(<unknown>null),
+      pPixData8: <Uint8Array>(<unknown>null),
+      uiSizePixData: 0,
+      pETRLEObject: <ETRLEObject[]>(<unknown>null),
+      usNumberOfObjects: 0,
+    };
 
     let pSGPPaletteEntry: SGPPaletteEntry[];
     let STCIPaletteEntry: STCIPaletteElement = createSTCIPaletteElement();
