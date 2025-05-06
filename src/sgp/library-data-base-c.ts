@@ -1,7 +1,30 @@
 namespace ja2 {
   const path: typeof import("path") = require("path");
 
-  // NUMBER_OF_LIBRARIES
+  const GAME_LIBRARIES: string[] = [
+    "Data.slf",
+    "Ambient.slf",
+    "Anims.slf",
+    "BattleSnds.slf",
+    "BigItems.slf",
+    "BinaryData.slf",
+    "Cursors.slf",
+    "Faces.slf",
+    "Fonts.slf",
+    "Interface.slf",
+    "Laptop.slf",
+    "Maps.slf",
+    "MercEdt.slf",
+    "Music.slf",
+    "Npc_Speech.slf",
+    "NpcData.slf",
+    "RadarMaps.slf",
+    "Sounds.slf",
+    "Speech.slf",
+    "TileSets.slf",
+    "LoadScreens.slf",
+    "Intro.slf",
+  ];
 
   // used when doing the binary search of the libraries
   let gsCurrentLibrary: INT16 = -1;
@@ -38,23 +61,20 @@ namespace ja2 {
 
     // Load up each library
     for (let i = 0; i < Enum30.NUMBER_OF_LIBRARIES; i++) {
-      // if you want to init the library at the begining of the game
-      if (gGameLibaries[i].fInitOnStart) {
-        // if the library exists
-        if (OpenLibrary(i)) {
-          fLibraryInited = true;
-        }
-        // else the library doesnt exist
-        else {
-          FastDebugMsg(
-            FormatString(
-              "Warning in InitializeFileDatabase( ): Library Id #%d (%s) is to be loaded but cannot be found.\n",
-              i,
-              gGameLibaries[i].sLibraryName,
-            ),
-          );
-          gFileDataBase.pLibraries[i].fLibraryOpen = false;
-        }
+      // if the library exists
+      if (OpenLibrary(i)) {
+        fLibraryInited = true;
+      }
+      // else the library doesnt exist
+      else {
+        FastDebugMsg(
+          FormatString(
+            "Warning in InitializeFileDatabase( ): Library Id #%d (%s) is to be loaded but cannot be found.\n",
+            i,
+            GAME_LIBRARIES[i],
+          ),
+        );
+        gFileDataBase.pLibraries[i].fLibraryOpen = false;
       }
     }
     // signify that the database has been initialized ( only if there was a library loaded )
@@ -70,30 +90,6 @@ namespace ja2 {
 
     // set the initial number how many files can be opened at the one time
     gFileDataBase.RealFiles.iSizeOfOpenFileArray = INITIAL_NUM_HANDLES;
-
-    return true;
-  }
-
-  //*****************************************************************************************
-  // ReopenCDLibraries
-  //
-  // Closes all CD libraries, then reopens them. This function needs to be called when CDs
-  // are changed.
-  //
-  // Returns BOOLEAN            - TRUE, always
-  //
-  // Created:  3/21/00 Derek Beland
-  //*****************************************************************************************
-  function ReopenCDLibraries(): boolean {
-    let i: INT16;
-
-    // Load up each library
-    for (i = 0; i < Enum30.NUMBER_OF_LIBRARIES; i++) {
-      if (gFileDataBase.pLibraries[i].fLibraryOpen && gGameLibaries[i].fOnCDrom)
-        CloseLibrary(i);
-
-      if (gGameLibaries[i].fOnCDrom) OpenLibrary(i);
-    }
 
     return true;
   }
@@ -762,15 +758,10 @@ namespace ja2 {
     if (sLibraryID >= gFileDataBase.usNumberOfLibraries) return false;
 
     // if we cant open the library
-    if (
-      !InitializeLibrary(
-        gGameLibaries[sLibraryID].sLibraryName,
-        gFileDataBase.pLibraries[sLibraryID],
-      )
-    )
-      return false;
-
-    return true;
+    return InitializeLibrary(
+      GAME_LIBRARIES[sLibraryID],
+      gFileDataBase.pLibraries[sLibraryID],
+    );
   }
 
   function CloseLibrary(sLibraryID: INT16): boolean {

@@ -14,24 +14,6 @@ namespace ja2 {
 
   export const DB_ADD_LIBRARY_ID = (exp: number) => exp << DB_BITS_FOR_FILE_ID;
 
-  export interface LibraryInitHeader {
-    sLibraryName: string /* CHAR8[FILENAME_SIZE] */; // The name of the library file on the disk
-    fOnCDrom: boolean; // A flag specifying if its a cdrom library ( not implemented yet )
-    fInitOnStart: boolean; // Flag specifying if the library is to Initialized at the begining of the game
-  }
-
-  export function createLibraryInitHeaderFrom(
-    sLibraryName: string,
-    fOnCDrom: boolean,
-    fInitOnStart: boolean,
-  ): LibraryInitHeader {
-    return {
-      sLibraryName,
-      fOnCDrom,
-      fInitOnStart,
-    };
-  }
-
   export interface RealFileOpenStruct {
     uiFileID: UINT32; // id of the file ( they start at 1 )
     hRealFileHandle: HANDLE; // if the file is a Real File, this its handle
