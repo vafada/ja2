@@ -409,38 +409,21 @@ namespace ja2 {
   //
   //************************************************************************
 
-  export function OpenFileFromLibrary(pName: string /* STR */): HWFILE {
-    let pFileHeader: FileHeaderStruct | null;
+  export function OpenFileFromLibrary(pName: string): HWFILE {
     let hLibFile: HWFILE;
-    let sLibraryID: INT16;
     let uiLoop1: UINT16;
     let uiFileNum: UINT32 = 0;
 
-    let uiNewFilePosition: UINT32 = 0;
-
     // Check if the file can be contained from an open library ( the path to the file a library path )
-    sLibraryID = GetLibraryIDFromFileName(pName);
+    let sLibraryID = GetLibraryIDFromFileName(pName);
 
     if (sLibraryID != -1) {
-      // Check if another file is already open in the library ( report a warning if so )
-
-      //		if( gFileDataBase.pLibraries[ sLibraryID ].fAnotherFileAlreadyOpenedLibrary )
-      if (
-        gFileDataBase.pLibraries[sLibraryID]
-          .uiIdOfOtherFileAlreadyOpenedLibrary != 0
-      ) {
-        // Temp removed
-        //			FastDebugMsg(String("\n*******\nOpenFileFromLibrary():  Warning!:  Trying to load file '%s' from the library '%s' which already has a file open\n", pName, gGameLibaries[ sLibraryID ].sLibraryName ) );
-        //			FastDebugMsg(String("\n*******\nOpenFileFromLibrary():  Warning!:  Trying to load file '%s' from the library '%s' which already has a file open ( file open is '%s')\n", pName, gGameLibaries[ sLibraryID ].sLibraryName, gFileDataBase.pLibraries[ sLibraryID ].pOpenFiles[ gFileDataBase.pLibraries[ sLibraryID ].uiIdOfOtherFileAlreadyOpenedLibrary ].pFileHeader->pFileName ) );
-      }
-
       // check if the file is already open
       if (CheckIfFileIsAlreadyOpen(pName, sLibraryID)) return 0;
 
       // if the file is in a library, get the file
-      if (
-        (pFileHeader = GetFileHeaderFromLibrary(sLibraryID, pName)) !== null
-      ) {
+      let pFileHeader = GetFileHeaderFromLibrary(sLibraryID, pName);
+      if (pFileHeader !== null) {
         // increment the number of open files
         gFileDataBase.pLibraries[sLibraryID].iNumFilesOpen++;
 
@@ -449,10 +432,10 @@ namespace ja2 {
           gFileDataBase.pLibraries[sLibraryID].iNumFilesOpen >=
           gFileDataBase.pLibraries[sLibraryID].iSizeOfOpenFileArray
         ) {
-          let pOpenFiles: FileOpenStruct[];
-
           // reallocate more space for the array
-          pOpenFiles = gFileDataBase.pLibraries[sLibraryID].pOpenFiles.concat(
+          const pOpenFiles = gFileDataBase.pLibraries[
+            sLibraryID
+          ].pOpenFiles.concat(
             Array.from({ length: NUM_FILES_TO_ADD_AT_A_TIME }, () => ({
               uiFileID: 0,
               uiFilePosInFile: 0,
@@ -510,17 +493,12 @@ namespace ja2 {
         );
 
         // Set the file position in the library to the begining of the 'file' in the library
-        uiNewFilePosition = SetFilePointer(
+        SetFilePointer(
           gFileDataBase.pLibraries[sLibraryID].hLibraryHandle,
           gFileDataBase.pLibraries[sLibraryID].pOpenFiles[uiFileNum].pFileHeader
             .uiFileOffset,
           null,
           FILE_BEGIN,
-        );
-
-        uiNewFilePosition = GetFileSize(
-          gFileDataBase.pLibraries[sLibraryID].hLibraryHandle,
-          null,
         );
       } else {
         // Failed to find the file in a library
