@@ -510,7 +510,6 @@ namespace ja2 {
     }
 
     // Set the fact the a file is currently open in the library
-    //	gFileDataBase.pLibraries[ sLibraryID ].fAnotherFileAlreadyOpenedLibrary = TRUE;
     gFileDataBase.pLibraries[sLibraryID].uiIdOfOtherFileAlreadyOpenedLibrary =
       uiFileNum;
 
@@ -521,9 +520,7 @@ namespace ja2 {
     sLibraryID: INT16,
     uiFileNum: UINT32,
   ): HWFILE {
-    let hLibFile: HWFILE;
-
-    hLibFile = uiFileNum;
+    let hLibFile = uiFileNum;
     hLibFile |= DB_ADD_LIBRARY_ID(sLibraryID);
 
     return hLibFile;
@@ -544,7 +541,10 @@ namespace ja2 {
 
       gFileDataBase.RealFiles.pRealFilesOpen =
         gFileDataBase.RealFiles.pRealFilesOpen.concat(
-          createArrayFrom(uiSize, createRealFileOpenStruct),
+          Array.from({ length: uiSize }, () => ({
+            uiFileID: 0,
+            hRealFileHandle: 0,
+          })),
         );
 
       gFileDataBase.RealFiles.iSizeOfOpenFileArray +=
@@ -824,8 +824,6 @@ namespace ja2 {
 
     let ppDirEntry: DIRENTRY | undefined;
 
-    let pAllEntries: DIRENTRY[];
-
     let buffer: Buffer;
 
     pLastWriteTime.dwLowDateTime = 0;
@@ -855,10 +853,23 @@ namespace ja2 {
 
     readLibHeader(LibFileHeader, buffer);
 
-    // If the file number is greater then the number in the lirary, return false
-    if (uiFileNum >= LibFileHeader.iEntries) return false;
+    // If the file number is greater than the number in the library, return false
+    if (uiFileNum >= LibFileHeader.iEntries) {
+      return false;
+    }
 
-    pAllEntries = createArrayFrom(LibFileHeader.iEntries, createDirEntry);
+    const pAllEntries = Array.from({ length: LibFileHeader.iEntries }, () => ({
+      sFileName: "",
+      uiOffset: 0,
+      uiLength: 0,
+      ubState: 0,
+      ubReserved: 0,
+      sFileTime: {
+        dwLowDateTime: 0,
+        dwHighDateTime: 0,
+      },
+      usReserved2: 0,
+    }));
 
     iFilePos = -(LibFileHeader.iEntries * DIRENTRY_SIZE);
 

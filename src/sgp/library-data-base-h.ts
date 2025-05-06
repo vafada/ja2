@@ -19,15 +19,8 @@ namespace ja2 {
     hRealFileHandle: HANDLE; // if the file is a Real File, this its handle
   }
 
-  export function createRealFileOpenStruct(): RealFileOpenStruct {
-    return {
-      uiFileID: 0,
-      hRealFileHandle: 0,
-    };
-  }
-
   export interface FileHeaderStruct {
-    pFileName: string /* STR */;
+    pFileName: string;
     uiFileLength: UINT32;
     uiFileOffset: UINT32;
   }
@@ -35,8 +28,8 @@ namespace ja2 {
   export interface FileOpenStruct {
     uiFileID: UINT32; // id of the file ( they start at 1 )
     uiFilePosInFile: UINT32; // current position in the file
-    uiActualPositionInLibrary: UINT32; // Current File pointer position in actuall library
-    pFileHeader: FileHeaderStruct /* Pointer<FileHeaderStruct> */;
+    uiActualPositionInLibrary: UINT32; // Current File pointer position in actual library
+    pFileHeader: FileHeaderStruct;
   }
 
   export interface LibraryHeaderStruct {
@@ -48,49 +41,29 @@ namespace ja2 {
     uiIdOfOtherFileAlreadyOpenedLibrary: UINT32; // this variable is set when a file is opened from the library and reset when the file is close.  No 2 files can have access to the library at 1 time.
     iNumFilesOpen: INT32;
     iSizeOfOpenFileArray: INT32;
-    pFileHeader: FileHeaderStruct[] /* Pointer<FileHeaderStruct> */;
-    pOpenFiles: FileOpenStruct[] /* Pointer<FileOpenStruct> */;
-  }
-
-  export function createLibraryHeaderStruct(): LibraryHeaderStruct {
-    return {
-      sLibraryPath: "",
-      hLibraryHandle: 0,
-      usNumberOfEntries: 0,
-      fLibraryOpen: false,
-      uiIdOfOtherFileAlreadyOpenedLibrary: 0,
-      iNumFilesOpen: 0,
-      iSizeOfOpenFileArray: 0,
-      pFileHeader: <FileHeaderStruct[]>(<unknown>null),
-      pOpenFiles: <FileOpenStruct[]>(<unknown>null),
-    };
+    pFileHeader: FileHeaderStruct[];
+    pOpenFiles: FileOpenStruct[];
   }
 
   export interface RealFileHeaderStruct {
     iNumFilesOpen: INT32;
     iSizeOfOpenFileArray: INT32;
-    pRealFilesOpen: RealFileOpenStruct[] /* Pointer<RealFileOpenStruct> */;
+    pRealFilesOpen: RealFileOpenStruct[];
   }
 
   export interface DatabaseManagerHeaderStruct {
-    sManagerName: string /* STR */;
-    pLibraries: LibraryHeaderStruct[] /* Pointer<LibraryHeaderStruct> */;
+    sManagerName: string;
+    pLibraries: LibraryHeaderStruct[];
     usNumberOfLibraries: UINT16;
     fInitialized: boolean;
     RealFiles: RealFileHeaderStruct;
   }
 
-  //*************************************************************************
-  //
-  //  NOTE!  The following structs are also used by the datalib98 utility
-  //
-  //*************************************************************************
-
   export const FILE_OK = 0;
 
   export interface LIBHEADER {
-    sLibName: string /* CHAR8[FILENAME_SIZE] */;
-    sPathToLibrary: string /* CHAR8[FILENAME_SIZE] */;
+    sLibName: string;
+    sPathToLibrary: string;
     iEntries: INT32;
     iUsed: INT32;
     iSort: UINT16;
@@ -137,25 +110,13 @@ namespace ja2 {
   }
 
   export interface DIRENTRY {
-    sFileName: string /* CHAR8[FILENAME_SIZE] */;
+    sFileName: string;
     uiOffset: UINT32;
     uiLength: UINT32;
     ubState: UINT8;
     ubReserved: UINT8;
     sFileTime: FILETIME;
     usReserved2: UINT16;
-  }
-
-  export function createDirEntry(): DIRENTRY {
-    return {
-      sFileName: "",
-      uiOffset: 0,
-      uiLength: 0,
-      ubState: 0,
-      ubReserved: 0,
-      sFileTime: createFileTime(),
-      usReserved2: 0,
-    };
   }
 
   export const DIRENTRY_SIZE = 280;
@@ -189,6 +150,4 @@ namespace ja2 {
 
     return offset;
   }
-
-  // Function Prototypes
 }
