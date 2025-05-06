@@ -364,14 +364,11 @@ namespace ja2 {
   //
   //************************************************************************
 
-  export function CheckIfFileExistInLibrary(
-    pFileName: string /* STR */,
-  ): boolean {
-    let sLibraryID: INT16;
+  export function CheckIfFileExistInLibrary(pFileName: string): boolean {
     let pFileHeader: FileHeaderStruct | null;
 
     // get thelibrary that file is in
-    sLibraryID = GetLibraryIDFromFileName(pFileName);
+    let sLibraryID = GetLibraryIDFromFileName(pFileName);
     if (sLibraryID == -1) {
       // not in any library
       return false;
@@ -391,12 +388,11 @@ namespace ja2 {
   //	( eg. File is  Laptop\Test.sti, if the Laptop\ library is open, it returns true
   //
   //************************************************************************
-  function GetLibraryIDFromFileName(pFileName: string /* STR */): INT16 {
-    let sLoop1: INT16;
+  function GetLibraryIDFromFileName(pFileName: string): INT16 {
     let sBestMatch: INT16 = -1;
 
     // loop through all the libraries to check which library the file is in
-    for (sLoop1 = 0; sLoop1 < gFileDataBase.usNumberOfLibraries; sLoop1++) {
+    for (let sLoop1 = 0; sLoop1 < gFileDataBase.usNumberOfLibraries; sLoop1++) {
       // if the library is not loaded, dont try to access the array
       if (IsLibraryOpened(sLoop1)) {
         // if the library path name is of size zero, ( the library is for the default path )

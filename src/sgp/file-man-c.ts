@@ -29,11 +29,8 @@ namespace ja2 {
   //
   //**************************************************************************
 
-  export function FileExists(strFilename: string /* STR */): boolean {
-    let fExists: boolean = false;
-    // HANDLE	hRealFile;
-
-    fExists = fs.existsSync(strFilename);
+  export function FileExists(strFilename: string): boolean {
+    let fExists = fs.existsSync(strFilename);
 
     // if the file wasnt on disk, check to see if its in a library
     if (fExists == false) {

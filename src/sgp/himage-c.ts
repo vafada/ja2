@@ -51,14 +51,12 @@ namespace ja2 {
     fContents: UINT16,
   ): ImageType {
     let hImage: ImageType;
-    let Extension: string /* SGPFILENAME */;
-    let ExtensionSep: string /* CHAR8[] */ = ".";
-    let StrPtr: number /* STR */;
+    let Extension: string;
     let iFileLoader: UINT32;
 
     // Depending on extension of filename, use different image readers
     // Get extension
-    StrPtr = ImageFile.indexOf(ExtensionSep);
+    const StrPtr = ImageFile.indexOf(".");
 
     if (StrPtr == -1) {
       // No extension given, use default internal loader extension
@@ -74,24 +72,19 @@ namespace ja2 {
     }
 
     // Determine type from Extension
-    do {
-      iFileLoader = UNKNOWN_FILE_READER;
+    iFileLoader = UNKNOWN_FILE_READER;
 
-      if (Extension.toUpperCase() === "PCX") {
-        iFileLoader = PCX_FILE_READER;
-        break;
-      }
+    if (Extension.toUpperCase() === "PCX") {
+      iFileLoader = PCX_FILE_READER;
+    }
 
-      if (Extension.toUpperCase() === "TGA") {
-        iFileLoader = TGA_FILE_READER;
-        break;
-      }
+    if (Extension.toUpperCase() === "TGA") {
+      iFileLoader = TGA_FILE_READER;
+    }
 
-      if (Extension.toUpperCase() === "STI") {
-        iFileLoader = STCI_FILE_READER;
-        break;
-      }
-    } while (false);
+    if (Extension.toUpperCase() === "STI") {
+      iFileLoader = STCI_FILE_READER;
+    }
 
     // Determine if resource exists before creating image structure
     if (!FileExists(ImageFile)) {
