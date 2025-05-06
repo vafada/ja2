@@ -149,7 +149,6 @@ namespace ja2 {
       fContainsSubDirectories: false,
       iReserved: 0,
     };
-    let uiCount: UINT32 = 0;
 
     // open the library for reading ( if it exists )
     const hFile = CreateFile(
@@ -176,47 +175,15 @@ namespace ja2 {
 
     readLibHeader(LibFileHeader, buffer);
 
-    // place the file pointer at the begining of the file headers ( they are at the end of the file )
-    SetFilePointer(
-      hFile,
-      -(LibFileHeader.iEntries * DIRENTRY_SIZE),
-      null,
-      FILE_END,
-    );
-
-    // loop through the library and determine the number of files that are FILE_OK
-    // ie.  so we dont load the old or deleted files
-    let usNumEntries = 0;
-    buffer = Buffer.allocUnsafe(DIRENTRY_SIZE);
-    for (let uiLoop = 0; uiLoop < LibFileHeader.iEntries; uiLoop++) {
-      // read in the file header
-      if ((uiNumBytesRead = ReadFile(hFile, buffer, DIRENTRY_SIZE)) === -1) {
-        return false;
-      }
-
-      const DirEntry: DIRENTRY = {
-        sFileName: "",
-        uiOffset: 0,
-        uiLength: 0,
-        ubState: 0,
-        ubReserved: 0,
-        sFileTime: createFileTime(),
-        usReserved2: 0,
-      };
-
-      readDirEntry(DirEntry, buffer);
-
-      if (DirEntry.ubState == FILE_OK) {
-        usNumEntries++;
-      }
-    }
-
     // Allocate enough memory for the library header
-    pLibHeader.pFileHeader = Array.from({ length: usNumEntries }, () => ({
-      pFileName: "",
-      uiFileLength: 0,
-      uiFileOffset: 0,
-    }));
+    pLibHeader.pFileHeader = Array.from(
+      { length: LibFileHeader.iEntries },
+      () => ({
+        pFileName: "",
+        uiFileLength: 0,
+        uiFileOffset: 0,
+      }),
+    );
 
     // place the file pointer at the begining of the file headers ( they are at the end of the file )
     SetFilePointer(
@@ -227,7 +194,7 @@ namespace ja2 {
     );
 
     // loop through all the entries
-    uiCount = 0;
+    let uiCount = 0;
     buffer = Buffer.allocUnsafe(DIRENTRY_SIZE);
     for (let uiLoop = 0; uiLoop < LibFileHeader.iEntries; uiLoop++) {
       // read in the file header
@@ -241,7 +208,10 @@ namespace ja2 {
         uiLength: 0,
         ubState: 0,
         ubReserved: 0,
-        sFileTime: createFileTime(),
+        sFileTime: {
+          dwLowDateTime: 0,
+          dwHighDateTime: 0,
+        },
         usReserved2: 0,
       };
 
@@ -269,8 +239,6 @@ namespace ja2 {
       }
     }
 
-    pLibHeader.usNumberOfEntries = usNumEntries;
-
     // if the library has a path
     if (LibFileHeader.sPathToLibrary.length != 0) {
       pLibHeader.sLibraryPath = LibFileHeader.sPathToLibrary;
@@ -286,7 +254,7 @@ namespace ja2 {
     );
 
     pLibHeader.hLibraryHandle = hFile;
-    pLibHeader.usNumberOfEntries = usNumEntries;
+    pLibHeader.usNumberOfEntries = LibFileHeader.iEntries;
     pLibHeader.fLibraryOpen = true;
     pLibHeader.iNumFilesOpen = 0;
     pLibHeader.iSizeOfOpenFileArray = INITIAL_NUM_HANDLES;

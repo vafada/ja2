@@ -51,6 +51,7 @@ namespace ja2 {
   export interface LibraryHeaderStruct {
     sLibraryPath: string;
     hLibraryHandle: HANDLE;
+    // TODO replace with pFileHeader.length
     usNumberOfEntries: UINT16;
     fLibraryOpen: boolean;
     uiIdOfOtherFileAlreadyOpenedLibrary: UINT32; // this variable is set when a file is opened from the library and reset when the file is close.  No 2 files can have access to the library at 1 time.
