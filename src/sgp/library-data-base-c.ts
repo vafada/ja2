@@ -45,19 +45,20 @@ namespace ja2 {
     gFileDataBase.usNumberOfLibraries = Enum30.NUMBER_OF_LIBRARIES;
 
     // allocate memory for the each of the library headers
-    let uiSize = Enum30.NUMBER_OF_LIBRARIES;
-
-    gFileDataBase.pLibraries = Array.from({ length: uiSize }, () => ({
-      sLibraryPath: "",
-      hLibraryHandle: 0,
-      usNumberOfEntries: 0,
-      fLibraryOpen: false,
-      uiIdOfOtherFileAlreadyOpenedLibrary: 0,
-      iNumFilesOpen: 0,
-      iSizeOfOpenFileArray: 0,
-      pFileHeader: <FileHeaderStruct[]>(<unknown>null),
-      pOpenFiles: <FileOpenStruct[]>(<unknown>null),
-    }));
+    gFileDataBase.pLibraries = Array.from(
+      { length: Enum30.NUMBER_OF_LIBRARIES },
+      () => ({
+        sLibraryPath: "",
+        hLibraryHandle: 0,
+        usNumberOfEntries: 0,
+        fLibraryOpen: false,
+        uiIdOfOtherFileAlreadyOpenedLibrary: 0,
+        iNumFilesOpen: 0,
+        iSizeOfOpenFileArray: 0,
+        pFileHeader: <FileHeaderStruct[]>(<unknown>null),
+        pOpenFiles: <FileOpenStruct[]>(<unknown>null),
+      }),
+    );
 
     // Load up each library
     for (let i = 0; i < Enum30.NUMBER_OF_LIBRARIES; i++) {
@@ -82,10 +83,12 @@ namespace ja2 {
 
     // allocate memory for the handles of the 'real files' that will be open
     // This is needed because the the code wouldnt be able to tell the difference between a 'real' handle and a made up one
-    uiSize = INITIAL_NUM_HANDLES;
-    gFileDataBase.RealFiles.pRealFilesOpen = createArrayFrom(
-      uiSize,
-      createRealFileOpenStruct,
+    gFileDataBase.RealFiles.pRealFilesOpen = Array.from(
+      { length: INITIAL_NUM_HANDLES },
+      () => ({
+        uiFileID: 0,
+        hRealFileHandle: 0,
+      }),
     );
 
     // set the initial number how many files can be opened at the one time
