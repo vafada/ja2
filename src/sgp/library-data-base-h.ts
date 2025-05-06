@@ -1,15 +1,11 @@
 namespace ja2 {
   export const FILENAME_SIZE = 256;
 
-  //#define	FILENAME_SIZE									40 + PATH_SIZE
-  const PATH_SIZE = 80;
-
   export const NUM_FILES_TO_ADD_AT_A_TIME = 20;
   export const INITIAL_NUM_HANDLES = 20;
 
   export const REAL_FILE_LIBRARY_ID = 1022;
 
-  const DB_BITS_FOR_LIBRARY = 10;
   const DB_BITS_FOR_FILE_ID = 22;
 
   export const DB_EXTRACT_LIBRARY = (exp: number) =>
@@ -17,7 +13,6 @@ namespace ja2 {
   export const DB_EXTRACT_FILE_ID = (exp: number) => exp & 0x3fffff;
 
   export const DB_ADD_LIBRARY_ID = (exp: number) => exp << DB_BITS_FOR_FILE_ID;
-  const DB_ADD_FILE_ID = (exp: number) => exp & 0xc00000;
 
   export interface LibraryInitHeader {
     sLibraryName: string /* CHAR8[FILENAME_SIZE] */; // The name of the library file on the disk
@@ -36,8 +31,6 @@ namespace ja2 {
       fInitOnStart,
     };
   }
-
-  const REAL_LIBRARY_FILE = "RealFiles.slf";
 
   export interface RealFileOpenStruct {
     uiFileID: UINT32; // id of the file ( they start at 1 )
@@ -114,14 +107,6 @@ namespace ja2 {
     pRealFilesOpen: RealFileOpenStruct[] /* Pointer<RealFileOpenStruct> */;
   }
 
-  export function createRealFileHeaderStruct(): RealFileHeaderStruct {
-    return {
-      iNumFilesOpen: 0,
-      iSizeOfOpenFileArray: 0,
-      pRealFilesOpen: <RealFileOpenStruct[]>(<unknown>null),
-    };
-  }
-
   export interface DatabaseManagerHeaderStruct {
     sManagerName: string /* STR */;
     pLibraries: LibraryHeaderStruct[] /* Pointer<LibraryHeaderStruct> */;
@@ -130,18 +115,6 @@ namespace ja2 {
     RealFiles: RealFileHeaderStruct;
   }
 
-  export function createDatabaseManagerHeaderStruct(): DatabaseManagerHeaderStruct {
-    return {
-      sManagerName: "",
-      pLibraries: <LibraryHeaderStruct[]>(<unknown>null),
-      usNumberOfLibraries: 0,
-      fInitialized: false,
-      RealFiles: createRealFileHeaderStruct(),
-    };
-  }
-
-  // typedef UINT32	HLIBFILE;
-
   //*************************************************************************
   //
   //  NOTE!  The following structs are also used by the datalib98 utility
@@ -149,9 +122,6 @@ namespace ja2 {
   //*************************************************************************
 
   export const FILE_OK = 0;
-  const FILE_DELETED = 0xff;
-  const FILE_OLD = 1;
-  const FILE_DOESNT_EXIST = 0xfe;
 
   export interface LIBHEADER {
     sLibName: string /* CHAR8[FILENAME_SIZE] */;

@@ -3,8 +3,17 @@ namespace ja2 {
   const path: typeof import("path") = require("path");
 
   // The FileDatabaseHeader
-  export let gFileDataBase: DatabaseManagerHeaderStruct =
-    createDatabaseManagerHeaderStruct();
+  export let gFileDataBase: DatabaseManagerHeaderStruct = {
+    sManagerName: "",
+    pLibraries: <LibraryHeaderStruct[]>(<unknown>null),
+    usNumberOfLibraries: 0,
+    fInitialized: false,
+    RealFiles: {
+      iNumFilesOpen: 0,
+      iSizeOfOpenFileArray: 0,
+      pRealFilesOpen: <RealFileOpenStruct[]>(<unknown>null),
+    },
+  };
 
   //**************************************************************************
   //
@@ -63,35 +72,9 @@ namespace ja2 {
   //
   //**************************************************************************
 
-  export function FileExistsNoDB(strFilename: string /* STR */): boolean {
-    let fExists: boolean = false;
-    // HANDLE	hRealFile;
-
-    fExists = fs.existsSync(strFilename);
-
-    return fExists;
+  export function FileExistsNoDB(strFilename: string): boolean {
+    return fs.existsSync(strFilename);
   }
-
-  //**************************************************************************
-  //
-  // FileDelete
-  //
-  //		Deletes a file.
-  //
-  // Parameter List :
-  //
-  //		STR	-> name of file to delete
-  //
-  // Return Value :
-  //
-  //		BOOLEAN	-> TRUE if successful
-  //					-> FALSE if not
-  //
-  // Modification history :
-  //
-  //		24sep96:HJH		-> creation
-  //
-  //**************************************************************************
 
   export function FileDelete(strFilename: string /* STR */): boolean {
     return DeleteFile(strFilename);
