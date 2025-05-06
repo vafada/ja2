@@ -5,6 +5,8 @@ namespace ja2 {
   // *		SubRectInfo's (usNumberOfRects > 0, size = usNumberOfSubRects * sizeof(SubRectInfo) ), uncompressed
   // *		Bytes of image data, possibly compressed
 
+  // http://ja2v113.pbworks.com/w/page/4218367/STCI%20(STI)%20format%20description#:~:text=ST%D0%A1I%20(Sir%2DTech's%20Crazy%20Image,holds%20just%20one%20noncompressed%20image.
+
   export const STCI_ID_STRING = "STCI";
 
   export const STCI_ETRLE_COMPRESSED = 0x0020;
