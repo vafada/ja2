@@ -21,6 +21,7 @@
   },
   "scripts": {
     "start": "ELECTRON_ENABLE_LOGGING=true JA2_DATA_DIR=~/ja2/Data electron .",
+    "viewer": "ELECTRON_ENABLE_LOGGING=true JA2_DATA_DIR=~/ja2/Data electron . --viewer",
     "build": "tsc"
   },
   "license": "SEE LICENSE IN SFI-SCLA",

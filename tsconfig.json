@@ -105,7 +105,8 @@
     "./src/ja2/editor/*-c.ts",
     "./src/ja2/tile-engine/*-c.ts",
     "./src/ja2/*-c.ts",
-    "./src/main.ts"
+    "./src/main.ts",
+    "./src/viewer/*.ts"
   ],
   "exclude": []
 }
