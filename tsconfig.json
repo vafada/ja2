@@ -107,13 +107,5 @@
     "./src/ja2/*-c.ts",
     "./src/main.ts"
   ],
-  "exclude": [
-    "./src/ja2/utils/dutch-text-c.ts",
-    "./src/ja2/utils/french-text-c.ts",
-    "./src/ja2/utils/german-text-c.ts",
-    "./src/ja2/utils/italian-text-c.ts",
-    "./src/ja2/utils/polish-text-c.ts",
-    "./src/ja2/utils/russian-text-c.ts",
-    "./src/ja2/utils/ja25-german-text-c.ts"
-  ]
+  "exclude": []
 }
