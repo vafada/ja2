@@ -96,18 +96,6 @@ namespace ja2 {
   let fScrollMessagesHidden: boolean = false;
   let uiStartOfPauseTime: UINT32 = 0;
 
-  // prototypes
-
-  // functions
-
-  function SetStringFont(pStringSt: ScrollStringSt, uiFont: UINT32): void {
-    pStringSt.uiFont = uiFont;
-  }
-
-  function GetStringFont(pStringSt: ScrollStringSt): UINT32 {
-    return pStringSt.uiFont;
-  }
-
   function AddString(
     pString: string /* STR16 */,
     usColor: UINT16,
@@ -141,14 +129,6 @@ namespace ja2 {
     pStringSt.pString16 = pString;
   }
 
-  function SetStringPosition(
-    pStringSt: ScrollStringSt,
-    usX: UINT16,
-    usY: UINT16,
-  ): void {
-    SetStringVideoOverlayPosition(pStringSt, usX, usY);
-  }
-
   function SetStringColor(pStringSt: ScrollStringSt, usColor: UINT16): void {
     pStringSt.usColor = usColor;
   }
@@ -159,12 +139,6 @@ namespace ja2 {
     // returns pointer to next string line
     if (pStringSt == null) return null;
     else return pStringSt.pNext;
-  }
-
-  function GetPrevString(pStringSt: ScrollStringSt): ScrollStringSt | null {
-    // returns pointer to previous string line
-    if (pStringSt == null) return null;
-    else return pStringSt.pPrev;
   }
 
   function SetStringNext(
@@ -272,19 +246,6 @@ namespace ja2 {
       pBlitter.zText,
     );
     UnLockVideoSurface(pBlitter.uiDestBuff);
-  }
-
-  function EnableStringVideoOverlay(
-    pStringSt: ScrollStringSt,
-    fEnable: boolean,
-  ): void {
-    let VideoOverlayDesc: VIDEO_OVERLAY_DESC = createVideoOverlayDesc();
-
-    if (pStringSt.iVideoOverlay != -1) {
-      VideoOverlayDesc.fDisabled = !fEnable;
-      VideoOverlayDesc.uiFlags = VOVERLAY_DESC_DISABLED;
-      UpdateVideoOverlay(VideoOverlayDesc, pStringSt.iVideoOverlay, false);
-    }
   }
 
   export function ClearDisplayedListOfTacticalStrings(): void {
@@ -632,15 +593,12 @@ namespace ja2 {
     if (ubPriority == MSG_BETAVERSION) {
       usColor = BETAVERSION_COLOR;
       return;
-      WriteMessageToFile(DestString);
     }
 
     if (ubPriority == MSG_TESTVERSION) {
       usColor = TESTVERSION_COLOR;
 
       return;
-
-      WriteMessageToFile(DestString);
     }
 
     if (fFirstTimeInMessageSystem) {
@@ -658,10 +616,6 @@ namespace ja2 {
 
     if (ubPriority == MSG_DEBUG) {
       return;
-      usColor = DEBUG_COLOR;
-      DestStringA = DestString;
-      DestString = swprintf("Debug: %s", DestStringA);
-      WriteMessageToFile(DestStringA);
     }
 
     if (ubPriority == MSG_DIALOG) {
@@ -779,15 +733,12 @@ namespace ja2 {
     if (ubPriority == MSG_BETAVERSION) {
       usColor = BETAVERSION_COLOR;
       return;
-
-      WriteMessageToFile(DestString);
     }
 
     if (ubPriority == MSG_TESTVERSION) {
       usColor = TESTVERSION_COLOR;
 
       return;
-      WriteMessageToFile(DestString);
     }
     // OK, check if we are ani imeediate feedback message, if so, do something else!
     if (ubPriority == MSG_UI_FEEDBACK) {
@@ -811,8 +762,6 @@ namespace ja2 {
       DestStringA = swprintf("DEBUG: %s", DestString);
 
       BeginUIMessage(DestStringA);
-      WriteMessageToFile(DestStringA);
-
       return;
     }
 
@@ -1289,8 +1238,6 @@ namespace ja2 {
     return;
   }
 
-  function WriteMessageToFile(pString: string /* STR16 */): void {}
-
   export function InitGlobalMessageList(): void {
     let iCounter: INT32 = 0;
 
@@ -1336,360 +1283,4 @@ namespace ja2 {
 
     return ubRange;
   }
-
-  /*
-BOOLEAN IsThereAnEmptySlotInTheMapScreenMessageList( void )
-{
-        // find if there is an empty slot
-
-        if( gMapScreenMessageList[ ( UINT8 )( gubEndOfMapScreenMessageList + 1 ) ] != NULL )
-        {
-                return ( FALSE );
-        }
-        else
-        {
-                return( TRUE );
-        }
-}
-
-
-UINT8 GetFirstEmptySlotInTheMapScreenMessageList( void )
-{
-        UINT8 ubSlotId = 0;
-
-        // find first empty slot in list
-
-        if( IsThereAnEmptySlotInTheMapScreenMessageList(  ) == FALSE)
-        {
-                ubSlotId = gubEndOfMapScreenMessageList;
-                return( ubSlotId );
-        }
-        else
-        {
-                // start at head of list
-                ubSlotId = gubEndOfMapScreenMessageList;
-
-                // run through list
-                while( gMapScreenMessageList[ ubSlotId ] != NULL )
-                {
-                        ubSlotId++;
-                }
-
-        }
-        return( ubSlotId );
-}
-
-
-
-void SetCurrentMapScreenMessageString( UINT8 ubCurrentStringPosition )
-{
-        // will attempt to set current string to this value, or the closest one
-  UINT8 ubCounter = 0;
-
-        if( gMapScreenMessageList[ ubCurrentStringPosition ] == NULL )
-        {
-                // no message here, run down to nearest
-                ubCounter = ubCurrentStringPosition;
-                ubCounter--;
-
-                while(  ( gMapScreenMessageList[ ubCounter ] == NULL )&&( ubCounter != ubCurrentStringPosition ) )
-                {
-                        if( ubCounter == 0 )
-                        {
-                                ubCounter = 255;
-                        }
-                        else
-                        {
-                                ubCounter--;
-                        }
-                }
-
-                ubCurrentStringPosition = ubCounter;
-
-        }
-        return;
-}
-
-
-UINT8 GetTheRelativePositionOfCurrentMessage( void )
-{
-        UINT8 ubPosition = 0;
-
-        if( gubEndOfMapScreenMessageList > gubStartOfMapScreenMessageList)
-        {
-                ubPosition = gubCurrentMapMessageString - gubStartOfMapScreenMessageList;
-        }
-        else
-        {
-                ubPosition = ( 255 - gubStartOfMapScreenMessageList ) + gubCurrentMapMessageString;
-        }
-
-
-        return( ubPosition );
-}
-
-
-
-
-void MoveCurrentMessagePointerDownList( void )
-{
-        // check to see if we can move 'down' to newer messages?
-        if( gMapScreenMessageList[ ( UINT8 )( gubCurrentMapMessageString  + 1 )  ] != NULL )
-        {
-                if(  ( UINT8 ) ( gubCurrentMapMessageString + 1 ) != gubEndOfMapScreenMessageList )
-                {
-                        if( ( AreThereASetOfStringsAfterThisIndex( gubCurrentMapMessageString, MAX_MESSAGES_ON_MAP_BOTTOM ) == TRUE ) )
-                        {
-                                gubCurrentMapMessageString++;
-                        }
-                }
-        }
-}
-
-
-void MoveCurrentMessagePointerUpList(void )
-{
-                // check to see if we can move 'down' to newer messages?
-        if( gMapScreenMessageList[ ( UINT8 )( gubCurrentMapMessageString  - 1 )  ] != NULL )
-        {
-                if( ( UINT8 ) ( gubCurrentMapMessageString - 1 ) != gubEndOfMapScreenMessageList )
-                {
-                        gubCurrentMapMessageString--;
-                }
-        }
-
-}
-
-
-
-void ScrollToHereInMapScreenMessageList( UINT8 ubPosition )
-{
-        // a position ranging from 0 to 255 where 0 is top and 255 is bottom
-        // get the range of messages, * ubPosition /255 and set current to this position
-        UINT8 ubTestPosition = gubCurrentMapMessageString;
-        UINT8 ubRange = 0;
-
-        ubRange = GetRangeOfMapScreenMessages( );
-
-        if( ubRange > 1 )
-        {
-                ubRange += 9;
-        }
-
-        ubTestPosition = ( UINT8 )( gubEndOfMapScreenMessageList - ( UINT8 )(  ubRange  ) + (  ( ( UINT8 )( ubRange )  * ubPosition ) / 256 ) );
-
-        if( AreThereASetOfStringsAfterThisIndex( ubTestPosition, MAX_MESSAGES_ON_MAP_BOTTOM ) == TRUE )
-        {
-                gubCurrentMapMessageString = ubTestPosition;
-        }
-
-        ubTempPosition = ubTestPosition;
-
-        return;
-}
-
-
-BOOLEAN AreThereASetOfStringsAfterThisIndex( UINT8 ubMsgIndex, INT32 iNumberOfStrings )
-{
-        INT32 iCounter;
-
-        // go through this number of strings, if they pass, then we have at least iNumberOfStrings after index ubMsgIndex
-        for( iCounter = 0; iCounter < iNumberOfStrings; iCounter++ )
-        {
-                // start checking AFTER this index, so skip ahead to the next index BEFORE checking
-                if( ubMsgIndex < 255 )
-                {
-                        ubMsgIndex++;
-                }
-                else
-                {
-                        ubMsgIndex = 0;
-                }
-
-                if( gMapScreenMessageList[ ubMsgIndex ] == NULL )
-                {
-                        return ( FALSE );
-                }
-
-                if( ubMsgIndex == gubEndOfMapScreenMessageList )
-                {
-                        return( FALSE );
-                }
-        }
-
-        return( TRUE );
-}
-
-
-
-UINT8 GetCurrentMessageValue( void )
-{
-        // return the value of the current message in the list, relative to the start of the list
-
-        if( GetRangeOfMapScreenMessages( ) >= 255  )
-        {
-          return( gubCurrentMapMessageString - gubStartOfMapScreenMessageList );
-        }
-        else
-        {
-                return( gubCurrentMapMessageString );
-        }
-}
-
-
-
-UINT8 GetCurrentTempMessageValue( void )
-{
-        if( GetRangeOfMapScreenMessages( ) >= 255  )
-        {
-                return( ubTempPosition - gubEndOfMapScreenMessageList );
-        }
-        else
-        {
-                return( ubTempPosition );
-        }
-}
-
-
-UINT8 GetNewMessageValueGivenPosition( UINT8 ubPosition )
-{
-        // if we were to scroll to this position, what would current message index value be?
-
-        return( ( UINT8 )( ( gubEndOfMapScreenMessageList - ( UINT8 )( GetRangeOfMapScreenMessages( ) ) ) + ( UINT8 )( ( GetRangeOfMapScreenMessages( ) * ubPosition ) / 255 ) ) );
-
-}
-
-
-BOOLEAN IsThisTheLastMessageInTheList( void )
-{
-        // is the current message the last message in the list?
-
-        if( ( ( UINT8 )( gubCurrentMapMessageString + 1 ) ) == ( gubEndOfMapScreenMessageList ) && ( GetRangeOfMapScreenMessages( ) < 255 ) )
-        {
-                return( TRUE );
-        }
-        else if( gMapScreenMessageList[ ( UINT8 )( gubCurrentMapMessageString + 1 ) ] == NULL )
-        {
-                return( TRUE );
-        }
-        else
-        {
-                if( AreThereASetOfStringsAfterThisIndex( gubCurrentMapMessageString, MAX_MESSAGES_ON_MAP_BOTTOM ) == FALSE )
-                {
-                        return( TRUE );
-                }
-                else
-                {
-                        return ( FALSE );
-                }
-        }
-}
-
-
-BOOLEAN IsThisTheFirstMessageInTheList( void )
-{
-        // is the current message the first message in the list?
-
-        if( ( gubCurrentMapMessageString ) == ( gubEndOfMapScreenMessageList ) )
-        {
-                return( TRUE );
-        }
-        else
-        {
-                return ( FALSE );
-        }
-}
-
-
-void DisplayLastMessage( void )
-{
-        // start at end of list go back until message flag says dialogue
-        UINT8 ubCounter = 0;
-        BOOLEAN fNotDone = TRUE;
-        BOOLEAN fFound = FALSE;
-        BOOLEAN fSecondNewString = FALSE;
-        CHAR16 sString[ 256 ];
-
-        sString[ 0 ] = 0;
-
-
-        // set counter to end of list
-        while( ( gMapScreenMessageList[ ( UINT8 )( ubCounter  + 1 )  ] != NULL ) && ( ( UINT8 ) ( ubCounter + 1 ) != gubEndOfMapScreenMessageList ) )
-        {
-                ubCounter++;
-        }
-
-        // now start moving back until dialogue is found
-        while( fNotDone )
-        {
-                if( ubCounter == gubEndOfMapScreenMessageList )
-                {
-                        fNotDone = FALSE;
-                        fFound = FALSE;
-                        continue;
-                }
-
-                if( gMapScreenMessageList[ ubCounter ] == NULL )
-                {
-                        fNotDone = FALSE;
-                        fFound = FALSE;
-                        continue;
-                }
-                // check if message if dialogue
-                if( gMapScreenMessageList[ ubCounter ]->uiFlags == MSG_DIALOG )
-                {
-                        if( gMapScreenMessageList[ ubCounter ]-> fBeginningOfNewString == TRUE )
-                        {
-                                // yup
-                                fNotDone = FALSE;
-                                fFound = TRUE;
-
-                                // now display message
-                                continue;
-                        }
-                }
-
-                ubCounter--;
-        }
-
-        if( fFound == TRUE )
-        {
-                fNotDone = TRUE;
-
-                while( fNotDone )
-                {
-                        if( gMapScreenMessageList[ ubCounter ] )
-                        {
-                                if( ( fSecondNewString ) && ( gMapScreenMessageList[ ubCounter ] ->  fBeginningOfNewString ) )
-                                {
-                                        fNotDone = FALSE;
-                                }
-                                else if( gMapScreenMessageList[ ubCounter ]->uiFlags == MSG_DIALOG )
-                                {
-                                        wcscat( sString, gMapScreenMessageList[ ubCounter ]->pString16 );
-                                        wcscat( sString, L" " );
-                                }
-
-                                if( ( gMapScreenMessageList[ ubCounter ] ->  fBeginningOfNewString ) )
-                                {
-                                        fSecondNewString = TRUE;
-                                }
-
-                        }
-                        else
-                        {
-                                fNotDone = FALSE;
-                        }
-
-                        // the next string
-                        ubCounter++;
-                }
-                // execute text box
-                ExecuteTacticalTextBoxForLastQuote( ( INT16 )( ( 640 - gusSubtitleBoxWidth ) / 2 ),  sString );
-        }
-
-        return;
-}
-
-*/
 }

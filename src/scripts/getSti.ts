@@ -112,8 +112,12 @@ for (let uiLoop = 0; uiLoop < fileHeader.iEntries; uiLoop++) {
     offset += 2; // padding
   }
 
-  console.log("entry = ", JSON.stringify(entry, null, 2));
+  // console.log("entry = ", JSON.stringify(entry, null, 2));
 
   entries.push(entry);
   fileHeadersOffset = fileHeadersOffset + DIRENTRY_SIZE;
+}
+
+for (const entry of entries) {
+  console.log("entry = ", entry.sFileName);
 }
