@@ -125,7 +125,7 @@ namespace ja2 {
       return offset;
     }
 
-    const fd = fs.openSync("/Users/mark/ja2/Data/Data.slf", "r");
+    const fd = fs.openSync("/Users/mark/ja2/Data/Loadscreens.slf", "r");
 
     let buffer = Buffer.allocUnsafe(532);
 
@@ -234,7 +234,7 @@ namespace ja2 {
       console.log("entry = ", entry.sFileName);
     }*/
 
-    const jaLogo = entries.find((e) => e.sFileName === "JA2_LOGO.STI");
+    const jaLogo = entries.find((e) => e.sFileName === "SPLASH.STI");
 
     if (jaLogo == null) {
       console.log("jaLogo is null");
@@ -411,15 +411,25 @@ namespace ja2 {
       console.log("hImage.p16BPPData = ", hImage.p16BPPData[x]);
     }
 */
-    const imageData = ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
+    const imageData = ctx.createImageData(
+      stciHeader.usWidth,
+      stciHeader.usHeight,
+    );
 
     // Iterate through every pixel
     let x = 0;
     for (let i = 0; i < hImage.p16BPPData.length; i++) {
       // Modify pixel data
       const pixel = hImage.p16BPPData[i];
-      imageData.data[x++] = (pixel >> 10) & 0x1f; // R value
-      imageData.data[x++] = (pixel >> 5) & 0x1f; // G value
+      /*
+      imageData.data[x++] = (pixel >>> 10) & 0x1f; // R value
+      imageData.data[x++] = (pixel >>> 5) & 0x1f; // G value
+      imageData.data[x++] = pixel & 0x1f; // B value
+      imageData.data[x++] = 255; // A value
+
+       */
+      imageData.data[x++] = (pixel & 0x7c00) >>> 10; // R value
+      imageData.data[x++] = (pixel & 0x03e0) >>> 5; // G value
       imageData.data[x++] = pixel & 0x1f; // B value
       imageData.data[x++] = 255; // A value
     }

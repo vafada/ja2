@@ -97,7 +97,7 @@ function readSTCIHeader(o: any, buffer: Buffer): number {
   return offset;
 }
 
-const fd = fs.openSync("/Users/mark/ja2/Data/Data.slf", "r");
+const fd = fs.openSync("/Users/mark/ja2/Data/Loadscreens.slf", "r");
 
 let buffer = Buffer.allocUnsafe(532);
 
@@ -202,11 +202,12 @@ for (let uiLoop = 0; uiLoop < fileHeader.iEntries; uiLoop++) {
   fileHeadersOffset = fileHeadersOffset + DIRENTRY_SIZE;
 }
 
-/*for (const entry of entries) {
+for (const entry of entries) {
   console.log("entry = ", entry.sFileName);
-}*/
+}
 
-const jaLogo = entries.find((e) => e.sFileName === "JA2_LOGO.STI");
+// const jaLogo = entries.find((e) => e.sFileName === "JA2_LOGO.STI");
+const jaLogo = entries.find((e) => e.sFileName === "SPLASH.STI");
 
 if (jaLogo == null) {
   console.log("jaLogo is null");
@@ -252,7 +253,7 @@ buffer = Buffer.allocUnsafe(STCI_HEADER_SIZE);
 
 fs.readSync(fd, buffer, 0, STCI_HEADER_SIZE, jaLogo.uiOffset);
 
-const headerOffset = readSTCIHeader(stciHeader, buffer);
+readSTCIHeader(stciHeader, buffer);
 
 console.log(stciHeader);
 
